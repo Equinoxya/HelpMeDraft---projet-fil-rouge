@@ -20,28 +20,6 @@ def gen_uuid() -> str:
 class Base(DeclarativeBase):
     pass
 
-
-# ── Tables de jonction (many-to-many sans colonnes supplémentaires) ──────────
-
-ouvrir = Table(
-    "ouvrir", Base.metadata,
-    Column("user_id",    String(50), ForeignKey("user.user_id"),         primary_key=True),
-    Column("id_session", String(50), ForeignKey("session.id_session"),   primary_key=True),
-)
-
-effectuer = Table(
-    "effectuer", Base.metadata,
-    Column("user_id", String(50), ForeignKey("user.user_id"), primary_key=True),
-    Column("id_ia",   String(50), ForeignKey("ia.id_ia"),     primary_key=True),
-)
-
-generer = Table(
-    "generer", Base.metadata,
-    Column("id_document", String(50), ForeignKey("document.id_document"), primary_key=True),
-    Column("id_ia",       String(50), ForeignKey("ia.id_ia"),             primary_key=True),
-)
-
-
 # ── Modèles ──────────────────────────────────────────────────────────────────
 
 class User(Base):
@@ -61,15 +39,15 @@ class User(Base):
     dossiers:      Mapped[list[Dossier]]      = relationship("Dossier",      back_populates="user")
     documents:     Mapped[list[Document]]     = relationship("Document",     back_populates="user")
     consentements: Mapped[list[Consentement]] = relationship("Consentement", back_populates="user")
-    sessions:      Mapped[list[UserSession]]  = relationship("UserSession",  secondary=ouvrir,    back_populates="users")
-    ias:           Mapped[list[IA]]           = relationship("IA",           secondary=effectuer, back_populates="users")
+    sessions:      Mapped[list[UserSession]]  = relationship("UserSession",  back_populates="users")
+    ias:           Mapped[list[IA]]           = relationship("IA",           back_populates="users")
 
 
 class TokenReset(Base):
     __tablename__ = "token_reset"
 
     id:        Mapped[str]      = mapped_column(String(50), primary_key=True, default=gen_uuid)
-    token:     Mapped[str]      = mapped_column(String(50), nullable=False, unique=True)
+    token:     Mapped[str]      = mapped_column(String(100), nullable=False, unique=True)
     expire_at: Mapped[datetime] = mapped_column(DateTime,   nullable=False)
     use:       Mapped[bool]     = mapped_column(Boolean,    nullable=False, default=False)
     user_id:   Mapped[str]      = mapped_column(ForeignKey("user.user_id"), nullable=False)
@@ -78,20 +56,23 @@ class TokenReset(Base):
 
 
 class UserSession(Base):
-    __tablename__ = "session"
+    __tablename__ = "usersession"
 
     id_session: Mapped[str]      = mapped_column(String(50),  primary_key=True, default=gen_uuid)
-    jwt_token:  Mapped[str]      = mapped_column(String(512), nullable=False)
+    refresh_token:  Mapped[str]      = mapped_column(String(2048), nullable=False, unique = True)
+    refresh_token_exp: Mapped[datetime] = mapped_column(DateTime,   nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime,    nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime,    nullable=False, server_default=func.now(), onupdate=func.now())
 
-    users: Mapped[list[User]] = relationship("User", secondary=ouvrir, back_populates="sessions")
+    user_id: Mapped[str] = mapped_column(ForeignKey('user.user_id'))
+    user: Mapped[User] = relationship("User", back_populates='usersessions')
+    users: Mapped[list[User]] = relationship("User", back_populates="usersessions")
 
 
 class Dossier(Base):
     __tablename__ = "dossier"
 
-    id_dossier: Mapped[str]      = mapped_column(String(50), primary_key=True, default=gen_uuid)
+    id_dossier: Mapped[str | None]      = mapped_column(String(50), primary_key=True, default=gen_uuid)
     name:       Mapped[str]      = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime,   nullable=False, server_default=func.now())
     user_id:    Mapped[str]      = mapped_column(ForeignKey("user.user_id"), nullable=False)
@@ -114,7 +95,7 @@ class Document(Base):
 
     dossier: Mapped[Dossier] = relationship("Dossier", back_populates="documents")
     user:    Mapped[User]    = relationship("User",    back_populates="documents")
-    ias:     Mapped[list[IA]] = relationship("IA",     secondary=generer, back_populates="documents")
+    ias:     Mapped[list[IA]] = relationship("IA",     back_populates="documents")
 
 
 class Consentement(Base):
@@ -138,8 +119,10 @@ class IA(Base):
     content_after:  Mapped[str]      = mapped_column(Text)
     created_at:     Mapped[datetime] = mapped_column(DateTime,   nullable=False, server_default=func.now())
 
-    users:     Mapped[list[User]]     = relationship("User",     secondary=effectuer, back_populates="ias")
-    documents: Mapped[list[Document]] = relationship("Document", secondary=generer,   back_populates="ias")
+    user_id: Mapped[str] = mapped_column(ForeignKey('user.user_id'), nullable=False)
+    users:     Mapped[list[User]]     = relationship("User",     back_populates="ias")
+    id_document: Mapped[str] = mapped_column(ForeignKey('document.id'))
+    documents: Mapped[list[Document]] = relationship("Document", back_populates="ias")
 
 
 # ── Création des tables ──────────────────────────────────────────────────────
