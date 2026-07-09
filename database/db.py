@@ -10,7 +10,7 @@ from sqlalchemy.orm import (
     DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 )
 
-DB_PATH = Path("db.db")
+DB_PATH = Path("HelpMeDraft.db")
 engine = create_engine(f'sqlite:///{DB_PATH}', echo=False)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
@@ -39,8 +39,8 @@ class User(Base):
     dossiers:      Mapped[list[Dossier]]      = relationship("Dossier",      back_populates="user")
     documents:     Mapped[list[Document]]     = relationship("Document",     back_populates="user")
     consentements: Mapped[list[Consentement]] = relationship("Consentement", back_populates="user")
-    sessions:      Mapped[list[UserSession]]  = relationship("UserSession",  back_populates="users")
-    ias:           Mapped[list[IA]]           = relationship("IA",           back_populates="users")
+    sessions:      Mapped[list[UserSession]]  = relationship("UserSession",  back_populates="user")
+    ias:           Mapped[list[IA]]           = relationship("IA",           back_populates="user")
 
 
 class TokenReset(Base):
@@ -56,17 +56,15 @@ class TokenReset(Base):
 
 
 class UserSession(Base):
-    __tablename__ = "usersession"
+    __tablename__ = "user_session"
 
-    id_session: Mapped[str]      = mapped_column(String(50),  primary_key=True, default=gen_uuid)
-    refresh_token:  Mapped[str]      = mapped_column(String(2048), nullable=False, unique = True)
-    refresh_token_exp: Mapped[datetime] = mapped_column(DateTime,   nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime,    nullable=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime,    nullable=False, server_default=func.now(), onupdate=func.now())
+    id_session:        Mapped[str]      = mapped_column(String(50),  primary_key=True, default=gen_uuid)
+    refresh_token:     Mapped[str]      = mapped_column(String(255), nullable=False, unique=True)
+    refresh_token_exp: Mapped[datetime] = mapped_column(DateTime,    nullable=False)
+    created_at:        Mapped[datetime] = mapped_column(DateTime,    nullable=False, server_default=func.now())
+    user_id:           Mapped[str]      = mapped_column(ForeignKey("user.user_id"), nullable=False)
 
-    user_id: Mapped[str] = mapped_column(ForeignKey('user.user_id'))
-    user: Mapped[User] = relationship("User", back_populates='usersessions')
-    users: Mapped[list[User]] = relationship("User", back_populates="usersessions")
+    user: Mapped[User] = relationship("User", back_populates="sessions")
 
 
 class Dossier(Base):
@@ -118,11 +116,11 @@ class IA(Base):
     content_before: Mapped[str]      = mapped_column(Text)
     content_after:  Mapped[str]      = mapped_column(Text)
     created_at:     Mapped[datetime] = mapped_column(DateTime,   nullable=False, server_default=func.now())
+    user_id:        Mapped[str]      = mapped_column(ForeignKey("user.user_id"),         nullable=False)
+    id_document:    Mapped[str]      = mapped_column(ForeignKey("document.id_document"), nullable=False)
 
-    user_id: Mapped[str] = mapped_column(ForeignKey('user.user_id'), nullable=False)
-    users:     Mapped[list[User]]     = relationship("User",     back_populates="ias")
-    id_document: Mapped[str] = mapped_column(ForeignKey('document.id'))
-    documents: Mapped[list[Document]] = relationship("Document", back_populates="ias")
+    user:     Mapped[User]     = relationship("User",     back_populates="ias")
+    document: Mapped[Document] = relationship("Document", back_populates="ias")
 
 
 # ── Création des tables ──────────────────────────────────────────────────────
