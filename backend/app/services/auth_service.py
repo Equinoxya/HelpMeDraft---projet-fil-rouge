@@ -6,6 +6,7 @@ import secrets
 from flask import current_app
 from sqlalchemy import select
 from database.db import SessionLocal, User, UserSession
+from utilitaires import utc_now_naive
 
 ACCESS_TOKEN_EXPIRES_MINUTES = 15
 REFRESH_TOKEN_EXPIRES_DAYS = 7
@@ -55,7 +56,7 @@ def create_session(user_id: str) -> str:
         user_session = UserSession(
             user_id=user_id,
             refresh_token=refresh_token,
-            refresh_token_exp=datetime.datetime.now(datetime.timezone.utc)
+            refresh_token_exp=utc_now_naive()
                 + datetime.timedelta(days=REFRESH_TOKEN_EXPIRES_DAYS),
         )
         db_session.add(user_session)
@@ -69,8 +70,10 @@ def verify_refresh_token(refresh_token: str) -> str:
         session = db_session.execute(stmt).scalar_one_or_none()
         if session is None:
             raise ValueError("Refresh token invalide")
-        if session.refresh_token_exp < datetime.datetime.now(datetime.timezone.utc):
+        if session.refresh_token_exp < utc_now_naive():
             db_session.delete(session)
             db_session.commit()
             raise ValueError("Refresh token expiré")
         return session.user_id
+    
+    

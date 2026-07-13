@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
-from database.db import SessionLocal, User
-from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session
+from database.db import SessionLocal, User, UserSession
+from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session, verify_refresh_token, generate_refresh_token
 from sqlalchemy import select
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -63,3 +63,32 @@ def login():
                 "lastname" : user.lastname
             }
         }), 200
+        
+@auth_bp.route("/refresh", methods=["POST"])
+def refresh():
+    data = request.get_json()
+    if not data.get("refresh_token"):
+        return jsonify({"error" : "Refresh token requis"}), 400
+    
+    try: 
+        user_id = verify_refresh_token(data["refresh_token"])
+    except ValueError as e:
+        return jsonify({"error" : str(e)}), 401
+    
+    new_access_token = generate_access_token(user_id)
+    return jsonify({"access_token" : new_access_token}), 200
+        
+@auth_bp.route("/logout", methods=['POST'])
+def logout():
+    data = request.get_json()
+    if not data.get("refresh_token"):
+        return jsonify({"error" : "refresh_token requis"}), 400
+    refresh_token = data["refresh_token"]
+    with SessionLocal() as db_session:
+        stmt = select(UserSession).where(UserSession.refresh_token == refresh_token)
+        session = db_session.execute(stmt).scalar_one_or_none()
+        if session is not None:
+            db_session.delete(session)
+            db_session.commit()
+    return jsonify({"message" : "Déconnexion réussite"}), 200
+    
