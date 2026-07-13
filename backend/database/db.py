@@ -91,9 +91,9 @@ class Document(Base):
     id_dossier:  Mapped[str]      = mapped_column(ForeignKey("dossier.id_dossier"), nullable=False)
     user_id:     Mapped[str]      = mapped_column(ForeignKey("user.user_id"),       nullable=False)
 
-    dossier: Mapped[Dossier] = relationship("Dossier", back_populates="documents")
-    user:    Mapped[User]    = relationship("User",    back_populates="documents")
-    ias:     Mapped[list[IA]] = relationship("IA",     back_populates="documents")
+    dossier: Mapped[Dossier]  = relationship("Dossier", back_populates="documents")
+    user:    Mapped[User]     = relationship("User",    back_populates="documents")
+    ias:     Mapped[list[IA]] = relationship("IA",      back_populates="document")  # <- corrigé : "document" au lieu de "documents"
 
 
 class Consentement(Base):
