@@ -23,21 +23,39 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div>
+  <div
+    className="card bg-base-100 w-full max-w-sm shrink-0 shadow-2xl card-body"
+  >
     <h1>Connexion</h1>
 
-    <form @submit.prevent="handleSubmit">
+    <form @submit.prevent="handleSubmit" className="fieldset">
       <div>
-        <label for="email">Email</label>
-        <input id="email" v-model="email" type="email" required />
+        <label for="email" className="label">Email</label>
+        <input
+          id="email"
+          className="input"
+          placeholder="Email"
+          v-model="email"
+          type="email"
+          required
+        />
       </div>
 
       <div>
-        <label for="mdp">Mot de passe</label>
-        <input id="mdp" v-model="mdp" type="password" required />
+        <label for="mdp" className="label">Mot de passe</label>
+        <input
+          id="mdp"
+          className="input"
+          placeholder="Mot de passe"
+          v-model="mdp"
+          type="password"
+          required
+        />
       </div>
-
-      <button type="submit">Se connecter</button>
+      <div><a className="link link-hover">Forgot password?</a></div>
+      <button type="submit" className="btn btn-neutral mt-4">
+        Se connecter
+      </button>
 
       <p v-if="errorMessage">{{ errorMessage }}</p>
     </form>

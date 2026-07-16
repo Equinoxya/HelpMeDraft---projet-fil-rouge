@@ -1,19 +1,17 @@
 import { defineStore } from "pinia";
-import { login as loginApi } from "../services/authService";
-import type { LoginPayload } from "../services/authService";
+import authService from "../services/authService";
+import type { LoginPayload } from "../types/auth";
 
 interface User {
-  user_id: string;
+  id: string;
   email: string;
-  firstname: string;
-  lastname: string;
 }
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     accessToken: null as string | null,
-    refreshToken: null as string | null,
     user: null as User | null,
+    isInitialized: false,
   }),
 
   getters: {
@@ -22,17 +20,35 @@ export const useAuthStore = defineStore("auth", {
 
   actions: {
     async login(payload: LoginPayload) {
-      const data = await loginApi(payload);
-
+      const data = await authService.login(payload);
       this.accessToken = data.access_token;
-      this.refreshToken = data.refresh_token;
       this.user = data.user;
     },
 
-    logout() {
-      this.accessToken = null;
-      this.refreshToken = null;
-      this.user = null;
+    async logout() {
+      try {
+        await authService.logout();
+      } finally {
+        this.accessToken = null;
+        this.user = null;
+      }
+    },
+
+    async tryRefresh(): Promise<boolean> {
+      try {
+        const data = await authService.refresh();
+        this.accessToken = data.access_token;
+        return true;
+      } catch {
+        this.accessToken = null;
+        this.user = null;
+        return false;
+      }
+    },
+
+    async initialize() {
+      await this.tryRefresh();
+      this.isInitialized = true;
     },
   },
 });
