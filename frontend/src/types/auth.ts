@@ -30,3 +30,9 @@ export interface RegisterResponse {
 export interface RefreshResponse {
   access_token: string;
 }
+export interface MeResponse {
+  id: string;
+  email: string;
+  firstname: string;
+  lastname: string;
+}

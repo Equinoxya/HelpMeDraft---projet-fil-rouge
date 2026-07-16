@@ -38,6 +38,8 @@ export const useAuthStore = defineStore("auth", {
       try {
         const data = await authService.refresh();
         this.accessToken = data.access_token;
+        const userData = await authService.me(this.accessToken);
+        this.user = userData;
         return true;
       } catch {
         this.accessToken = null;

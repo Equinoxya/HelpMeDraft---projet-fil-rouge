@@ -5,6 +5,7 @@ import type {
   AuthResponse,
   RegisterResponse,
   RefreshResponse,
+  MeResponse,
 } from "../types/auth";
 
 async function register(payload: RegisterPayload): Promise<RegisterResponse> {
@@ -26,9 +27,16 @@ async function logout(): Promise<void> {
   await api.post("/logout");
 }
 
+async function me(token: string): Promise<MeResponse> {
+  const response = await api.get<MeResponse>("/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+}
 export default {
   register,
   login,
   refresh,
   logout,
+  me,
 };

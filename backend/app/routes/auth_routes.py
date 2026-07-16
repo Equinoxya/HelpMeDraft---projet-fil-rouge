@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify, request
 from database.db import SessionLocal, User, UserSession, Consentement
-from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session, verify_refresh_token, generate_refresh_token
+from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session, verify_refresh_token, generate_refresh_token, is_password_valid
 from sqlalchemy import select
+from functools import wraps
+from app.services.auth_service import decode_access_token
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -18,6 +20,9 @@ def register():
 
     email = data["email"]
     plain_password = data["mdp"]
+    
+    if not is_password_valid(plain_password):
+        return jsonify({"error": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre"}), 400
 
     with SessionLocal() as db_session:
         stmt = select(User).where(User.email == email)
@@ -60,6 +65,7 @@ def login():
         return jsonify({"error" : "Email ou mot de passe requis"}), 400
     email = data["email"]
     plain_password = data["mdp"]
+    
     with SessionLocal() as db_session:
         stmt = select(User). where(User.email == email)
         user = db_session.execute(stmt).scalar_one_or_none()
@@ -107,4 +113,33 @@ def logout():
     response = jsonify({"message": "Déconnexion réussite"})
     response.delete_cookie("refresh_token", path="/auth")
     return response, 200
-    
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Token manquant"}), 401
+        token = auth_header.split(" ")[1]
+        try:
+            payload = decode_access_token(token)
+        except Exception:
+            return jsonify({"error": "Token invalide ou expiré"}), 401
+        request.user_id = payload["sub"]  # adapte "sub" au nom réel de la claim dans ton JWT
+        return f(*args, **kwargs)
+    return decorated
+
+@auth_bp.route("/me", methods=["GET"])
+@token_required
+def me():
+    with SessionLocal() as db_session:
+        stmt = select(User).where(User.user_id == request.user_id)
+        user = db_session.execute(stmt).scalar_one_or_none()
+        if user is None:
+            return jsonify({"error": "Utilisateur introuvable"}), 404
+        return jsonify({
+            "id": user.user_id,
+            "email": user.email,
+            "firstname": user.firstname,
+            "lastname": user.lastname,
+        }), 200

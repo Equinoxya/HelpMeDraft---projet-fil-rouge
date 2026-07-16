@@ -3,6 +3,7 @@ import bcrypt
 import jwt
 import datetime
 import secrets
+import re
 from flask import current_app
 from sqlalchemy import select
 from database.db import SessionLocal, User, UserSession
@@ -23,6 +24,17 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     password_bytes = plain_password.encode("utf-8")
     hashed_bytes = hashed_password.encode("utf-8")
     return bcrypt.checkpw(password_bytes, hashed_bytes)
+
+def is_password_valid(password: str) -> bool:
+    if len(password) < 8:
+        return False
+    if not re.search(r"[A-Z]", password):
+        return False
+    if not re.search(r"[a-z]", password):
+        return False
+    if not re.search(r"[0-9]", password):
+        return False
+    return True
 
 
 # ── Access token (JWT) ───────────────────────────────────────
