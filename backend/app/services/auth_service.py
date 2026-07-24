@@ -3,6 +3,7 @@ import bcrypt
 import jwt
 import datetime
 import secrets
+import hashlib
 import re
 from flask import current_app
 from sqlalchemy import select
@@ -89,3 +90,14 @@ def verify_refresh_token(refresh_token: str) -> str:
         return session.user_id
     
     
+def generate_reset_token() -> tuple[str,str]:
+    plain_token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(plain_token.encode()).hexdigest()
+    return plain_token, token_hash
+
+def hash_reset_token(plain_token: str) -> str:
+    return hashlib.sha256(plain_token.encode()).hexdigest()
+
+def is_reset_token_expired(expires_at: datetime) -> bool:
+    return utc_now_naive() > expires_at  # réutilise ton helper existant
+

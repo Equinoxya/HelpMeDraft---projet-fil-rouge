@@ -26,13 +26,15 @@ export const useAuthStore = defineStore("auth", {
       this.accessToken = data.access_token;
       this.user = data.user;
     },
-
+    clearAuth() {
+      this.accessToken = null;
+      this.user = null;
+    },
     async logout() {
       try {
         await authService.logout();
       } finally {
-        this.accessToken = null;
-        this.user = null;
+        this.clearAuth();
       }
     },
 

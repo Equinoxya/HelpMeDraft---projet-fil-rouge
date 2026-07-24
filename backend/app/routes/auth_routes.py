@@ -1,9 +1,14 @@
 from flask import Blueprint, jsonify, request
-from database.db import SessionLocal, User, UserSession, Consentement
-from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session, verify_refresh_token, generate_refresh_token, is_password_valid
+from database.db import SessionLocal, User, UserSession, Consentement, PasswordReset
+from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session, verify_refresh_token, generate_reset_token, is_password_valid, hash_reset_token, is_reset_token_expired, is_password_valid
+from app.services.email_service import send_reset_password_email
 from sqlalchemy import select
 from functools import wraps
+from datetime import timedelta
+import os
 from app.services.auth_service import decode_access_token
+from utilitaires import utc_now_naive
+from app.extension import mail  
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -143,3 +148,71 @@ def me():
             "firstname": user.firstname,
             "lastname": user.lastname,
         }), 200
+
+#==========================================RESET PASSWORD====================================================
+@auth_bp.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.get_json()
+    email = data.get("email")
+    if not email:
+        return jsonify({"error": "Email requis"}), 400
+
+    with SessionLocal() as db_session:
+        stmt = select(User).where(User.email == email)
+        user = db_session.execute(stmt).scalar_one_or_none()
+
+        # Important : on répond pareil que l'utilisateur existe ou non,
+        # pour ne pas révéler quels emails sont enregistrés (énumération de comptes)
+        if user is not None:
+            plain_token, token_hash = generate_reset_token()
+
+            reset_entry = PasswordReset(
+                user_id=user.user_id,
+                token_hash=token_hash,
+                expires_at=utc_now_naive() + timedelta(hours=1),
+            )
+            db_session.add(reset_entry)
+            db_session.commit()
+
+            frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+            reset_link = f"{frontend_url}/reset-password?token={plain_token}"
+# adapte au chemin réel de ton objet Mail
+            send_reset_password_email(mail, user.email, user.firstname, reset_link)
+
+        return jsonify({"message": "Si cet email existe, un lien de réinitialisation a été envoyé"}), 200
+
+
+@auth_bp.route("/reset-password", methods=["POST"])
+def reset_password():
+    data = request.get_json()
+    token = data.get("token")
+    new_password = data.get("mdp")
+
+    if not token or not new_password:
+        return jsonify({"error": "Token et nouveau mot de passe requis"}), 400
+
+    if not is_password_valid(new_password):
+        return jsonify({"error": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre"}), 400
+
+    token_hash = hash_reset_token(token)
+
+    with SessionLocal() as db_session:
+        stmt = select(PasswordReset).where(
+            PasswordReset.token_hash == token_hash,
+            PasswordReset.used == False,
+        )
+        reset_entry = db_session.execute(stmt).scalar_one_or_none()
+
+        if reset_entry is None or is_reset_token_expired(reset_entry.expires_at):
+            return jsonify({"error": "Lien invalide ou expiré"}), 400
+
+        stmt_user = select(User).where(User.user_id == reset_entry.user_id)
+        user = db_session.execute(stmt_user).scalar_one_or_none()
+        if user is None:
+            return jsonify({"error": "Utilisateur introuvable"}), 404
+
+        user.mdp_hash = hash_password(new_password)
+        reset_entry.used = True
+        db_session.commit()
+
+        return jsonify({"message": "Mot de passe réinitialisé avec succès"}), 200

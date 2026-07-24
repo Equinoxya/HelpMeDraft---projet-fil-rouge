@@ -3,12 +3,13 @@ from pathlib import Path
 from datetime import datetime
 import uuid
 from sqlalchemy import (
-    Boolean, Column, DateTime, ForeignKey,
-    Integer, String, Text, Table, create_engine, func
+    Boolean, DateTime, ForeignKey,
+    Integer, String, Text, create_engine, func
 )
 from sqlalchemy.orm import (
     DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 )
+from utilitaires import utc_now_naive
 
 DB_PATH = Path("HelpMeDraft.db")
 engine = create_engine(f'sqlite:///{DB_PATH}', echo=False)
@@ -122,6 +123,15 @@ class IA(Base):
     user:     Mapped[User]     = relationship("User",     back_populates="ias")
     document: Mapped[Document] = relationship("Document", back_populates="ias")
 
+class PasswordReset(Base):
+    __tablename__ = "password_reset"
+    
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda:str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("user.user_id"), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(512), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    used: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now_naive)
 
 # ── Création des tables ──────────────────────────────────────────────────────
 Base.metadata.create_all(engine)

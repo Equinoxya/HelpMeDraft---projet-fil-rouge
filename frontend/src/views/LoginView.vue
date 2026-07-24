@@ -5,7 +5,6 @@ import { useAuthStore } from "../stores/auth";
 
 const email = ref("");
 const mdp = ref("");
-const firstname = ref("");
 const errorMessage = ref("");
 
 const authStore = useAuthStore();
@@ -18,7 +17,6 @@ async function handleSubmit() {
     await authStore.login({
       email: email.value,
       mdp: mdp.value,
-      firstname: firstname.value,
     });
     router.push("/dashboard");
   } catch (err) {
@@ -28,19 +26,19 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div className="flex justify-center items-center m-5">
-    <div className="aura aura-rainbow">
+  <div class="flex justify-center items-center m-5">
+    <div class="aura aura-rainbow">
       <div
-        className="card bg-base-100 w-full max-w-sm shrink-0 shadow-xl card-body"
+        class="card bg-base-100 w-full max-w-sm shrink-0 shadow-xl card-body"
       >
         <h1>Connexion</h1>
 
-        <form @submit.prevent="handleSubmit" className="fieldset">
+        <form @submit.prevent="handleSubmit" class="fieldset">
           <div>
-            <label for="email" className="label">Email</label>
+            <label for="email" class="label">Email</label>
             <input
               id="email"
-              className="input"
+              class="input"
               placeholder="Email"
               v-model="email"
               type="email"
@@ -49,10 +47,10 @@ async function handleSubmit() {
           </div>
 
           <div>
-            <label for="mdp" className="label">Mot de passe</label>
+            <label for="mdp" class="label">Mot de passe</label>
             <input
               id="mdp"
-              className="input"
+              class="input"
               placeholder="Mot de passe"
               v-model="mdp"
               type="password"
@@ -60,8 +58,13 @@ async function handleSubmit() {
             />
           </div>
 
-          <div><a className="link link-hover">Forgot password?</a></div>
-          <button type="submit" className="btn btn-neutral mt-4">
+          <div>
+            <RouterLink to="/forgot-password" class="link link-hover">
+              Mot de passe oublié ?
+            </RouterLink>
+          </div>
+
+          <button type="submit" class="btn btn-neutral mt-4">
             Se connecter
           </button>
 

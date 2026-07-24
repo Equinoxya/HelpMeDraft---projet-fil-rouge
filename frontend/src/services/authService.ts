@@ -27,16 +27,37 @@ async function logout(): Promise<void> {
   await api.post("/logout");
 }
 
+async function forgotPassword(email: string): Promise<{ message: string }> {
+  const response = await api.post<{ message: string }>("/forgot-password", {
+    email,
+  });
+  return response.data;
+}
+
+async function resetPassword(
+  token: string,
+  mdp: string,
+): Promise<{ message: string }> {
+  const response = await api.post<{ message: string }>("/reset-password", {
+    token,
+    mdp,
+  });
+  return response.data;
+}
+
 async function me(token: string): Promise<MeResponse> {
   const response = await api.get<MeResponse>("/me", {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
 }
+
 export default {
   register,
   login,
   refresh,
   logout,
+  forgotPassword,
+  resetPassword,
   me,
 };

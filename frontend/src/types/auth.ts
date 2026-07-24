@@ -1,7 +1,6 @@
 export interface LoginPayload {
   email: string;
   mdp: string;
-  firstname: string;
 }
 
 export interface RegisterPayload {
