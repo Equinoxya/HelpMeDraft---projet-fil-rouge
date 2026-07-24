@@ -6,6 +6,6 @@ const authStore = useAuthStore();
 <template>
   <div>
     <h1>Dashboard</h1>
-    <p>Connecté en tant que : {{ authStore.user?.email }}</p>
+    <p>Bonjour {{ authStore.user?.firstname }}</p>
   </div>
 </template>

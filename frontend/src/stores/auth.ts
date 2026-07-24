@@ -5,6 +5,8 @@ import type { LoginPayload } from "../types/auth";
 interface User {
   id: string;
   email: string;
+  firstname: string;
+  lastname: string;
 }
 
 export const useAuthStore = defineStore("auth", {

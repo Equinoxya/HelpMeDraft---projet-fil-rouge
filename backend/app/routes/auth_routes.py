@@ -76,7 +76,7 @@ def login():
         
         response = jsonify({
         "access_token": access_token,
-        "user": {"id": user.user_id, "email": user.email}
+        "user": {"id": user.user_id, "email": user.email, "firstname" : user.firstname, "lastname": user.lastname}
     })
         response.set_cookie(
             "refresh_token", refresh_token,

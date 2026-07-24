@@ -1,6 +1,7 @@
 export interface LoginPayload {
   email: string;
   mdp: string;
+  firstname: string;
 }
 
 export interface RegisterPayload {
@@ -14,6 +15,8 @@ export interface RegisterPayload {
 export interface AuthUser {
   id: string;
   email: string;
+  firstname: string;
+  lastname: string;
 }
 
 export interface AuthResponse {
