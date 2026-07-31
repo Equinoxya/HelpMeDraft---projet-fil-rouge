@@ -71,7 +71,7 @@ class UserSession(Base):
 class Dossier(Base):
     __tablename__ = "dossier"
 
-    id_dossier: Mapped[str | None]      = mapped_column(String(50), primary_key=True, default=gen_uuid)
+    id_dossier: Mapped[str]      = mapped_column(String(50), primary_key=True, default=gen_uuid)
     name:       Mapped[str]      = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime,   nullable=False, server_default=func.now())
     user_id:    Mapped[str]      = mapped_column(ForeignKey("user.user_id"), nullable=False)

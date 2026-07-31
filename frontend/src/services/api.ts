@@ -43,7 +43,7 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/auth/refresh")
+      !originalRequest.url?.includes("/refresh")
     ) {
       if (isRefreshing) {
         // Un refresh est déjà en cours : on met la requête en attente
