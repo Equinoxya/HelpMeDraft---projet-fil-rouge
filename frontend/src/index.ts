@@ -39,7 +39,26 @@ const router = createRouter({
       component: () => import("./views/ResetPasswordView.vue"),
       meta: { guestOnly: true },
     },
+    {
+      path: "/mentions-legales",
+      name: "MentionsLegales",
+      component: () => import("./views/MentionsLegalesView.vue"),
+    },
+    {
+      path: "/cgu",
+      name: "CGU",
+      component: () => import("./views/CguView.vue"),
+    },
+    {
+      path: "/confidentialite",
+      name: "Confidentialite",
+      component: () => import("./views/ConfidentialiteView.vue"),
+    },
   ],
+  scrollBehavior() {
+    // Remonte en haut de page quand on clique sur un lien du footer
+    return { top: 0 };
+  },
 });
 
 router.beforeEach(async (to, from, next) => {
