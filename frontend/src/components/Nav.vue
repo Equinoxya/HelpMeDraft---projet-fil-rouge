@@ -44,6 +44,9 @@ const handleLogout = async () => {
             </li>
 
             <template v-if="authStore.isAuthenticated">
+              <li>
+                <RouterLink to="/dashboard">Tableau de bord</RouterLink>
+              </li>
               <button @click="handleLogout">Déconnexion</button>
             </template>
 
