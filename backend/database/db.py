@@ -26,44 +26,48 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "user"
 
-    user_id:    Mapped[str]      = mapped_column(String(50),  primary_key=True, default=gen_uuid)
+    user_id:    Mapped[str]      = mapped_column(String(36),  primary_key=True, default=gen_uuid)
     lastname:   Mapped[str]      = mapped_column(String(50),  nullable=False)
     firstname:  Mapped[str]      = mapped_column(String(50),  nullable=False)
     email:      Mapped[str]      = mapped_column(String(326), nullable=False, unique=True)
     mdp_hash:   Mapped[str]      = mapped_column(String(255), nullable=False)
-    role:       Mapped[str]      = mapped_column(String(50),  nullable=False)
-    token_ia:   Mapped[int]      = mapped_column(Integer,     nullable=False, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime,    nullable=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime,    nullable=False, server_default=func.now(), onupdate=func.now())
+    role:       Mapped[str]      = mapped_column(String(20),  nullable=False, default="user") # ex: 'user', 'admin'
+    
+    # Quotas & Usage IA
+    quota_daily_limit: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now_naive)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now_naive, onupdate=utc_now_naive)
 
-    token_resets:  Mapped[list[TokenReset]]   = relationship("TokenReset",   back_populates="user")
-    dossiers:      Mapped[list[Dossier]]      = relationship("Dossier",      back_populates="user")
-    documents:     Mapped[list[Document]]     = relationship("Document",     back_populates="user")
-    consentements: Mapped[list[Consentement]] = relationship("Consentement", back_populates="user")
-    sessions:      Mapped[list[UserSession]]  = relationship("UserSession",  back_populates="user")
-    ias:           Mapped[list[IA]]           = relationship("IA",           back_populates="user")
+    password_resets: Mapped[list[PasswordReset]] = relationship("PasswordReset", back_populates="user", cascade="all, delete-orphan")
+    dossiers:        Mapped[list[Dossier]]       = relationship("Dossier",       back_populates="user", cascade="all, delete-orphan")
+    documents:       Mapped[list[Document]]      = relationship("Document",      back_populates="user", cascade="all, delete-orphan")
+    consentements:   Mapped[list[Consentement]]  = relationship("Consentement",  back_populates="user", cascade="all, delete-orphan")
+    sessions:        Mapped[list[UserSession]]   = relationship("UserSession",   back_populates="user", cascade="all, delete-orphan")
+    ias:             Mapped[list[IA]]            = relationship("IA",            back_populates="user", cascade="all, delete-orphan")
 
 
-class TokenReset(Base):
-    __tablename__ = "token_reset"
+class PasswordReset(Base):
+    __tablename__ = "password_reset"
+    
+    id:          Mapped[str]      = mapped_column(String(36),  primary_key=True, default=gen_uuid)
+    user_id:     Mapped[str]      = mapped_column(String(36),  ForeignKey("user.user_id"), nullable=False)
+    token_hash:  Mapped[str]      = mapped_column(String(512), nullable=False)
+    expires_at:  Mapped[datetime] = mapped_column(DateTime,    nullable=False)
+    used:        Mapped[bool]     = mapped_column(Boolean,     nullable=False, default=False)
+    created_at:  Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive)
 
-    id:        Mapped[str]      = mapped_column(String(50), primary_key=True, default=gen_uuid)
-    token:     Mapped[str]      = mapped_column(String(100), nullable=False, unique=True)
-    expire_at: Mapped[datetime] = mapped_column(DateTime,   nullable=False)
-    use:       Mapped[bool]     = mapped_column(Boolean,    nullable=False, default=False)
-    user_id:   Mapped[str]      = mapped_column(ForeignKey("user.user_id"), nullable=False)
-
-    user: Mapped[User] = relationship("User", back_populates="token_resets")
+    user: Mapped[User] = relationship("User", back_populates="password_resets")
 
 
 class UserSession(Base):
     __tablename__ = "user_session"
 
-    id_session:        Mapped[str]      = mapped_column(String(50),  primary_key=True, default=gen_uuid)
-    refresh_token:     Mapped[str]      = mapped_column(String(255), nullable=False, unique=True)
+    id_session:        Mapped[str]      = mapped_column(String(36),  primary_key=True, default=gen_uuid)
+    refresh_token:     Mapped[str]      = mapped_column(String(512), nullable=False, unique=True)
     refresh_token_exp: Mapped[datetime] = mapped_column(DateTime,    nullable=False)
-    created_at:        Mapped[datetime] = mapped_column(DateTime,    nullable=False, server_default=func.now())
-    user_id:           Mapped[str]      = mapped_column(ForeignKey("user.user_id"), nullable=False)
+    created_at:        Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive)
+    user_id:           Mapped[str]      = mapped_column(String(36),  ForeignKey("user.user_id"), nullable=False)
 
     user: Mapped[User] = relationship("User", back_populates="sessions")
 
@@ -71,10 +75,10 @@ class UserSession(Base):
 class Dossier(Base):
     __tablename__ = "dossier"
 
-    id_dossier: Mapped[str]      = mapped_column(String(50), primary_key=True, default=gen_uuid)
-    name:       Mapped[str]      = mapped_column(String(50), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime,   nullable=False, server_default=func.now())
-    user_id:    Mapped[str]      = mapped_column(ForeignKey("user.user_id"), nullable=False)
+    id_dossier: Mapped[str]      = mapped_column(String(36),  primary_key=True, default=gen_uuid)
+    name:       Mapped[str]      = mapped_column(String(100), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive)
+    user_id:    Mapped[str]      = mapped_column(String(36),  ForeignKey("user.user_id"), nullable=False)
 
     user:      Mapped[User]           = relationship("User",     back_populates="dossiers")
     documents: Mapped[list[Document]] = relationship("Document", back_populates="dossier")
@@ -83,28 +87,29 @@ class Dossier(Base):
 class Document(Base):
     __tablename__ = "document"
 
-    id_document: Mapped[str]      = mapped_column(String(50), primary_key=True, default=gen_uuid)
-    titre:       Mapped[str]      = mapped_column(String(50), nullable=False)
-    content:     Mapped[str]      = mapped_column(Text)
-    format:      Mapped[str]      = mapped_column(String(50))
-    created_at:  Mapped[datetime] = mapped_column(DateTime,   nullable=False, server_default=func.now())
-    updated_at:  Mapped[datetime] = mapped_column(DateTime,   nullable=False, server_default=func.now(), onupdate=func.now())
-    id_dossier:  Mapped[str]      = mapped_column(ForeignKey("dossier.id_dossier"), nullable=False)
-    user_id:     Mapped[str]      = mapped_column(ForeignKey("user.user_id"),       nullable=False)
+    id_document: Mapped[str]      = mapped_column(String(36),  primary_key=True, default=gen_uuid)
+    titre:       Mapped[str]      = mapped_column(String(255), nullable=False)
+    content:     Mapped[str]      = mapped_column(Text,        nullable=True)
+    format:      Mapped[str]      = mapped_column(String(20),  default="markdown") # ex: 'markdown', 'wysiwyg'
+    created_at:  Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive)
+    updated_at:  Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive, onupdate=utc_now_naive)
+    
+    id_dossier:  Mapped[str | None] = mapped_column(String(36), ForeignKey("dossier.id_dossier", ondelete="SET NULL"), nullable=True)
+    user_id:     Mapped[str]        = mapped_column(String(36), ForeignKey("user.user_id"), nullable=False)
 
-    dossier: Mapped[Dossier]  = relationship("Dossier", back_populates="documents")
-    user:    Mapped[User]     = relationship("User",    back_populates="documents")
-    ias:     Mapped[list[IA]] = relationship("IA",      back_populates="document")  # <- corrigé : "document" au lieu de "documents"
+    dossier: Mapped[Dossier | None] = relationship("Dossier", back_populates="documents")
+    user:    Mapped[User]           = relationship("User",    back_populates="documents")
+    ias:     Mapped[list[IA]]       = relationship("IA",      back_populates="document", cascade="all, delete-orphan")
 
 
 class Consentement(Base):
     __tablename__ = "consentement"
 
-    id_consentement:   Mapped[str]      = mapped_column(String(50), primary_key=True, default=gen_uuid)
-    type_consentement: Mapped[str]      = mapped_column(String(50), nullable=False)
+    id_consentement:   Mapped[str]      = mapped_column(String(36), primary_key=True, default=gen_uuid)
+    type_consentement: Mapped[str]      = mapped_column(String(50), nullable=False) # ex: 'openai_data_processing'
     accepte:           Mapped[bool]     = mapped_column(Boolean,    nullable=False, default=False)
-    date_consentement: Mapped[datetime] = mapped_column(DateTime,   nullable=False, server_default=func.now())
-    user_id:           Mapped[str]      = mapped_column(ForeignKey("user.user_id"), nullable=False)
+    date_consentement: Mapped[datetime] = mapped_column(DateTime,   nullable=False, default=utc_now_naive)
+    user_id:           Mapped[str]      = mapped_column(String(36), ForeignKey("user.user_id"), nullable=False)
 
     user: Mapped[User] = relationship("User", back_populates="consentements")
 
@@ -112,26 +117,18 @@ class Consentement(Base):
 class IA(Base):
     __tablename__ = "ia"
 
-    id_ia:          Mapped[str]      = mapped_column(String(50), primary_key=True, default=gen_uuid)
-    type_action:    Mapped[str]      = mapped_column(String(50), nullable=False)
-    content_before: Mapped[str]      = mapped_column(Text)
-    content_after:  Mapped[str]      = mapped_column(Text)
-    created_at:     Mapped[datetime] = mapped_column(DateTime,   nullable=False, server_default=func.now())
-    user_id:        Mapped[str]      = mapped_column(ForeignKey("user.user_id"),         nullable=False)
-    id_document:    Mapped[str]      = mapped_column(ForeignKey("document.id_document"), nullable=False)
+    id_ia:          Mapped[str]      = mapped_column(String(36), primary_key=True, default=gen_uuid)
+    type_action:    Mapped[str]      = mapped_column(String(50), nullable=False) # ex: 'reformuler', 'corriger', 'completer'
+    content_before: Mapped[str]      = mapped_column(Text, nullable=True)
+    content_after:  Mapped[str]      = mapped_column(Text, nullable=True)
+    tokens_used:    Mapped[int]      = mapped_column(Integer, default=0) # Utile pour les métriques de back-office !
+    created_at:     Mapped[datetime] = mapped_column(DateTime,   nullable=False, default=utc_now_naive)
+    
+    user_id:        Mapped[str]      = mapped_column(String(36), ForeignKey("user.user_id"), nullable=False)
+    id_document:    Mapped[str]      = mapped_column(String(36), ForeignKey("document.id_document"), nullable=False)
 
     user:     Mapped[User]     = relationship("User",     back_populates="ias")
     document: Mapped[Document] = relationship("Document", back_populates="ias")
-
-class PasswordReset(Base):
-    __tablename__ = "password_reset"
-    
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda:str(uuid.uuid4()))
-    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("user.user_id"), nullable=False)
-    token_hash: Mapped[str] = mapped_column(String(512), nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    used: Mapped[bool] = mapped_column(default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now_naive)
 
 # ── Création des tables ──────────────────────────────────────────────────────
 Base.metadata.create_all(engine)
