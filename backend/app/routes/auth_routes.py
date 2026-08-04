@@ -8,11 +8,12 @@ from datetime import timedelta
 import os
 from app.services.auth_service import decode_access_token
 from utilitaires import utc_now_naive
-from app.extension import mail  
+from app.extension import mail, limiter
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 @auth_bp.route("/register", methods=["POST"])
+@limiter.limit("3 per hour")
 def register():
     data = request.get_json()
     requiered_fields = ["email", "mdp", "lastname", "firstname", "rgpd_consent"]
@@ -62,6 +63,7 @@ def register():
         }), 201
         
 @auth_bp.route("/login", methods= ["POST"])
+@limiter.limit("5 per minute")
 def login():
     data = request.get_json()
     if not data.get("email") or not data.get("mdp"):
@@ -149,6 +151,7 @@ def me():
 
 #==========================================RESET PASSWORD====================================================
 @auth_bp.route("/forgot-password", methods=["POST"])
+@limiter.limit("3 per hour")
 def forgot_password():
     data = request.get_json()
     email = data.get("email")

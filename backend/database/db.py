@@ -66,6 +66,7 @@ class UserSession(Base):
     id_session:        Mapped[str]      = mapped_column(String(36),  primary_key=True, default=gen_uuid)
     refresh_token:     Mapped[str]      = mapped_column(String(512), nullable=False, unique=True)
     refresh_token_exp: Mapped[datetime] = mapped_column(DateTime,    nullable=False)
+    revoke: Mapped[bool] = mapped_column(Boolean, nullable= False, default=False)
     created_at:        Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive)
     user_id:           Mapped[str]      = mapped_column(String(36),  ForeignKey("user.user_id"), nullable=False)
 
