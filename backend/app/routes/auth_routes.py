@@ -65,8 +65,6 @@ def register():
 def login():
     data = request.get_json()
     if not data.get("email") or not data.get("mdp"):
-        print("RAW:", repr(request.data))
-        print("PARSED:", data)
         return jsonify({"error" : "Email ou mot de passe requis"}), 400
     email = data["email"]
     plain_password = data["mdp"]
@@ -213,6 +211,11 @@ def reset_password():
 
         user.mdp_hash = hash_password(new_password)
         reset_entry.used = True
+        stmt_session = select(UserSession).where(UserSession.user_id == user.user_id)
+        sessions = db_session.execute(stmt_session).scalars().all()
+        for session in sessions: 
+            db_session.delete(session)
+        
         db_session.commit()
 
         return jsonify({"message": "Mot de passe réinitialisé avec succès"}), 200
