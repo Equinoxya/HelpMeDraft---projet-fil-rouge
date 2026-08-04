@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from database.db import SessionLocal, User, UserSession, Consentement, PasswordReset
-from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session, verify_refresh_token, generate_reset_token, is_password_valid, hash_reset_token, is_reset_token_expired, is_password_valid
+from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session, rotate_refresh_token, generate_reset_token, is_password_valid, hash_reset_token, is_reset_token_expired, is_password_valid
 from app.services.email_service import send_reset_password_email
 from sqlalchemy import select
 from functools import wraps
@@ -96,13 +96,21 @@ def refresh():
     if not token:
         return jsonify({"error": "Aucun token"}), 401
 
-    session = verify_refresh_token(token)
-    if not session:
-        return jsonify({"error": "Session invalide"}), 401
-
-    new_access_token = generate_access_token(session)  # pas session.user_id
-
-    return jsonify({"access_token": new_access_token}), 200
+    try:
+        user_id, new_refresh_token = rotate_refresh_token(token)
+    except ValueError as e:
+        response = jsonify({'error': str(e)})
+        response.delete_cookie('refresh_token', path ='/auth')
+        return response, 401
+    new_access_token = generate_access_token(user_id)
+    
+    response= jsonify({'access_token' : new_access_token})
+    response.set_cookie(
+        "refresh_token", new_refresh_token,
+        httponly=True, secure=False, samesite="Lax",
+        max_age=60*60+24*30, path="/auth"
+    )
+    return response, 200
         
 @auth_bp.route("/logout", methods=['POST'])
 def logout():

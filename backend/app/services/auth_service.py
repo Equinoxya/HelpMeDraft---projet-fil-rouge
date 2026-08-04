@@ -89,7 +89,50 @@ def verify_refresh_token(refresh_token: str) -> str:
             raise ValueError("Refresh token expiré")
         return session.user_id
     
-    
+def revoke_all_user_sessions(user_id: str, db_session) -> None:
+    stmt = select(UserSession).where(UserSession.user_id == user_id)
+    sessions = db_session.execute(stmt).scalars().all()
+    for session in sessions:
+        db_session.delete(session)
+
+
+def rotate_refresh_token(old_refresh_token: str) -> tuple[str, str]:
+    """
+    Vérifie le refresh token présenté, applique la rotation, et détecte
+    une éventuelle réutilisation frauduleuse.
+    Retourne (user_id, nouveau_refresh_token).
+    Lève ValueError si le token est invalide, expiré, ou réutilisé.
+    """
+    with SessionLocal() as db_session:
+        stmt = select(UserSession).where(UserSession.refresh_token == old_refresh_token)
+        session = db_session.execute(stmt).scalar_one_or_none()
+
+        if session is None:
+            raise ValueError("Refresh token invalide")
+
+        if session.revoked:
+            revoke_all_user_sessions(session.user_id, db_session)
+            db_session.commit()
+            raise ValueError("Réutilisation détectée : toutes les sessions ont été révoquées")
+
+        if session.refresh_token_exp < utc_now_naive():
+            db_session.delete(session)
+            db_session.commit()
+            raise ValueError("Refresh token expiré")
+
+        session.revoked = True
+
+        new_refresh_token = generate_refresh_token()
+        new_session = UserSession(
+            user_id=session.user_id,
+            refresh_token=new_refresh_token,
+            refresh_token_exp=utc_now_naive() + datetime.timedelta(days=REFRESH_TOKEN_EXPIRES_DAYS),
+        )
+        db_session.add(new_session)
+        db_session.commit()
+
+        return session.user_id, new_refresh_token
+
 def generate_reset_token() -> tuple[str,str]:
     plain_token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(plain_token.encode()).hexdigest()
