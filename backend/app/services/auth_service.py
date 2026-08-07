@@ -110,7 +110,7 @@ def rotate_refresh_token(old_refresh_token: str) -> tuple[str, str]:
         if session is None:
             raise ValueError("Refresh token invalide")
 
-        if session.revoked:
+        if session.revoke:
             revoke_all_user_sessions(session.user_id, db_session)
             db_session.commit()
             raise ValueError("Réutilisation détectée : toutes les sessions ont été révoquées")
@@ -120,7 +120,7 @@ def rotate_refresh_token(old_refresh_token: str) -> tuple[str, str]:
             db_session.commit()
             raise ValueError("Refresh token expiré")
 
-        session.revoked = True
+        session.revoke = True
 
         new_refresh_token = generate_refresh_token()
         new_session = UserSession(

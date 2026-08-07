@@ -3,7 +3,7 @@ import { useAuthStore } from "../stores/auth";
 import router from "../index.ts";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/auth", // adapte à ton URL backend
+  baseURL: "http://localhost:5000/", // adapte à ton URL backend
   withCredentials: true, // essentiel pour envoyer le cookie httpOnly
 });
 
