@@ -54,6 +54,12 @@ const router = createRouter({
       name: "Confidentialite",
       component: () => import("./views/ConfidentialiteView.vue"),
     },
+    {
+      path: "/documents",
+      name: "documents-list",
+      component: () => import("./views/DocumentsListView.vue"),
+      meta: { requiresAuth: true },
+    },
   ],
   scrollBehavior() {
     // Remonte en haut de page quand on clique sur un lien du footer
