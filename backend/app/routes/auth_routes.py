@@ -108,7 +108,7 @@ def refresh():
     response.set_cookie(
         "refresh_token", new_refresh_token,
         httponly=True, secure=False, samesite="Lax",
-        max_age=60*60+24*30, path="/auth"
+        max_age=60*60*24*30, path="/auth"
     )
     return response, 200
         
