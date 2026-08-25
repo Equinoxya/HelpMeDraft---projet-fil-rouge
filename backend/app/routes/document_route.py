@@ -11,10 +11,16 @@ DEFAULT_PER_PAGE = 20
 
 
 @document_bp.before_request
-@token_required
 def require_auth():
-    # token_required place request.user_id ; pas de retour = on continue
-    pass
+    # Un préflight CORS (OPTIONS) n'envoie jamais le header Authorization :
+    # on le laisse passer sans vérifier le token, sinon Flask n'a jamais
+    # l'occasion de générer sa réponse OPTIONS automatique et le navigateur
+    # bloque la requête réelle qui suit (erreur "preflight ... HTTP ok status").
+    # Aucune donnée n'est exposée par une réponse OPTIONS : c'est sans risque.
+    if request.method == "OPTIONS":
+        return None
+
+    return token_required(lambda: None)()
 
 
 def _dossier_belongs_to_user(db_session, id_dossier: str, user_id: str) -> bool:

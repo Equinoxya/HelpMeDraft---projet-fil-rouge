@@ -60,6 +60,18 @@ const router = createRouter({
       component: () => import("./views/DocumentsListView.vue"),
       meta: { requiresAuth: true },
     },
+    {
+      path: "/documents/nouveau",
+      name: "document-new",
+      component: () => import("./views/DocumentEditorView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/documents/:id",
+      name: "document-edit",
+      component: () => import("./views/DocumentEditorView.vue"),
+      meta: { requiresAuth: true },
+    },
   ],
   scrollBehavior() {
     // Remonte en haut de page quand on clique sur un lien du footer
