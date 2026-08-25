@@ -4,7 +4,7 @@ from datetime import datetime
 import uuid
 from sqlalchemy import (
     Boolean, DateTime, ForeignKey,
-    Integer, String, Text, create_engine, func
+    Integer, String, Text, create_engine, event, func
 )
 from sqlalchemy.orm import (
     DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
@@ -13,6 +13,21 @@ from utilitaires import utc_now_naive
 
 DB_PATH = Path("HelpMeDraft.db")
 engine = create_engine(f'sqlite:///{DB_PATH}', echo=False)
+
+
+@event.listens_for(engine, "connect")
+def _enable_sqlite_foreign_keys(dbapi_connection, connection_record):
+    # SQLite n'applique PAS les contraintes de clé étrangère par défaut
+    # (contrairement à MySQL/InnoDB, cible de la migration prod KAN-86).
+    # Sans ce PRAGMA, le ondelete="SET NULL" déclaré sur
+    # Document.id_dossier ne serait jamais exécuté par SQLite : supprimer
+    # un dossier laisserait des documents avec un id_dossier pointant vers
+    # une ligne inexistante au lieu de repasser proprement à NULL.
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 def gen_uuid() -> str:
@@ -92,6 +107,7 @@ class Document(Base):
     titre:       Mapped[str]      = mapped_column(String(255), nullable=False)
     content:     Mapped[str]      = mapped_column(Text,        nullable=True)
     format:      Mapped[str]      = mapped_column(String(20),  default="markdown") # ex: 'markdown', 'wysiwyg'
+    status:      Mapped[str]      = mapped_column(String(20),  nullable=False, default="brouillon") # 'brouillon', 'a_relire', 'termine'
     created_at:  Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive)
     updated_at:  Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive, onupdate=utc_now_naive)
     
