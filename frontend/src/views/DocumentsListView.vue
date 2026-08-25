@@ -81,9 +81,6 @@ async function handleDelete(document: DocumentItem) {
   try {
     await documentService.remove(document.id_document);
 
-    // Décrément intelligent : si on supprime le dernier document d'une page
-    // (hors première page), on recule d'une page plutôt que d'afficher une
-    // page vide.
     if (items.value.length === 1 && page.value > 1) {
       page.value -= 1;
     }
@@ -100,116 +97,172 @@ onMounted(fetchDocuments);
 </script>
 
 <template>
-  <main class="documents-page">
-    <div class="documents-shell">
-      <!-- En-tête -->
-      <section class="page-header">
+  <div
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+  >
+    <!-- MAIN CONTENT -->
+    <main
+      class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16"
+    >
+      <!-- EN-TÊTE PAGE -->
+      <section
+        class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10 pb-6 border-b border-[#111111]/20"
+      >
         <div>
-          <p class="page-eyebrow">Espace personnel</p>
-          <h1>Mes documents</h1>
+          <span
+            class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+          >
+            [ Espace Personnel ]
+          </span>
+          <h1
+            class="text-3xl sm:text-5xl font-black uppercase tracking-tight text-[#111111]"
+          >
+            Mes documents
+          </h1>
         </div>
 
-        <RouterLink to="/documents/nouveau" class="primary-action">
+        <RouterLink
+          to="/documents/nouveau"
+          class="inline-flex items-center justify-center gap-2 h-12 px-6 bg-[#111111] hover:bg-[#E0533C] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest transition-colors shadow-[4px_4px_0px_0px_rgba(224,83,60,1)] hover:shadow-none border border-[#111111]"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            aria-hidden="true"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-            <path
-              d="M12 5v14M5 12h14"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            />
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
           Nouveau document
         </RouterLink>
       </section>
 
-      <!-- Panneau liste -->
-      <section class="documents-panel">
-        <div class="documents-toolbar">
-          <label class="search-field">
+      <!-- PANNEAU PRINCIPAL AVEC OMBRE NÉO-BRUTALISTE -->
+      <section
+        class="bg-[#FAF8F5] border-2 border-[#111111] shadow-[8px_8px_0px_0px_rgba(17,17,17,1)]"
+      >
+        <!-- BARRE D'OUTILS ET RECHERCHE -->
+        <div
+          class="p-4 sm:p-6 border-b border-[#111111]/20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-[#F4F1EA]/50"
+        >
+          <label class="relative flex-1 max-w-md flex items-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
+              class="w-4 h-4 absolute left-3.5 text-[#111111]/50 pointer-events-none"
               fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
-              aria-hidden="true"
+              stroke-width="2"
             >
-              <circle cx="11" cy="11" r="7" stroke-width="1.8" />
-              <path
-                d="m20 20-3.5-3.5"
-                stroke-linecap="round"
-                stroke-width="1.8"
-              />
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-
             <input
               v-model="searchQuery"
               type="search"
-              placeholder="Rechercher dans cette page"
+              placeholder="Rechercher dans cette page..."
               aria-label="Rechercher un document"
+              class="w-full h-11 pl-10 pr-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
             />
           </label>
 
-          <p class="results-count">
+          <p
+            class="font-mono text-xs uppercase text-[#111111]/70 self-end sm:self-center"
+          >
             {{ filteredItems.length }} / {{ total }} document(s)
           </p>
         </div>
 
-        <div v-if="errorMessage" class="alert-error" role="alert">
-          {{ errorMessage }}
+        <!-- ALERTE ERREUR -->
+        <div
+          v-if="errorMessage"
+          class="p-4 border-b border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold flex items-center gap-2"
+          role="alert"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <span>{{ errorMessage }}</span>
         </div>
 
-        <div v-if="isLoading" class="loading-state">
+        <!-- ÉTAT DE CHARGEMENT -->
+        <div
+          v-if="isLoading"
+          class="p-12 text-center font-mono text-xs uppercase tracking-widest text-[#111111]/60 flex flex-col items-center gap-3"
+        >
+          <span
+            class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#E0533C] rounded-full animate-spin"
+          ></span>
           Chargement de vos documents…
         </div>
 
         <template v-else>
-          <div v-if="filteredItems.length" class="documents-list">
+          <!-- LISTE DES DOCUMENTS -->
+          <div v-if="filteredItems.length" class="divide-y divide-[#111111]/10">
             <div
               v-for="document in filteredItems"
               :key="document.id_document"
-              class="document-row"
+              class="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 hover:bg-[#F4F1EA] transition-colors"
             >
               <RouterLink
                 :to="`/documents/${document.id_document}`"
-                class="document-link"
+                class="flex items-start gap-4 flex-1 w-full sm:w-auto mb-4 sm:mb-0"
               >
-                <div class="document-icon">
+                <div
+                  class="w-10 h-10 border border-[#111111] bg-[#FAF8F5] group-hover:bg-[#E0533C] group-hover:text-[#F4F1EA] flex items-center justify-center shrink-0 transition-colors"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
+                    class="w-5 h-5"
                     fill="none"
+                    viewBox="0 0 24 24"
                     stroke="currentColor"
-                    aria-hidden="true"
+                    stroke-width="1.8"
                   >
                     <path
-                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"
                       stroke-linecap="round"
                       stroke-linejoin="round"
-                      stroke-width="1.8"
+                      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"
                     />
                     <path
-                      d="M14 2v6h6"
                       stroke-linecap="round"
                       stroke-linejoin="round"
-                      stroke-width="1.8"
+                      d="M14 2v6h6"
                     />
                   </svg>
                 </div>
 
-                <div class="document-main">
-                  <h3>{{ document.titre }}</h3>
-
-                  <div class="document-meta">
-                    <span>{{
-                      formatLabels[document.format] ?? document.format
-                    }}</span>
-                    <span aria-hidden="true">·</span>
+                <div class="space-y-1">
+                  <h3
+                    class="font-bold text-base sm:text-lg text-[#111111] group-hover:text-[#E0533C] transition-colors"
+                  >
+                    {{ document.titre }}
+                  </h3>
+                  <div
+                    class="font-mono text-xs text-[#111111]/60 flex flex-wrap items-center gap-2"
+                  >
+                    <span
+                      class="uppercase tracking-wider font-semibold text-[#111111]/80"
+                    >
+                      [{{ formatLabels[document.format] ?? document.format }}]
+                    </span>
+                    <span>·</span>
                     <span
                       >Modifié le {{ formatDate(document.updated_at) }}</span
                     >
@@ -217,10 +270,11 @@ onMounted(fetchDocuments);
                 </div>
               </RouterLink>
 
+              <!-- BOUTON SUPPRIMER -->
               <button
                 type="button"
-                class="delete-button"
                 :disabled="deletingId === document.id_document"
+                class="self-end sm:self-center font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[#E0533C] text-[#E0533C] hover:bg-[#E0533C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors shrink-0"
                 @click="handleDelete(document)"
               >
                 {{
@@ -232,8 +286,9 @@ onMounted(fetchDocuments);
             </div>
           </div>
 
-          <div v-else class="empty-state">
-            <p class="empty-title">
+          <!-- ÉTAT VIDE -->
+          <div v-else class="p-12 text-center space-y-4">
+            <p class="font-serif text-lg text-[#111111]/80">
               {{
                 searchQuery
                   ? "Aucun document ne correspond à cette recherche."
@@ -243,30 +298,34 @@ onMounted(fetchDocuments);
             <RouterLink
               v-if="!searchQuery"
               to="/documents/nouveau"
-              class="empty-action"
+              class="inline-block font-mono text-xs uppercase tracking-widest text-[#E0533C] hover:underline underline-offset-4 font-bold"
             >
               Créer votre premier document →
             </RouterLink>
           </div>
 
-          <div v-if="totalPages > 1" class="pagination">
+          <!-- PAGINATION -->
+          <div
+            v-if="totalPages > 1"
+            class="p-4 sm:p-6 border-t border-[#111111]/20 flex items-center justify-between bg-[#F4F1EA]/50"
+          >
             <button
               type="button"
-              class="page-button"
               :disabled="page === 1"
+              class="font-mono text-xs uppercase tracking-wider border border-[#111111] px-4 py-2 hover:bg-[#111111] hover:text-[#F4F1EA] disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#111111] transition-colors"
               @click="goToPage(page - 1)"
             >
               ← Précédent
             </button>
 
-            <span class="page-indicator">
+            <span class="font-mono text-xs uppercase text-[#111111]/70">
               Page {{ page }} / {{ totalPages }}
             </span>
 
             <button
               type="button"
-              class="page-button"
               :disabled="page === totalPages"
+              class="font-mono text-xs uppercase tracking-wider border border-[#111111] px-4 py-2 hover:bg-[#111111] hover:text-[#F4F1EA] disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#111111] transition-colors"
               @click="goToPage(page + 1)"
             >
               Suivant →
@@ -274,370 +333,6 @@ onMounted(fetchDocuments);
           </div>
         </template>
       </section>
-    </div>
-  </main>
+    </main>
+  </div>
 </template>
-
-<style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
-
-.documents-page {
-  min-height: calc(100vh - 72px);
-  padding: 4rem max(1.5rem, calc((100vw - 1100px) / 2)) 6rem;
-  background:
-    radial-gradient(
-      circle at 10% 5%,
-      rgba(76, 122, 115, 0.2),
-      transparent 25rem
-    ),
-    #16233a;
-  color: #efeae0;
-  font-family: "Inter", sans-serif;
-}
-
-.documents-shell {
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.page-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 2.5rem;
-}
-
-.page-eyebrow {
-  margin: 0 0 0.75rem;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #c9a227;
-}
-
-.page-header h1 {
-  margin: 0;
-  font-family: "Fraunces", serif;
-  font-size: clamp(2.2rem, 5vw, 3.4rem);
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.primary-action {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  gap: 0.7rem;
-  min-height: 3.1rem;
-  padding: 0 1.3rem;
-  border: 1px solid #c9a227;
-  border-radius: 5px;
-  background: #c9a227;
-  color: #16233a;
-  font-size: 0.86rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition:
-    background-color 180ms ease,
-    color 180ms ease,
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.primary-action svg {
-  width: 18px;
-  height: 18px;
-}
-
-.primary-action:hover {
-  background: #efeae0;
-  box-shadow: 0 14px 30px rgba(5, 12, 24, 0.25);
-  transform: translateY(-2px);
-}
-
-.documents-panel {
-  overflow: hidden;
-  border: 1px solid rgba(22, 35, 58, 0.12);
-  border-radius: 8px;
-  background: #efeae0;
-  color: #16233a;
-  box-shadow: 0 30px 70px rgba(5, 12, 24, 0.2);
-}
-
-.documents-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(22, 35, 58, 0.1);
-}
-
-.results-count {
-  margin: 0;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.66rem;
-  color: rgba(22, 35, 58, 0.45);
-  white-space: nowrap;
-}
-
-.search-field {
-  display: flex;
-  align-items: center;
-  width: min(100%, 360px);
-  padding: 0 0.9rem;
-  border: 1px solid rgba(22, 35, 58, 0.16);
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.4);
-}
-
-.search-field:focus-within {
-  border-color: #4c7a73;
-  box-shadow: 0 0 0 3px rgba(76, 122, 115, 0.12);
-}
-
-.search-field svg {
-  width: 18px;
-  height: 18px;
-  color: rgba(22, 35, 58, 0.42);
-  flex-shrink: 0;
-}
-
-.search-field input {
-  width: 100%;
-  height: 2.8rem;
-  padding: 0 0.7rem;
-  border: none;
-  outline: none;
-  background: transparent;
-  font: inherit;
-  color: #16233a;
-}
-
-.search-field input::placeholder {
-  color: rgba(22, 35, 58, 0.38);
-}
-
-.alert-error {
-  margin: 1.25rem 1.5rem 0;
-  padding: 0.85rem 1rem;
-  border-left: 3px solid #d97757;
-  background: rgba(217, 119, 87, 0.1);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.75rem;
-  color: #983f29;
-}
-
-.loading-state {
-  padding: 4rem 1.5rem;
-  text-align: center;
-  color: rgba(22, 35, 58, 0.55);
-  font-size: 0.9rem;
-}
-
-.documents-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.document-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  border-bottom: 1px solid rgba(22, 35, 58, 0.08);
-}
-
-.document-row:last-child {
-  border-bottom: none;
-}
-
-.document-link {
-  display: grid;
-  flex: 1;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 1rem;
-  min-height: 92px;
-  padding: 1.2rem 0 1.2rem 1.5rem;
-  color: #16233a;
-  text-decoration: none;
-  transition: background-color 160ms ease;
-}
-
-.document-row:hover .document-link {
-  background: rgba(76, 122, 115, 0.07);
-}
-
-.document-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 5px;
-  background: rgba(22, 35, 58, 0.07);
-  color: #4c7a73;
-}
-
-.document-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.document-main h3 {
-  margin: 0;
-  font-family: "Fraunces", serif;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.document-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 0.35rem;
-  font-size: 0.72rem;
-  color: rgba(22, 35, 58, 0.48);
-}
-
-.delete-button {
-  flex: 0 0 auto;
-  margin-right: 1.5rem;
-  padding: 0.55rem 0.9rem;
-  border: 1px solid rgba(217, 119, 87, 0.4);
-  border-radius: 5px;
-  background: transparent;
-  color: #a34d37;
-  font-family: "Inter", sans-serif;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease;
-}
-
-.delete-button:hover:not(:disabled) {
-  background: rgba(217, 119, 87, 0.11);
-  border-color: #d97757;
-}
-
-.delete-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.empty-state {
-  padding: 4rem 1.5rem;
-  text-align: center;
-}
-
-.empty-title {
-  margin: 0 0 1rem;
-  font-family: "Fraunces", serif;
-  font-size: 1.35rem;
-  color: #16233a;
-}
-
-.empty-action {
-  color: #4c7a73;
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.empty-action:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  padding: 1.25rem 1.5rem;
-  border-top: 1px solid rgba(22, 35, 58, 0.1);
-}
-
-.page-button {
-  padding: 0.55rem 1rem;
-  border: 1px solid rgba(22, 35, 58, 0.2);
-  border-radius: 5px;
-  background: transparent;
-  color: #16233a;
-  font-family: "Inter", sans-serif;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 160ms ease;
-}
-
-.page-button:hover:not(:disabled) {
-  background: rgba(76, 122, 115, 0.1);
-}
-
-.page-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.page-indicator {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.72rem;
-  color: rgba(22, 35, 58, 0.55);
-}
-
-@media (max-width: 640px) {
-  .documents-page {
-    padding: 2.8rem 1rem 4rem;
-  }
-
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.25rem;
-  }
-
-  .primary-action {
-    width: 100%;
-  }
-
-  .documents-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .search-field {
-    width: 100%;
-  }
-
-  .document-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .document-link {
-    padding: 1.2rem 1.5rem;
-  }
-
-  .delete-button {
-    margin: 0 1.5rem 1.2rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .primary-action,
-  .document-link,
-  .delete-button,
-  .page-button {
-    transition: none;
-  }
-}
-</style>

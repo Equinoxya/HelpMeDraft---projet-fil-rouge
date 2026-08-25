@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
+import axios from "axios";
 import authService from "../services/authService";
 
 const email = ref("");
@@ -9,6 +10,9 @@ const confirmMdp = ref("");
 const firstname = ref("");
 const lastname = ref("");
 const rgpdConsent = ref(false);
+
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
 
 const router = useRouter();
 const errorMessage = ref<string | null>(null);
@@ -20,10 +24,10 @@ async function handleSubmit() {
 
   try {
     await authService.register({
-      email: email.value,
+      email: email.value.trim(),
       mdp: mdp.value,
-      firstname: firstname.value,
-      lastname: lastname.value,
+      firstname: firstname.value.trim(),
+      lastname: lastname.value.trim(),
       rgpd_consent: rgpdConsent.value,
     });
 
@@ -31,14 +35,18 @@ async function handleSubmit() {
       name: "login",
       query: { registered: "true" },
     });
-  } catch (err: any) {
-    if (err.response?.status === 409) {
-      errorMessage.value = "Cet email est déjà utilisé.";
-    } else if (err.response?.status === 400) {
-      errorMessage.value =
-        err.response.data.error ?? "Vérifiez les champs du formulaire.";
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      if (err.response?.status === 409) {
+        errorMessage.value = "Cet email est déjà utilisé.";
+      } else if (err.response?.status === 400) {
+        errorMessage.value =
+          err.response.data?.error ?? "Vérifiez les champs du formulaire.";
+      } else {
+        errorMessage.value = "Une erreur est survenue. Réessayez plus tard.";
+      }
     } else {
-      errorMessage.value = "Une erreur est survenue. Réessayez plus tard.";
+      errorMessage.value = "Une erreur inattendue est survenue.";
     }
   } finally {
     isSubmitting.value = false;
@@ -54,9 +62,7 @@ const mdpRules = computed(() => ({
   digit: /[0-9]/.test(mdp.value),
 }));
 
-const mdpValid = computed(() =>
-  Object.values(mdpRules.value).every((rule) => rule === true),
-);
+const mdpValid = computed(() => Object.values(mdpRules.value).every(Boolean));
 
 const isFormValid = computed(
   () =>
@@ -65,526 +71,300 @@ const isFormValid = computed(
     lastname.value.trim() !== "" &&
     mdpValid.value &&
     mdpsMatch.value &&
-    rgpdConsent.value === true,
+    rgpdConsent.value,
 );
 </script>
 
 <template>
-  <main class="register-shell">
-    <div class="register-aura">
-      <section class="register-card">
-        <div class="register-heading">
-          <p class="register-eyebrow">Création de compte</p>
-          <h1>Inscription</h1>
-          <p>
-            Créez votre espace HelpMeDraft et commencez à rédiger vos documents.
+  <div
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+  >
+    <!-- FORM SECTION -->
+    <main class="flex-1 flex items-center justify-center px-4 py-12 lg:py-20">
+      <div
+        class="w-full max-w-xl bg-[#FAF8F5] border-2 border-[#111111] p-6 sm:p-10 shadow-[8px_8px_0px_0px_rgba(17,17,17,1)]"
+      >
+        <div class="border-b border-[#111111]/20 pb-6 mb-8">
+          <span
+            class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+          >
+            [ Inscription Studio ]
+          </span>
+          <h1
+            class="text-3xl sm:text-4xl font-black uppercase tracking-tight text-[#111111]"
+          >
+            Créer un compte
+          </h1>
+          <p class="font-serif text-[#111111]/70 text-base mt-2">
+            Accédez à votre espace pour structurer vos premiers actes.
           </p>
         </div>
 
-        <p v-if="errorMessage" class="error-message">
-          {{ errorMessage }}
-        </p>
+        <div
+          v-if="errorMessage"
+          class="mb-6 p-4 border border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold"
+          role="alert"
+        >
+          ANNULATION : {{ errorMessage }}
+        </div>
 
-        <form class="register-form" @submit.prevent="handleSubmit">
-          <div class="form-group">
-            <label for="firstname">Prénom</label>
+        <form class="space-y-6" @submit.prevent="handleSubmit">
+          <!-- Nom & Prénom -->
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label
+                for="firstname"
+                class="block font-mono text-xs uppercase tracking-wider text-[#111111]"
+              >
+                Prénom
+              </label>
+              <input
+                id="firstname"
+                v-model="firstname"
+                type="text"
+                placeholder="Jean"
+                autocomplete="given-name"
+                required
+                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+              />
+            </div>
 
-            <input
-              id="firstname"
-              v-model="firstname"
-              type="text"
-              placeholder="Votre prénom"
-              autocomplete="given-name"
-              required
-            />
+            <div class="space-y-2">
+              <label
+                for="lastname"
+                class="block font-mono text-xs uppercase tracking-wider text-[#111111]"
+              >
+                Nom
+              </label>
+              <input
+                id="lastname"
+                v-model="lastname"
+                type="text"
+                placeholder="Dupont"
+                autocomplete="family-name"
+                required
+                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+              />
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="lastname">Nom</label>
-
-            <input
-              id="lastname"
-              v-model="lastname"
-              type="text"
-              placeholder="Votre nom"
-              autocomplete="family-name"
-              required
-            />
-          </div>
-
-          <div class="form-group form-group-full">
-            <label for="email">Adresse email</label>
-
+          <!-- Email -->
+          <div class="space-y-2">
+            <label
+              for="email"
+              class="block font-mono text-xs uppercase tracking-wider text-[#111111]"
+            >
+              Adresse email
+            </label>
             <input
               id="email"
               v-model="email"
               type="email"
-              placeholder="vous@exemple.fr"
+              placeholder="jean.dupont@exemple.fr"
               autocomplete="email"
               required
+              class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
             />
           </div>
 
-          <div class="form-group">
-            <label for="mdp">Mot de passe</label>
-
-            <input
-              id="mdp"
-              v-model="mdp"
-              type="password"
-              placeholder="Votre mot de passe"
-              autocomplete="new-password"
-              required
-            />
+          <!-- Mot de passe -->
+          <div class="space-y-2">
+            <label
+              for="mdp"
+              class="block font-mono text-xs uppercase tracking-wider text-[#111111]"
+            >
+              Mot de passe
+            </label>
+            <div class="relative flex items-center">
+              <input
+                id="mdp"
+                v-model="mdp"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                required
+                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+              />
+              <button
+                type="button"
+                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors focus:outline-none"
+                :aria-label="
+                  showPassword
+                    ? 'Masquer le mot de passe'
+                    : 'Afficher le mot de passe'
+                "
+                @click="showPassword = !showPassword"
+              >
+                <svg
+                  v-if="showPassword"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                  ></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
           </div>
 
-          <div class="password-panel">
-            <p>Votre mot de passe doit contenir :</p>
-
-            <ul class="password-rules">
-              <li :class="{ valid: mdpRules.length }">
-                <span>{{ mdpRules.length ? "✓" : "—" }}</span>
-                Au moins 8 caractères
+          <!-- Exigences Mot de passe -->
+          <div
+            class="border-l-2 border-[#E0533C] bg-[#111111]/5 p-4 font-mono text-xs"
+          >
+            <span class="font-bold text-[#E0533C] uppercase block mb-2"
+              >Exigences de sécurité :</span
+            >
+            <ul class="grid sm:grid-cols-2 gap-2 text-[#111111]/70">
+              <li :class="{ 'text-[#111111] font-bold': mdpRules.length }">
+                [{{ mdpRules.length ? "✓" : " " }}] 8 caractères min.
               </li>
-
-              <li :class="{ valid: mdpRules.uppercase }">
-                <span>{{ mdpRules.uppercase ? "✓" : "—" }}</span>
-                Une majuscule
+              <li :class="{ 'text-[#111111] font-bold': mdpRules.uppercase }">
+                [{{ mdpRules.uppercase ? "✓" : " " }}] Une majuscule
               </li>
-
-              <li :class="{ valid: mdpRules.lowercase }">
-                <span>{{ mdpRules.lowercase ? "✓" : "—" }}</span>
-                Une minuscule
+              <li :class="{ 'text-[#111111] font-bold': mdpRules.lowercase }">
+                [{{ mdpRules.lowercase ? "✓" : " " }}] Une minuscule
               </li>
-
-              <li :class="{ valid: mdpRules.digit }">
-                <span>{{ mdpRules.digit ? "✓" : "—" }}</span>
-                Un chiffre
+              <li :class="{ 'text-[#111111] font-bold': mdpRules.digit }">
+                [{{ mdpRules.digit ? "✓" : " " }}] Un chiffre
               </li>
             </ul>
           </div>
 
-          <div class="form-group form-group-full">
-            <label for="confirmMdp">Confirmer le mot de passe</label>
-
-            <input
-              id="confirmMdp"
-              v-model="confirmMdp"
-              type="password"
-              placeholder="Saisissez à nouveau le mot de passe"
-              autocomplete="new-password"
-              required
-              :class="{
-                'input-valid': confirmMdp && mdpsMatch,
-                'input-error': confirmMdp && !mdpsMatch,
-              }"
-            />
-
-            <p v-if="confirmMdp && !mdpsMatch" class="field-error">
+          <!-- Confirmation Mot de passe -->
+          <div class="space-y-2">
+            <label
+              for="confirmMdp"
+              class="block font-mono text-xs uppercase tracking-wider text-[#111111]"
+            >
+              Confirmer le mot de passe
+            </label>
+            <div class="relative flex items-center">
+              <input
+                id="confirmMdp"
+                v-model="confirmMdp"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                required
+                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                :class="
+                  confirmMdp && !mdpsMatch
+                    ? 'border-[#E0533C]'
+                    : 'border-[#111111]'
+                "
+              />
+              <button
+                type="button"
+                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors focus:outline-none"
+                :aria-label="
+                  showConfirmPassword
+                    ? 'Masquer la confirmation'
+                    : 'Afficher la confirmation'
+                "
+                @click="showConfirmPassword = !showConfirmPassword"
+              >
+                <svg
+                  v-if="showConfirmPassword"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                  ></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+            <p
+              v-if="confirmMdp && !mdpsMatch"
+              class="font-mono text-xs text-[#E0533C] mt-1"
+            >
               Les mots de passe ne correspondent pas.
             </p>
           </div>
 
-          <label class="rgpd-field form-group-full">
-            <input v-model="rgpdConsent" type="checkbox" required />
-
-            <span>
+          <!-- RGPD -->
+          <label class="flex items-start gap-3 cursor-pointer pt-2">
+            <input
+              v-model="rgpdConsent"
+              type="checkbox"
+              required
+              class="mt-1 h-4 w-4 rounded-none border-[#111111] accent-[#E0533C]"
+            />
+            <span class="font-serif text-sm text-[#111111]/80 leading-snug">
               J’accepte la politique de confidentialité et le traitement de mes
               données conformément au RGPD.
             </span>
           </label>
 
+          <!-- Bouton Submit -->
           <button
             type="submit"
-            class="submit-button form-group-full"
             :disabled="!isFormValid || isSubmitting"
+            class="w-full h-14 bg-[#111111] hover:bg-[#E0533C] disabled:bg-[#111111]/30 disabled:cursor-not-allowed text-[#F4F1EA] font-mono text-xs uppercase tracking-widest transition-colors border-none"
           >
-            {{ isSubmitting ? "Création du compte…" : "Créer mon compte" }}
+            {{ isSubmitting ? "Création en cours..." : "Créer mon compte" }}
           </button>
         </form>
 
-        <p class="login-link">
+        <p
+          class="mt-8 pt-6 border-t border-[#111111]/20 font-serif text-center text-sm text-[#111111]/70"
+        >
           Déjà un compte ?
-
-          <RouterLink :to="{ name: 'login' }"> Se connecter </RouterLink>
+          <RouterLink
+            :to="{ name: 'login' }"
+            class="font-sans font-bold text-[#111111] hover:text-[#E0533C] underline ml-1"
+          >
+            Se connecter
+          </RouterLink>
         </p>
-      </section>
-    </div>
-  </main>
+      </div>
+    </main>
+  </div>
 </template>
-
-<style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
-
-.register-shell {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100vh - 72px);
-  padding: 4rem 1.5rem;
-  overflow: hidden;
-  background:
-    radial-gradient(
-      circle at 15% 20%,
-      rgba(76, 122, 115, 0.24),
-      transparent 32%
-    ),
-    radial-gradient(
-      circle at 85% 80%,
-      rgba(201, 162, 39, 0.16),
-      transparent 30%
-    ),
-    #16233a;
-  font-family: "Inter", sans-serif;
-}
-
-.register-shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.18;
-  background-image:
-    linear-gradient(rgba(239, 234, 224, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(239, 234, 224, 0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-.register-aura {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 800px;
-}
-
-.register-aura::before {
-  content: "";
-  position: absolute;
-  inset: -70px;
-  z-index: -1;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(201, 162, 39, 0.14),
-    transparent 68%
-  );
-  filter: blur(25px);
-}
-
-.register-card {
-  position: relative;
-  width: 100%;
-  padding: 3rem;
-  overflow: hidden;
-  border: 1px solid rgba(239, 234, 224, 0.25);
-  border-radius: 10px;
-  background: #efeae0;
-  color: #16233a;
-  box-shadow:
-    0 35px 90px rgba(5, 12, 24, 0.46),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
-}
-
-.register-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 4px;
-  background: linear-gradient(
-    90deg,
-    #c9a227 0%,
-    #c9a227 58%,
-    #4c7a73 58%,
-    #4c7a73 100%
-  );
-}
-
-.register-heading {
-  max-width: 580px;
-  margin-bottom: 2.5rem;
-}
-
-.register-eyebrow {
-  margin: 0 0 0.9rem;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #4c7a73;
-}
-
-.register-heading h1 {
-  position: relative;
-  margin: 0 0 1.1rem;
-  padding-bottom: 1.2rem;
-  font-family: "Fraunces", serif;
-  font-size: clamp(2.6rem, 7vw, 3.6rem);
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.045em;
-  color: #16233a;
-}
-
-.register-heading h1::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 58px;
-  height: 3px;
-  background: #c9a227;
-}
-
-.register-heading > p:last-child {
-  margin: 0;
-  max-width: 520px;
-  font-size: 0.95rem;
-  line-height: 1.7;
-  color: rgba(22, 35, 58, 0.65);
-}
-
-.register-form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.4rem 1.5rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.form-group-full {
-  grid-column: 1 / -1;
-}
-
-.form-group label,
-.password-panel > p {
-  margin: 0;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(22, 35, 58, 0.72);
-}
-
-.form-group input {
-  width: 100%;
-  height: 3.25rem;
-  padding: 0 1rem;
-  border: 1px solid rgba(22, 35, 58, 0.2);
-  border-radius: 5px;
-  outline: none;
-  background: rgba(255, 255, 255, 0.5);
-  font: inherit;
-  color: #16233a;
-  transition:
-    border-color 180ms ease,
-    background-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
-}
-
-.form-group input::placeholder {
-  color: rgba(22, 35, 58, 0.36);
-}
-
-.form-group input:hover {
-  border-color: rgba(22, 35, 58, 0.4);
-  background: rgba(255, 255, 255, 0.68);
-}
-
-.form-group input:focus {
-  border-color: #4c7a73;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 0 0 3px rgba(76, 122, 115, 0.14);
-  transform: translateY(-1px);
-}
-
-.form-group input.input-valid {
-  border-color: #4c7a73;
-}
-
-.form-group input.input-error {
-  border-color: #d97757;
-}
-
-.password-panel {
-  align-self: end;
-  min-height: 3.25rem;
-  padding: 0.9rem 1rem;
-  border-left: 2px solid rgba(201, 162, 39, 0.75);
-  background: rgba(201, 162, 39, 0.08);
-}
-
-.password-panel > p {
-  margin-bottom: 0.6rem;
-  font-size: 0.6rem;
-}
-
-.password-rules {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.4rem 1rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.password-rules li {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.65rem;
-  line-height: 1.4;
-  color: rgba(22, 35, 58, 0.5);
-}
-
-.password-rules li span {
-  width: 1rem;
-  color: rgba(22, 35, 58, 0.35);
-}
-
-.password-rules li.valid {
-  color: #4c7a73;
-}
-
-.password-rules li.valid span {
-  color: #4c7a73;
-}
-
-.rgpd-field {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.2rem 0;
-  cursor: pointer;
-  font-size: 0.8rem;
-  line-height: 1.55;
-  color: rgba(22, 35, 58, 0.68);
-}
-
-.rgpd-field input {
-  flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
-  margin-top: 0.1rem;
-  accent-color: #4c7a73;
-  cursor: pointer;
-}
-
-.submit-button {
-  min-height: 3.35rem;
-  margin-top: 0.25rem;
-  border: 1px solid #16233a;
-  border-radius: 5px;
-  background: #16233a;
-  font-family: "Inter", sans-serif;
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: #efeae0;
-  cursor: pointer;
-  transition:
-    border-color 180ms ease,
-    background-color 180ms ease,
-    color 180ms ease,
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.submit-button:not(:disabled):hover {
-  border-color: #c9a227;
-  background: #c9a227;
-  color: #16233a;
-  box-shadow: 0 12px 28px rgba(201, 162, 39, 0.22);
-  transform: translateY(-2px);
-}
-
-.submit-button:disabled {
-  border-color: rgba(22, 35, 58, 0.15);
-  background: rgba(22, 35, 58, 0.16);
-  color: rgba(22, 35, 58, 0.42);
-  cursor: not-allowed;
-}
-
-.error-message,
-.field-error {
-  font-family: "JetBrains Mono", monospace;
-  color: #983f29;
-}
-
-.error-message {
-  margin: 0 0 1.75rem;
-  padding: 0.9rem 1rem;
-  border-left: 3px solid #d97757;
-  background: rgba(217, 119, 87, 0.1);
-  font-size: 0.72rem;
-}
-
-.field-error {
-  margin: 0;
-  font-size: 0.65rem;
-}
-
-.login-link {
-  margin: 1.8rem 0 0;
-  font-size: 0.84rem;
-  text-align: center;
-  color: rgba(22, 35, 58, 0.6);
-}
-
-.login-link a {
-  margin-left: 0.2rem;
-  font-weight: 600;
-  color: #4c7a73;
-  text-decoration: none;
-  text-underline-offset: 4px;
-}
-
-.login-link a:hover {
-  color: #16233a;
-  text-decoration: underline;
-  text-decoration-color: #c9a227;
-}
-
-@media (max-width: 700px) {
-  .register-shell {
-    align-items: flex-start;
-    padding: 2.5rem 1rem;
-  }
-
-  .register-card {
-    padding: 2.5rem 1.5rem;
-  }
-
-  .register-form {
-    grid-template-columns: 1fr;
-  }
-
-  .form-group,
-  .form-group-full,
-  .password-panel,
-  .submit-button,
-  .rgpd-field {
-    grid-column: 1;
-  }
-
-  .password-rules {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .form-group input,
-  .submit-button {
-    transition: none;
-  }
-}
-</style>
