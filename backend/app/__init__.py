@@ -3,6 +3,7 @@ from .config import Config
 from flask_cors import CORS
 from .routes.auth_routes import auth_bp
 from .routes.document_route import document_bp
+from .routes.dossier_route import dossier_bp
 from app.extension import mail, limiter
 
 def create_app():
@@ -13,6 +14,7 @@ def create_app():
     limiter.init_app(app)
     app.register_blueprint(auth_bp)
     app.register_blueprint(document_bp)
+    app.register_blueprint(dossier_bp)
     
     @app.errorhandler(429)
     def ratelimit_handler(e):

@@ -10,6 +10,8 @@ import {
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import documentService from "../services/documentService";
 import type { DocumentStatus } from "../types/document";
+import dossierService from "../services/dossierService";
+import type { DossierItem } from "../types/dossier";
 
 const route = useRoute();
 const router = useRouter();
@@ -21,6 +23,8 @@ const isEditMode = computed(() => documentId.value !== null);
 
 const titre = ref("");
 const status = ref<DocumentStatus>("brouillon");
+const idDossier = ref<string>("");
+const dossiers = ref<DossierItem[]>([]);
 const editorRef = ref<HTMLDivElement | null>(null);
 
 const isLoading = ref(false);
@@ -54,6 +58,7 @@ async function loadDocument(id: string) {
     const document = await documentService.get(id);
     titre.value = document.titre;
     status.value = document.status;
+    idDossier.value = document.id_dossier ?? "";
 
     isLoading.value = false;
     await nextTick();
@@ -77,6 +82,12 @@ onMounted(() => {
   if (documentId.value) {
     loadDocument(documentId.value);
   }
+  dossierService
+    .list()
+    .then((list) => {
+      dossiers.value = list;
+    })
+    .catch(() => {});
   document.addEventListener("selectionchange", updateActiveFormats);
 });
 
@@ -127,6 +138,7 @@ function buildPayload() {
     content: editorRef.value?.innerHTML ?? "",
     format: "wysiwyg" as const,
     status: status.value,
+    id_dossier: idDossier.value || undefined,
   };
 }
 
@@ -168,6 +180,7 @@ function handleEditorInput() {
 
 watch(titre, scheduleAutoSave);
 watch(status, scheduleAutoSave);
+watch(idDossier, scheduleAutoSave);
 
 async function handleSave() {
   errorMessage.value = "";
@@ -353,6 +366,28 @@ function handleCancel() {
                 <option value="brouillon">Brouillon</option>
                 <option value="a_relire">À relire</option>
                 <option value="termine">Terminé</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <label
+                for="dossier"
+                class="font-mono text-xs uppercase tracking-wider text-[#111111] font-bold block"
+              >
+                Dossier
+              </label>
+              <select
+                id="dossier"
+                v-model="idDossier"
+                class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+              >
+                <option value="">Aucun dossier</option>
+                <option
+                  v-for="d in dossiers"
+                  :key="d.id_dossier"
+                  :value="d.id_dossier"
+                >
+                  {{ d.name }}
+                </option>
               </select>
             </div>
           </div>
