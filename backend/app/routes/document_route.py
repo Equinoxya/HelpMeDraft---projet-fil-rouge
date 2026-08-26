@@ -6,6 +6,7 @@ from app.routes.auth_routes import token_required
 document_bp = Blueprint("documents", __name__, url_prefix="/documents")
 
 ALLOWED_FORMATS = {"markdown", "wysiwyg"}
+ALLOWED_STATUSES = {"brouillon", "a_relire", "termine"}
 MAX_PER_PAGE = 50
 DEFAULT_PER_PAGE = 20
 
@@ -37,6 +38,7 @@ def _serialize_document(document: Document) -> dict:
         "titre": document.titre,
         "content": document.content,
         "format": document.format,
+        "status": document.status,
         "id_dossier": document.id_dossier,
         "created_at": document.created_at.isoformat(),
         "updated_at": document.updated_at.isoformat(),
@@ -48,7 +50,7 @@ def _validate_document_fields(data: dict, partial: bool = False):
     Valide les champs titre/content/format/id_dossier d'un payload.
     - partial=False (création) : titre requis, tous les champs retournés avec défauts.
     - partial=True (mise à jour) : seuls les champs présents dans `data` sont validés
-      et retournés ; les absents ne sont pas touchés par l'appelant.
+    et retournés ; les absents ne sont pas touchés par l'appelant.
 
     Retourne (champs_valides: dict, erreur: None) ou (None, (réponse_json, code_http)).
     """
@@ -74,6 +76,12 @@ def _validate_document_fields(data: dict, partial: bool = False):
         if doc_format not in ALLOWED_FORMATS:
             return None, (jsonify({"error": f"Le format doit être l'un de : {', '.join(sorted(ALLOWED_FORMATS))}"}), 400)
         fields["format"] = doc_format
+    
+    if not partial or "status" in data:
+        status = data.get("status", "brouillon")
+        if status not in ALLOWED_STATUSES:
+            return None, (jsonify({"error": f"Le statut doit être l'un de : {', '.join(sorted(ALLOWED_STATUSES))}"}), 400)
+        fields["status"] = status
 
     if not partial or "id_dossier" in data:
         id_dossier = data.get("id_dossier")
@@ -101,6 +109,7 @@ def create_document():
             titre=fields["titre"],
             content=fields["content"],
             format=fields["format"],
+            status=fields["status"],
             id_dossier=fields["id_dossier"],
             user_id=request.user_id,
         )
@@ -207,4 +216,23 @@ def delete_document(id_document):
         db_session.delete(document)
         db_session.commit()
 
-        return "", 204
+        return "", 
+    
+@document_bp.route("/stats", methods=["GET"])
+def document_stats():
+    with SessionLocal() as db_session:
+        stmt = (
+            select(Document.status, func.count())
+            .where(Document.user_id == request.user_id)
+            .group_by(Document.status)
+        )
+        rows = db_session.execute(stmt).all()
+
+        counts = {status: 0 for status in ALLOWED_STATUSES}
+        for status, count in rows:
+            counts[status] = count
+
+        return jsonify({
+            "total": sum(counts.values()),
+            **counts,
+        }), 200

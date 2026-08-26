@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { RouterLink } from "vue-router";
 import documentService from "../services/documentService";
 import type { DocumentItem } from "../types/document";
-
+import { statusLabels, getStatusStyle } from "../utils/documentStatus";
 const PER_PAGE = 10;
 
 const items = ref<DocumentItem[]>([]);
@@ -92,7 +92,6 @@ async function handleDelete(document: DocumentItem) {
     deletingId.value = null;
   }
 }
-
 onMounted(fetchDocuments);
 </script>
 
@@ -257,6 +256,12 @@ onMounted(fetchDocuments);
                   <div
                     class="font-mono text-xs text-[#111111]/60 flex flex-wrap items-center gap-2"
                   >
+                    <span
+                      class="font-mono text-[10px] uppercase font-bold px-2 py-0.5 tracking-wider"
+                      :class="getStatusStyle(document.status)"
+                    >
+                      {{ statusLabels[document.status] }}
+                    </span>
                     <span
                       class="uppercase tracking-wider font-semibold text-[#111111]/80"
                     >

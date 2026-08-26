@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import documentService from "../services/documentService";
+import type { DocumentStatus } from "../types/document";
 
 const route = useRoute();
 const router = useRouter();
@@ -12,6 +13,7 @@ const documentId = computed(() =>
 const isEditMode = computed(() => documentId.value !== null);
 
 const titre = ref("");
+const status = ref<DocumentStatus>("brouillon");
 const editorRef = ref<HTMLDivElement | null>(null);
 
 const isLoading = ref(false);
@@ -39,6 +41,7 @@ async function loadDocument(id: string) {
   try {
     const document = await documentService.get(id);
     titre.value = document.titre;
+    status.value = document.status;
 
     isLoading.value = false;
     await nextTick();
@@ -118,6 +121,7 @@ async function handleSave() {
     titre: titre.value.trim(),
     content: editorRef.value?.innerHTML ?? "",
     format: "wysiwyg" as const,
+    status: status.value,
   };
 
   try {
@@ -280,7 +284,23 @@ function handleCancel() {
               class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-serif text-lg text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C] transition-shadow"
             />
           </div>
-
+          <div class="space-y-2">
+            <label
+              for="status"
+              class="font-mono text-xs uppercase tracking-wider text-[#111111] font-bold block"
+            >
+              Statut
+            </label>
+            <select
+              id="status"
+              v-model="status"
+              class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+            >
+              <option value="brouillon">Brouillon</option>
+              <option value="a_relire">À relire</option>
+              <option value="termine">Terminé</option>
+            </select>
+          </div>
           <!-- BARRE D'OUTILS DE MISE EN FORME -->
           <div
             class="bg-[#F4F1EA] border border-[#111111] border-b-0 p-2 flex flex-wrap items-center gap-1"

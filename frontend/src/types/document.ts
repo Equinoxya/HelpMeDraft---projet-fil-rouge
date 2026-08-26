@@ -1,11 +1,13 @@
 // frontend/src/types/document.ts
 export type DocumentFormat = "markdown" | "wysiwyg";
+export type DocumentStatus = "brouillon" | "a_relire" | "termine";
 
 export interface DocumentItem {
   id_document: string;
   titre: string;
   content: string | null;
   format: DocumentFormat;
+  status: DocumentStatus;
   id_dossier: string | null;
   created_at: string;
   updated_at: string;
@@ -36,4 +38,10 @@ export interface UpdateDocumentPayload {
   content?: string;
   format?: DocumentFormat;
   id_dossier?: string | null;
+}
+export interface DocumentStatsResponse {
+  total: number;
+  brouillon: number;
+  a_relire: number;
+  termine: number;
 }

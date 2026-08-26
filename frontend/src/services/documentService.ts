@@ -6,6 +6,7 @@ import type {
   DocumentListParams,
   CreateDocumentPayload,
   UpdateDocumentPayload,
+  DocumentStatsResponse,
 } from "../types/document";
 
 async function list(
@@ -38,6 +39,10 @@ async function update(
 async function remove(id: string): Promise<void> {
   await api.delete(`/documents/${id}`);
 }
+async function stats(): Promise<DocumentStatsResponse> {
+  const response = await api.get<DocumentStatsResponse>("/documents/stats");
+  return response.data;
+}
 
 export default {
   list,
@@ -45,4 +50,5 @@ export default {
   create,
   update,
   remove,
+  stats,
 };
