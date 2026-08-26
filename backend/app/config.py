@@ -12,3 +12,5 @@ class Config:
     MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True") == "True"
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
     MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "False") == "True"
+    OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1")
