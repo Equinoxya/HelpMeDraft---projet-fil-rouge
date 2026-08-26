@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
+import {
+  ref,
+  computed,
+  watch,
+  onMounted,
+  onBeforeUnmount,
+  nextTick,
+} from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import documentService from "../services/documentService";
 import type { DocumentStatus } from "../types/document";
@@ -22,6 +29,11 @@ const isDeleting = ref(false);
 const errorMessage = ref("");
 const savedNotice = ref(false);
 let savedNoticeTimeout: ReturnType<typeof setTimeout> | null = null;
+
+type AutoSaveStatus = "idle" | "saving" | "saved" | "error";
+const autoSaveStatus = ref<AutoSaveStatus>("idle");
+let autoSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+const AUTOSAVE_DELAY_MS = 2500;
 
 const activeFormats = ref({
   bold: false,
@@ -71,6 +83,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener("selectionchange", updateActiveFormats);
   if (savedNoticeTimeout) clearTimeout(savedNoticeTimeout);
+  if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
 });
 
 function updateActiveFormats() {
@@ -91,6 +104,7 @@ function exec(command: string, value?: string) {
   editorRef.value?.focus();
   document.execCommand(command, false, value);
   updateActiveFormats();
+  scheduleAutoSave();
 }
 
 function insertLink() {
@@ -107,6 +121,54 @@ function insertLink() {
   exec("createLink", url);
 }
 
+function buildPayload() {
+  return {
+    titre: titre.value.trim(),
+    content: editorRef.value?.innerHTML ?? "",
+    format: "wysiwyg" as const,
+    status: status.value,
+  };
+}
+
+async function persistDocument() {
+  const payload = buildPayload();
+
+  if (isEditMode.value && documentId.value) {
+    await documentService.update(documentId.value, payload);
+  } else {
+    const created = await documentService.create(payload);
+    router.replace(`/documents/${created.id_document}`);
+  }
+}
+
+function scheduleAutoSave() {
+  if (!isTitreValid.value) return;
+  if (isLoading.value || isSaving.value) return;
+
+  if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+  autoSaveTimeout = setTimeout(performAutoSave, AUTOSAVE_DELAY_MS);
+}
+
+async function performAutoSave() {
+  if (!isTitreValid.value || isSaving.value) return;
+
+  autoSaveStatus.value = "saving";
+
+  try {
+    await persistDocument();
+    autoSaveStatus.value = "saved";
+  } catch {
+    autoSaveStatus.value = "error";
+  }
+}
+
+function handleEditorInput() {
+  scheduleAutoSave();
+}
+
+watch(titre, scheduleAutoSave);
+watch(status, scheduleAutoSave);
+
 async function handleSave() {
   errorMessage.value = "";
 
@@ -115,24 +177,14 @@ async function handleSave() {
     return;
   }
 
+  if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
   isSaving.value = true;
 
-  const payload = {
-    titre: titre.value.trim(),
-    content: editorRef.value?.innerHTML ?? "",
-    format: "wysiwyg" as const,
-    status: status.value,
-  };
-
   try {
-    if (isEditMode.value && documentId.value) {
-      await documentService.update(documentId.value, payload);
-    } else {
-      const created = await documentService.create(payload);
-      router.replace(`/documents/${created.id_document}`);
-    }
+    await persistDocument();
 
     savedNotice.value = true;
+    autoSaveStatus.value = "saved";
     if (savedNoticeTimeout) clearTimeout(savedNoticeTimeout);
     savedNoticeTimeout = setTimeout(() => {
       savedNotice.value = false;
@@ -244,7 +296,7 @@ function handleCancel() {
             <span>{{ errorMessage }}</span>
           </div>
 
-          <!-- NOTIFICATION SUCCÈS -->
+          <!-- NOTIFICATION SUCCÈS (SAUVEGARDE MANUELLE) -->
           <div
             v-if="savedNotice"
             class="mb-6 p-4 border border-[#111111] bg-[#111111] text-[#F4F1EA] font-mono text-xs font-bold flex items-center gap-2"
@@ -267,40 +319,70 @@ function handleCancel() {
             <span>Document enregistré avec succès.</span>
           </div>
 
-          <!-- CHAMP TITRE -->
-          <div class="mb-6 space-y-2">
-            <label
-              for="titre"
-              class="font-mono text-xs uppercase tracking-wider text-[#111111] font-bold block"
-            >
-              Titre du document
-            </label>
-            <input
-              id="titre"
-              v-model="titre"
-              type="text"
-              placeholder="Ex. Contrat de location meublée"
-              maxlength="255"
-              class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-serif text-lg text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C] transition-shadow"
-            />
+          <!-- CHAMP TITRE + STATUT -->
+          <div class="mb-6 grid sm:grid-cols-[1fr_auto] gap-4 items-end">
+            <div class="space-y-2">
+              <label
+                for="titre"
+                class="font-mono text-xs uppercase tracking-wider text-[#111111] font-bold block"
+              >
+                Titre du document
+              </label>
+              <input
+                id="titre"
+                v-model="titre"
+                type="text"
+                placeholder="Ex. Contrat de location meublée"
+                maxlength="255"
+                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-serif text-lg text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C] transition-shadow"
+              />
+            </div>
+
+            <div class="space-y-2">
+              <label
+                for="status"
+                class="font-mono text-xs uppercase tracking-wider text-[#111111] font-bold block"
+              >
+                Statut
+              </label>
+              <select
+                id="status"
+                v-model="status"
+                class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+              >
+                <option value="brouillon">Brouillon</option>
+                <option value="a_relire">À relire</option>
+                <option value="termine">Terminé</option>
+              </select>
+            </div>
           </div>
-          <div class="space-y-2">
-            <label
-              for="status"
-              class="font-mono text-xs uppercase tracking-wider text-[#111111] font-bold block"
+
+          <!-- INDICATEUR D'ENREGISTREMENT AUTOMATIQUE -->
+          <div class="mb-2 h-4 flex items-center">
+            <span
+              v-if="autoSaveStatus === 'saving'"
+              class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/50 flex items-center gap-1.5"
             >
-              Statut
-            </label>
-            <select
-              id="status"
-              v-model="status"
-              class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+              <span
+                class="w-2 h-2 border border-[#111111]/30 border-t-[#111111]/70 rounded-full animate-spin"
+              ></span>
+              Enregistrement…
+            </span>
+            <span
+              v-else-if="autoSaveStatus === 'saved'"
+              class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/50"
             >
-              <option value="brouillon">Brouillon</option>
-              <option value="a_relire">À relire</option>
-              <option value="termine">Terminé</option>
-            </select>
+              ✓ Enregistré automatiquement
+            </span>
+            <span
+              v-else-if="autoSaveStatus === 'error'"
+              class="font-mono text-[10px] uppercase tracking-wider text-[#E0533C] font-bold"
+            >
+              ⚠ Échec de l'enregistrement auto — pensez à enregistrer
+              manuellement
+            </span>
           </div>
+
           <!-- BARRE D'OUTILS DE MISE EN FORME -->
           <div
             class="bg-[#F4F1EA] border border-[#111111] border-b-0 p-2 flex flex-wrap items-center gap-1"
@@ -440,6 +522,7 @@ function handleCancel() {
             class="min-h-[360px] p-6 bg-[#F4F1EA] border border-[#111111] text-[#111111] font-sans text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#E0533C] [&_h1]:font-serif [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:font-serif [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-3 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_a]:text-[#E0533C] [&_a]:underline"
             @keyup="updateActiveFormats"
             @mouseup="updateActiveFormats"
+            @input="handleEditorInput"
           ></div>
 
           <!-- ACTIONS EN BAS -->
