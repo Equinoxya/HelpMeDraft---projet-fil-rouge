@@ -12,6 +12,8 @@ import documentService from "../services/documentService";
 import type { DocumentStatus } from "../types/document";
 import dossierService from "../services/dossierService";
 import type { DossierItem } from "../types/dossier";
+import iaService from "../services/iaService";
+import { type IaTypeAction, type IaScope, IaTypeAction } from "../types/ia";
 
 const route = useRoute();
 const router = useRouter();
@@ -49,6 +51,101 @@ const isTitreValid = computed(() => {
   const trimmed = titre.value.trim();
   return trimmed.length > 0 && trimmed.length <= 255;
 });
+const showIaPanel = ref(false);
+const iaTypeAction = ref<IaTypeAction>("reformuler");
+const iaScope = ref<IaScope>("selection");
+const iaInstructions = ref("");
+const iaLoading = ref(false);
+const iaError = ref("");
+const iaResult = ref<string | null>(null);
+let savedSelectionRange: Range | null = null;
+
+function openIaPanel() {
+  const selection = window.getSelection();
+  if (
+    selection &&
+    !selection.isCollapsed &&
+    editorRef.value?.contains(selection.anchorNode)
+  ) {
+    savedSelectionRange = selection.getRangeAt(0).cloneRange();
+    iaScope.value = "selection";
+  } else {
+    savedSelectionRange = null;
+    iaScope.value = "document";
+  }
+  iaResult.value = null;
+  iaError.value = "";
+  showIaPanel.value = true;
+}
+
+function closeIaPanel() {
+  showIaPanel.value = false;
+  iaResult.value = null;
+  iaError.value = "";
+}
+
+function getIaSourceText(): string | null {
+  if (iaScope.value === "selection") {
+    if (!savedSelectionRange) {
+      iaError.value = "Sélectionnez d'abord du texte dans le document.";
+      return null;
+    }
+    return savedSelectionRange.toString();
+  }
+  return editorRef.value?.innerText ?? "";
+}
+
+async function handleGenerateIa() {
+  if (!documentId.value) {
+    iaError.value = "Enregistrez d'abord le document avant d'utiliser l'IA.";
+    return;
+  }
+
+  const contenu = getIaSourceText();
+  if (!contenu || !contenu.trim()) {
+    iaError.value = "Le texte à traiter est vide.";
+    return;
+  }
+
+  iaLoading.value = true;
+  iaError.value = "";
+  iaResult.value = null;
+
+  try {
+    const result = await iaService.generer(documentId.value, {
+      type_action: iaTypeAction.value,
+      scope: iaScope.value,
+      contenu,
+      instructions: iaInstructions.value.trim() || undefined,
+    });
+    iaResult.value = result.content_after;
+  } catch (err: any) {
+    iaError.value =
+      err.response?.data?.error ?? "L'assistant IA n'a pas pu répondre.";
+  } finally {
+    iaLoading.value = false;
+  }
+}
+
+function applyIaResult() {
+  if (!iaResult.value || !editorRef.value) return;
+
+  editorRef.value.focus();
+
+  if (iaScope.value === "selection" && savedSelectionRange) {
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(savedSelectionRange);
+    // insertText traite le résultat comme du texte brut, jamais comme du HTML :
+    // ça évite qu'une réponse du modèle injecte des balises dans l'éditeur.
+    document.execCommand("insertText", false, iaResult.value);
+  } else {
+    editorRef.value.textContent = iaResult.value;
+  }
+
+  scheduleAutoSave();
+  closeIaPanel();
+}
 
 async function loadDocument(id: string) {
   isLoading.value = true;
@@ -523,7 +620,14 @@ function handleCancel() {
             >
               Lien
             </button>
-
+            <button
+              type="button"
+              title="Assistant IA"
+              class="h-9 px-3 font-mono text-xs font-bold text-[#111111] hover:bg-[#111111]/10 transition-colors"
+              @click="openIaPanel"
+            >
+              ✨ IA
+            </button>
             <span
               class="w-[1px] h-6 bg-[#111111]/20 mx-1"
               aria-hidden="true"
@@ -546,7 +650,121 @@ function handleCancel() {
               ↻
             </button>
           </div>
+          <div
+            v-if="showIaPanel"
+            class="mb-4 p-5 border-2 border-[#111111] bg-[#F4F1EA] space-y-4"
+          >
+            <div class="flex items-center justify-between">
+              <span
+                class="font-mono text-xs uppercase tracking-widest font-bold text-[#E0533C]"
+              >
+                [ Assistant IA — Ollama ]
+              </span>
+              <button
+                type="button"
+                class="font-mono text-xs text-[#111111]/60 hover:text-[#E0533C]"
+                @click="closeIaPanel"
+              >
+                ✕ Fermer
+              </button>
+            </div>
 
+            <div class="flex flex-wrap gap-4">
+              <div class="space-y-1">
+                <label
+                  class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/70 block"
+                >
+                  Action
+                </label>
+                <select
+                  v-model="iaTypeAction"
+                  class="h-9 px-3 bg-[#FAF8F5] border border-[#111111] font-mono text-xs uppercase"
+                >
+                  <option value="reformuler">Reformuler</option>
+                  <option value="corriger">Corriger</option>
+                  <option value="completer">Compléter</option>
+                </select>
+              </div>
+
+              <div class="space-y-1">
+                <label
+                  class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/70 block"
+                >
+                  Portée
+                </label>
+                <select
+                  v-model="iaScope"
+                  class="h-9 px-3 bg-[#FAF8F5] border border-[#111111] font-mono text-xs uppercase"
+                >
+                  <option value="selection">Sélection</option>
+                  <option value="document">Document entier</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label
+                class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/70 block"
+              >
+                Instructions particulières (optionnel)
+              </label>
+              <input
+                v-model="iaInstructions"
+                type="text"
+                maxlength="500"
+                placeholder="Ex. ton plus formel, plus concis..."
+                class="w-full h-9 px-3 bg-[#FAF8F5] border border-[#111111] font-mono text-xs"
+              />
+            </div>
+
+            <div
+              v-if="iaError"
+              class="font-mono text-xs text-[#E0533C] font-bold"
+            >
+              {{ iaError }}
+            </div>
+
+            <button
+              type="button"
+              :disabled="iaLoading"
+              class="h-10 px-5 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase tracking-wider hover:bg-[#E0533C] disabled:opacity-50 transition-colors"
+              @click="handleGenerateIa"
+            >
+              {{ iaLoading ? "Génération en cours…" : "Générer" }}
+            </button>
+
+            <div
+              v-if="iaResult"
+              class="pt-3 border-t border-[#111111]/20 space-y-3"
+            >
+              <p
+                class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/60"
+              >
+                Résultat proposé :
+              </p>
+              <div
+                class="p-3 bg-[#FAF8F5] border border-[#111111]/30 text-sm font-serif whitespace-pre-wrap"
+              >
+                {{ iaResult }}
+              </div>
+              <div class="flex gap-3">
+                <button
+                  type="button"
+                  class="h-9 px-4 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase hover:bg-[#E0533C] transition-colors"
+                  @click="applyIaResult"
+                >
+                  Insérer
+                </button>
+                <button
+                  type="button"
+                  class="h-9 px-4 border border-[#111111] font-mono text-xs uppercase hover:bg-[#111111]/10 transition-colors"
+                  @click="iaResult = null"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
           <!-- ZONE D'ÉDITION RICHE (WYSIWYG) -->
           <div
             ref="editorRef"
