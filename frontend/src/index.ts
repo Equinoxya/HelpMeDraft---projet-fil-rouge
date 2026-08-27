@@ -72,6 +72,21 @@ const router = createRouter({
       component: () => import("./views/DocumentEditorView.vue"),
       meta: { requiresAuth: true },
     },
+    {
+      path: "/fonctionnalites",
+      name: "fonctionnalites",
+      component: () => import("./views/FonctionnalitesView.vue"),
+    },
+    {
+      path: "/tarifs",
+      name: "tarifs",
+      component: () => import("./views/TarifsView.vue"),
+    },
+    {
+      path: "/modeles",
+      name: "modeles",
+      component: () => import("./views/ModelesView.vue"),
+    },
   ],
   scrollBehavior() {
     // Remonte en haut de page quand on clique sur un lien du footer
