@@ -224,7 +224,7 @@ onMounted(fetchDashboardData);
               v-for="action in quickActions"
               :key="action.title"
               :to="action.to"
-              class="group relative flex flex-col justify-between p-8 bg-[#FAF8F5] border-2 border-[#111111] shadow-[6px_6px_0px_0px_#111111] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_#111111] transition-all focus-visible:outline-2 focus-visible:outline-black"
+              class="group relative flex flex-col justify-between p-8 bg-[#FAF8F5] border-2 border-[#111111] shadow-[6px_6px_0px_0px_#111111] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0px_0px_#111111] transition-all focus-visible:outline-2 focus-visible:outline-black"
             >
               <div>
                 <div
@@ -375,7 +375,7 @@ onMounted(fetchDashboardData);
               >
                 <div class="flex items-start gap-4">
                   <div
-                    class="w-10 h-10 border border-[#111111] bg-[#F4F1EA] flex-shrink-0 flex items-center justify-center text-[#111111] group-hover:bg-[#111111] group-hover:text-[#F4F1EA] transition-colors mt-0.5"
+                    class="w-10 h-10 border border-[#111111] bg-[#F4F1EA] shrink-0 flex items-center justify-center text-[#111111] group-hover:bg-[#111111] group-hover:text-[#F4F1EA] transition-colors mt-0.5"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

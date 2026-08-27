@@ -562,7 +562,7 @@ function handleCancel() {
             </button>
 
             <span
-              class="w-[1px] h-6 bg-[#111111]/20 mx-1"
+              class="w-px h-6 bg-[#111111]/20 mx-1"
               aria-hidden="true"
             ></span>
 
@@ -592,7 +592,7 @@ function handleCancel() {
             </button>
 
             <span
-              class="w-[1px] h-6 bg-[#111111]/20 mx-1"
+              class="w-px h-6 bg-[#111111]/20 mx-1"
               aria-hidden="true"
             ></span>
 
@@ -629,7 +629,7 @@ function handleCancel() {
               ✨ IA
             </button>
             <span
-              class="w-[1px] h-6 bg-[#111111]/20 mx-1"
+              class="w-px h-6 bg-[#111111]/20 mx-1"
               aria-hidden="true"
             ></span>
 
@@ -772,7 +772,7 @@ function handleCancel() {
             role="textbox"
             aria-multiline="true"
             aria-label="Contenu du document"
-            class="min-h-[360px] p-6 bg-[#F4F1EA] border border-[#111111] text-[#111111] font-sans text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#E0533C] [&_h1]:font-serif [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:font-serif [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-3 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_a]:text-[#E0533C] [&_a]:underline"
+            class="min-h-90 p-6 bg-[#F4F1EA] border border-[#111111] text-[#111111] font-sans text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#E0533C] [&_h1]:font-serif [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:font-serif [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-3 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_a]:text-[#E0533C] [&_a]:underline"
             @keyup="updateActiveFormats"
             @mouseup="updateActiveFormats"
             @input="handleEditorInput"
