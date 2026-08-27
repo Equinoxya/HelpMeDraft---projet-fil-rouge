@@ -13,7 +13,7 @@ import type { DocumentStatus } from "../types/document";
 import dossierService from "../services/dossierService";
 import type { DossierItem } from "../types/dossier";
 import iaService from "../services/iaService";
-import { type IaTypeAction, type IaScope, IaTypeAction } from "../types/ia";
+import { type IaTypeAction, type IaScope } from "../types/ia";
 
 const route = useRoute();
 const router = useRouter();

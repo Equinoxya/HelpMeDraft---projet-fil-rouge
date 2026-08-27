@@ -5,6 +5,7 @@ import documentService from "../services/documentService";
 import dossierService from "../services/dossierService";
 import type { DocumentItem } from "../types/document";
 import type { DossierItem } from "../types/dossier";
+import { statusLabels, getStatusStyle } from "../utils/documentStatus";
 
 const PER_PAGE = 10;
 
@@ -403,7 +404,7 @@ onMounted(() => {
               <div
                 v-for="document in filteredItems"
                 :key="document.id_document"
-                class="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 hover:bg-[#F4F1EA] transition-colors"
+                class="group gap-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 hover:bg-[#F4F1EA] transition-colors"
               >
                 <RouterLink
                   :to="`/documents/${document.id_document}`"
@@ -454,7 +455,13 @@ onMounted(() => {
                     </div>
                   </div>
                 </RouterLink>
-
+                <!-- BADGE STATUT -->
+                <span
+                  class="font-mono text-[10px] uppercase font-bold px-3 py-1 tracking-wider"
+                  :class="getStatusStyle(document.status)"
+                >
+                  {{ statusLabels[document.status] }}
+                </span>
                 <!-- BOUTON SUPPRIMER -->
                 <button
                   type="button"
