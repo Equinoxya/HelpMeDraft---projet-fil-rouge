@@ -14,6 +14,12 @@ import dossierService from "../services/dossierService";
 import type { DossierItem } from "../types/dossier";
 import iaService from "../services/iaService";
 import { type IaTypeAction, type IaScope } from "../types/ia";
+import MarkdownEditor from "../components/MarkdownEditor.vue";
+
+// Type pour le ref de l'éditeur
+interface MarkdownEditorExposed {
+  focus: () => void;
+}
 
 const route = useRoute();
 const router = useRouter();
@@ -26,8 +32,8 @@ const isEditMode = computed(() => documentId.value !== null);
 const titre = ref("");
 const status = ref<DocumentStatus>("brouillon");
 const idDossier = ref<string>("");
+const content = ref<string>("");
 const dossiers = ref<DossierItem[]>([]);
-const editorRef = ref<HTMLDivElement | null>(null);
 
 const isLoading = ref(false);
 const isSaving = ref(false);
@@ -41,36 +47,31 @@ const autoSaveStatus = ref<AutoSaveStatus>("idle");
 let autoSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 const AUTOSAVE_DELAY_MS = 2500;
 
-const activeFormats = ref({
-  bold: false,
-  italic: false,
-  underline: false,
-});
-
 const isTitreValid = computed(() => {
   const trimmed = titre.value.trim();
   return trimmed.length > 0 && trimmed.length <= 255;
 });
+
+// Référence pour l'éditeur Markdown
+const markdownEditorRef = ref<MarkdownEditorExposed | null>(null);
+
+// Panel IA
 const showIaPanel = ref(false);
 const iaTypeAction = ref<IaTypeAction>("reformuler");
-const iaScope = ref<IaScope>("selection");
+const iaScope = ref<IaScope>("document");
 const iaInstructions = ref("");
 const iaLoading = ref(false);
 const iaError = ref("");
 const iaResult = ref<string | null>(null);
-let savedSelectionRange: Range | null = null;
 
 function openIaPanel() {
   const selection = window.getSelection();
-  if (
-    selection &&
-    !selection.isCollapsed &&
-    editorRef.value?.contains(selection.anchorNode)
-  ) {
-    savedSelectionRange = selection.getRangeAt(0).cloneRange();
-    iaScope.value = "selection";
+  if (selection && !selection.isCollapsed) {
+    const selectedText = selection.toString();
+    if (selectedText) {
+      iaScope.value = "selection";
+    }
   } else {
-    savedSelectionRange = null;
     iaScope.value = "document";
   }
   iaResult.value = null;
@@ -86,13 +87,15 @@ function closeIaPanel() {
 
 function getIaSourceText(): string | null {
   if (iaScope.value === "selection") {
-    if (!savedSelectionRange) {
-      iaError.value = "Sélectionnez d'abord du texte dans le document.";
-      return null;
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) {
+      const selectedText = selection.toString();
+      if (selectedText) return selectedText;
     }
-    return savedSelectionRange.toString();
+    iaError.value = "Sélectionnez d'abord du texte dans le document.";
+    return null;
   }
-  return editorRef.value?.innerText ?? "";
+  return content.value;
 }
 
 async function handleGenerateIa() {
@@ -128,21 +131,23 @@ async function handleGenerateIa() {
 }
 
 function applyIaResult() {
-  if (!iaResult.value || !editorRef.value) return;
+  if (!iaResult.value) return;
 
-  editorRef.value.focus();
-
-  if (iaScope.value === "selection" && savedSelectionRange) {
+  if (iaScope.value === "selection") {
     const selection = window.getSelection();
-    selection?.removeAllRanges();
-    selection?.addRange(savedSelectionRange);
-    // insertText traite le résultat comme du texte brut, jamais comme du HTML :
-    // ça évite qu'une réponse du modèle injecte des balises dans l'éditeur.
-    document.execCommand("insertText", false, iaResult.value);
+    if (selection && !selection.isCollapsed) {
+      const range = selection.getRangeAt(0);
+      const start = content.value.substring(0, range.startOffset);
+      const end = content.value.substring(range.endOffset);
+      content.value = start + iaResult.value + end;
+    }
   } else {
-    editorRef.value.textContent = iaResult.value;
+    content.value = iaResult.value;
   }
 
+  nextTick(() => {
+    markdownEditorRef.value?.focus();
+  });
   scheduleAutoSave();
   closeIaPanel();
 }
@@ -156,12 +161,8 @@ async function loadDocument(id: string) {
     titre.value = document.titre;
     status.value = document.status;
     idDossier.value = document.id_dossier ?? "";
-
+    content.value = document.content ?? "";
     isLoading.value = false;
-    await nextTick();
-    if (editorRef.value) {
-      editorRef.value.innerHTML = document.content ?? "";
-    }
     return;
   } catch (err: any) {
     if (err.response?.status === 404) {
@@ -185,55 +186,18 @@ onMounted(() => {
       dossiers.value = list;
     })
     .catch(() => {});
-  document.addEventListener("selectionchange", updateActiveFormats);
 });
 
 onBeforeUnmount(() => {
-  document.removeEventListener("selectionchange", updateActiveFormats);
   if (savedNoticeTimeout) clearTimeout(savedNoticeTimeout);
   if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
 });
 
-function updateActiveFormats() {
-  if (!editorRef.value || document.activeElement !== editorRef.value) return;
-
-  try {
-    activeFormats.value = {
-      bold: document.queryCommandState("bold"),
-      italic: document.queryCommandState("italic"),
-      underline: document.queryCommandState("underline"),
-    };
-  } catch {
-    // queryCommandState peut lever une exception sur certains navigateurs
-  }
-}
-
-function exec(command: string, value?: string) {
-  editorRef.value?.focus();
-  document.execCommand(command, false, value);
-  updateActiveFormats();
-  scheduleAutoSave();
-}
-
-function insertLink() {
-  const selection = window.getSelection();
-  if (!selection || selection.isCollapsed) {
-    errorMessage.value =
-      "Sélectionnez d'abord le texte auquel ajouter un lien.";
-    return;
-  }
-
-  const url = window.prompt("Adresse du lien (https://...)");
-  if (!url) return;
-
-  exec("createLink", url);
-}
-
 function buildPayload() {
   return {
     titre: titre.value.trim(),
-    content: editorRef.value?.innerHTML ?? "",
-    format: "wysiwyg" as const,
+    content: content.value,
+    format: "markdown" as const,
     status: status.value,
     id_dossier: idDossier.value || undefined,
   };
@@ -274,10 +238,6 @@ async function performAutoSave() {
 function handleEditorInput() {
   scheduleAutoSave();
 }
-
-watch(titre, scheduleAutoSave);
-watch(status, scheduleAutoSave);
-watch(idDossier, scheduleAutoSave);
 
 async function handleSave() {
   errorMessage.value = "";
@@ -341,7 +301,7 @@ function handleCancel() {
     <main
       class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16"
     >
-      <!-- BARRE SUPÉRIEURE DE NAVIGATION ET SUPPRESSION -->
+      <!-- BARRE SUPÉRIEURE -->
       <div class="flex items-center justify-between gap-4 mb-8">
         <RouterLink
           to="/documents"
@@ -361,7 +321,7 @@ function handleCancel() {
         </button>
       </div>
 
-      <!-- CARTE ÉDITEUR NÉO-BRUTALISTE -->
+      <!-- CARTE ÉDITEUR -->
       <div
         class="bg-[#FAF8F5] border-2 border-[#111111] p-6 sm:p-10 shadow-[8px_8px_0px_0px_rgba(17,17,17,1)]"
       >
@@ -406,7 +366,7 @@ function handleCancel() {
             <span>{{ errorMessage }}</span>
           </div>
 
-          <!-- NOTIFICATION SUCCÈS (SAUVEGARDE MANUELLE) -->
+          <!-- NOTIFICATION SUCCÈS -->
           <div
             v-if="savedNotice"
             class="mb-6 p-4 border border-[#111111] bg-[#111111] text-[#F4F1EA] font-mono text-xs font-bold flex items-center gap-2"
@@ -429,8 +389,8 @@ function handleCancel() {
             <span>Document enregistré avec succès.</span>
           </div>
 
-          <!-- CHAMP TITRE + STATUT -->
-          <div class="mb-6 grid sm:grid-cols-[1fr_auto] gap-4 items-end">
+          <!-- CHAMP TITRE + STATUT + DOSSIER -->
+          <div class="mb-6 grid sm:grid-cols-[1fr_auto_auto] gap-4 items-end">
             <div class="space-y-2">
               <label
                 for="titre"
@@ -489,7 +449,7 @@ function handleCancel() {
             </div>
           </div>
 
-          <!-- INDICATEUR D'ENREGISTREMENT AUTOMATIQUE -->
+          <!-- INDICATEUR D'AUTOSAVE -->
           <div class="mb-2 h-4 flex items-center">
             <span
               v-if="autoSaveStatus === 'saving'"
@@ -515,141 +475,7 @@ function handleCancel() {
             </span>
           </div>
 
-          <!-- BARRE D'OUTILS DE MISE EN FORME -->
-          <div
-            class="bg-[#F4F1EA] border border-[#111111] border-b-0 p-2 flex flex-wrap items-center gap-1"
-            role="toolbar"
-            aria-label="Mise en forme"
-          >
-            <button
-              type="button"
-              title="Gras"
-              :class="[
-                'h-9 px-3 font-mono text-xs font-bold border border-transparent transition-colors',
-                activeFormats.bold
-                  ? 'bg-[#111111] text-[#F4F1EA]'
-                  : 'text-[#111111] hover:bg-[#111111]/10',
-              ]"
-              @click="exec('bold')"
-            >
-              G
-            </button>
-            <button
-              type="button"
-              title="Italique"
-              :class="[
-                'h-9 px-3 font-mono text-xs font-bold italic border border-transparent transition-colors',
-                activeFormats.italic
-                  ? 'bg-[#111111] text-[#F4F1EA]'
-                  : 'text-[#111111] hover:bg-[#111111]/10',
-              ]"
-              @click="exec('italic')"
-            >
-              I
-            </button>
-            <button
-              type="button"
-              title="Souligné"
-              :class="[
-                'h-9 px-3 font-mono text-xs font-bold underline border border-transparent transition-colors',
-                activeFormats.underline
-                  ? 'bg-[#111111] text-[#F4F1EA]'
-                  : 'text-[#111111] hover:bg-[#111111]/10',
-              ]"
-              @click="exec('underline')"
-            >
-              S
-            </button>
-
-            <span
-              class="w-px h-6 bg-[#111111]/20 mx-1"
-              aria-hidden="true"
-            ></span>
-
-            <button
-              type="button"
-              title="Titre 1"
-              class="h-9 px-3 font-mono text-xs font-bold text-[#111111] hover:bg-[#111111]/10 transition-colors"
-              @click="exec('formatBlock', '<h1>')"
-            >
-              H1
-            </button>
-            <button
-              type="button"
-              title="Titre 2"
-              class="h-9 px-3 font-mono text-xs font-bold text-[#111111] hover:bg-[#111111]/10 transition-colors"
-              @click="exec('formatBlock', '<h2>')"
-            >
-              H2
-            </button>
-            <button
-              type="button"
-              title="Paragraphe"
-              class="h-9 px-3 font-mono text-xs font-bold text-[#111111] hover:bg-[#111111]/10 transition-colors"
-              @click="exec('formatBlock', '<p>')"
-            >
-              P
-            </button>
-
-            <span
-              class="w-px h-6 bg-[#111111]/20 mx-1"
-              aria-hidden="true"
-            ></span>
-
-            <button
-              type="button"
-              title="Liste à puces"
-              class="h-9 px-3 font-mono text-xs font-bold text-[#111111] hover:bg-[#111111]/10 transition-colors"
-              @click="exec('insertUnorderedList')"
-            >
-              • Liste
-            </button>
-            <button
-              type="button"
-              title="Liste numérotée"
-              class="h-9 px-3 font-mono text-xs font-bold text-[#111111] hover:bg-[#111111]/10 transition-colors"
-              @click="exec('insertOrderedList')"
-            >
-              1. Liste
-            </button>
-            <button
-              type="button"
-              title="Insérer un lien"
-              class="h-9 px-3 font-mono text-xs font-bold text-[#111111] hover:bg-[#111111]/10 transition-colors"
-              @click="insertLink"
-            >
-              Lien
-            </button>
-            <button
-              type="button"
-              title="Assistant IA"
-              class="h-9 px-3 font-mono text-xs font-bold text-[#111111] hover:bg-[#111111]/10 transition-colors"
-              @click="openIaPanel"
-            >
-              ✨ IA
-            </button>
-            <span
-              class="w-px h-6 bg-[#111111]/20 mx-1"
-              aria-hidden="true"
-            ></span>
-
-            <button
-              type="button"
-              title="Annuler"
-              class="h-9 px-3 font-mono text-xs font-bold text-[#111111] hover:bg-[#111111]/10 transition-colors"
-              @click="exec('undo')"
-            >
-              ↺
-            </button>
-            <button
-              type="button"
-              title="Rétablir"
-              class="h-9 px-3 font-mono text-xs font-bold text-[#111111] hover:bg-[#111111]/10 transition-colors"
-              @click="exec('redo')"
-            >
-              ↻
-            </button>
-          </div>
+          <!-- PANEL IA -->
           <div
             v-if="showIaPanel"
             class="mb-4 p-5 border-2 border-[#111111] bg-[#F4F1EA] space-y-4"
@@ -765,20 +591,16 @@ function handleCancel() {
               </div>
             </div>
           </div>
-          <!-- ZONE D'ÉDITION RICHE (WYSIWYG) -->
-          <div
-            ref="editorRef"
-            contenteditable="true"
-            role="textbox"
-            aria-multiline="true"
-            aria-label="Contenu du document"
-            class="min-h-90 p-6 bg-[#F4F1EA] border border-[#111111] text-[#111111] font-sans text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#E0533C] [&_h1]:font-serif [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-4 [&_h2]:font-serif [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-3 [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_a]:text-[#E0533C] [&_a]:underline"
-            @keyup="updateActiveFormats"
-            @mouseup="updateActiveFormats"
-            @input="handleEditorInput"
-          ></div>
 
-          <!-- ACTIONS EN BAS -->
+          <!-- ÉDITEUR MARKDOWN -->
+          <MarkdownEditor
+            ref="markdownEditorRef"
+            v-model="content"
+            @input="handleEditorInput"
+            @openIaPanel="openIaPanel"
+          />
+
+          <!-- BOUTONS EN BAS -->
           <div
             class="mt-8 flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-4"
           >
