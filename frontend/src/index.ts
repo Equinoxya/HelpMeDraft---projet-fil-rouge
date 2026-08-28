@@ -87,6 +87,12 @@ const router = createRouter({
       name: "modeles",
       component: () => import("./views/ModelesView.vue"),
     },
+    {
+      path: "/admin",
+      name: "admin",
+      component: () => import("./views/AdminView.vue"),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
   ],
   scrollBehavior() {
     // Remonte en haut de page quand on clique sur un lien du footer
@@ -96,13 +102,16 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
-
   if (!authStore.isInitialized) {
     await authStore.initialize();
   }
   const isAuthenticated = !!authStore.accessToken;
+  const isAdmin = authStore.user?.role === "admin";
+
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: "login" });
+  } else if (to.meta.requiresAdmin && !isAdmin) {
+    next({ name: "dashboard" });
   } else if (to.meta.guestOnly && isAuthenticated) {
     next({ name: "dashboard" });
   } else {

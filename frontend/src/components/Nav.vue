@@ -85,6 +85,13 @@ const handleLogout = async () => {
             Tableau de bord
           </RouterLink>
           <RouterLink
+            v-if="authStore.user?.role === 'admin'"
+            to="/admin"
+            class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+          >
+            Administration
+          </RouterLink>
+          <RouterLink
             to="/documents"
             class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
           >

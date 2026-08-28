@@ -7,6 +7,7 @@ interface User {
   email: string;
   firstname: string;
   lastname: string;
+  role: "user" | "admin";
 }
 
 export const useAuthStore = defineStore("auth", {

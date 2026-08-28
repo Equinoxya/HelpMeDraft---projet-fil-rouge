@@ -16,6 +16,7 @@ export interface AuthUser {
   email: string;
   firstname: string;
   lastname: string;
+  role: "user" | "admin";
 }
 
 export interface AuthResponse {
@@ -37,4 +38,5 @@ export interface MeResponse {
   email: string;
   firstname: string;
   lastname: string;
+  role: "user" | "admin";
 }

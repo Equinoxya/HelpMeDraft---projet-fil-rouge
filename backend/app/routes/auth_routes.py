@@ -81,7 +81,7 @@ def login():
         
         response = jsonify({
         "access_token": access_token,
-        "user": {"id": user.user_id, "email": user.email, "firstname" : user.firstname, "lastname": user.lastname}
+        "user": {"id": user.user_id, "email": user.email, "firstname" : user.firstname, "lastname": user.lastname, "role": user.role}
     })
         response.set_cookie(
             "refresh_token", refresh_token,
@@ -155,6 +155,7 @@ def me():
             "email": user.email,
             "firstname": user.firstname,
             "lastname": user.lastname,
+            "role": user.role
         }), 200
 
 #==========================================RESET PASSWORD====================================================

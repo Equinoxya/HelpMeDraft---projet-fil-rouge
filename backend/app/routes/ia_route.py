@@ -1,8 +1,10 @@
 from flask import Blueprint, jsonify, request
-from database.db import SessionLocal, Document, IA
-from sqlalchemy import select
+from database.db import SessionLocal, Document, IA, User
+from sqlalchemy import select, func
 from app.routes.auth_routes import token_required
 from app.services.ia_service import build_prompt, call_ollama
+from utilitaires import utc_now_naive
+from datetime import timedelta
 
 ia_bp = Blueprint("ia", __name__, url_prefix="/documents")
 
@@ -58,7 +60,24 @@ def generer_ia(id_document):
         document = _get_owned_document(db_session, id_document)
         if document is None:
             return jsonify({"error": "Document introuvable"}), 404
+        current_user = db_session.execute(
+            select(User).where(User.user_id == request.user_id)
+        ).scalar_one_or_none()
+        if current_user is None:
+            return jsonify({"error": "Utilisateur introuvable"}), 404
 
+        window_start = utc_now_naive() - timedelta(hours=24)
+        calls_last_24h = db_session.execute(
+            select(func.count()).select_from(IA).where(
+                IA.user_id == request.user_id,
+                IA.created_at >= window_start,
+            )
+        ).scalar_one()
+
+        if calls_last_24h >= current_user.quota_daily_limit:
+            return jsonify({
+                "error": f"Quota IA quotidien atteint ({current_user.quota_daily_limit} requêtes / 24h)."
+            }), 429
         prompt = build_prompt(type_action, contenu, instructions)
 
         try:
