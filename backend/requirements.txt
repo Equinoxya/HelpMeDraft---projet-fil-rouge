@@ -1,0 +1,30 @@
+# ==============================================================================
+# HelpMeDraft — dépendances Python du backend
+# ------------------------------------------------------------------------------
+# Installation :
+#   cd backend
+#   python -m venv .venv
+#   .venv\Scripts\activate        (Windows)  |  source .venv/bin/activate  (macOS/Linux)
+#   pip install -r requirements.txt
+#
+# Versions figées volontairement (reproductibilité des builds et de la CI).
+# ==============================================================================
+
+# ── Framework web ─────────────────────────────────────────────────────────────
+Flask==3.1.3
+Flask-Cors==6.0.5            # CORS pour le front Vite (http://localhost:5173)
+Flask-Limiter==4.1.1         # rate-limiting sur /auth/register, /login, /forgot-password
+Flask-Mail==0.10.0           # envoi du mail de réinitialisation de mot de passe
+
+# ── Base de données ───────────────────────────────────────────────────────────
+SQLAlchemy==2.1.1            # ORM (API 2.0 : DeclarativeBase / Mapped / mapped_column)
+
+# ── Sécurité / authentification ───────────────────────────────────────────────
+bcrypt==5.0.0                # hachage des mots de passe
+PyJWT==2.15.0                # signature et vérification des access tokens (HS256)
+
+# ── Intégration IA ────────────────────────────────────────────────────────────
+requests==2.34.2             # appels HTTP vers l'API locale Ollama
+
+# ── Configuration ─────────────────────────────────────────────────────────────
+python-dotenv==1.2.3         # chargement du fichier .env (app/config.py)
