@@ -35,7 +35,7 @@ const handleLogout = async () => {
           <span
             class="font-mono text-sm uppercase tracking-widest font-black text-[#111111]"
           >
-            HelpMeDraft <span class="text-[#E0533C]">/</span> Studio
+            HelpMeDraft <span class="text-[#E0533C]">/</span> LexiCorp
           </span>
         </RouterLink>
 

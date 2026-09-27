@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const typedText = ref("");
 const fullText =
-  "Le bailleur s'engage à restituer le dépôt de garantie dans un délai de deux mois...";
+  "Suite à notre échange de ce matin, je vous confirme les points arrêtés pour la livraison...";
 let charIndex = 0;
 let typingInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -33,13 +33,13 @@ const features = [
     code: "[ 01 ]",
     title: "Intelligence Contextuelle",
     description:
-      "Expliquez la situation en français courant. L'IA extrait les faits clés et structure un document juridiquement cohérent.",
+      "Expliquez la situation en français courant. L'IA extrait les faits clés et structure un document clair et cohérent.",
   },
   {
     code: "[ 02 ]",
     title: "Bibliothèque de Modèles",
     description:
-      "Des bases solides pour vos baux, contrats et mises en demeure. Finie la hantise de la page blanche.",
+      "Des bases solides pour vos courriels, notes de service et rapports. Finie la hantise de la page blanche.",
   },
   {
     code: "[ 03 ]",
@@ -60,7 +60,7 @@ const steps = [
     step: "Étape II",
     title: "La Structure",
     description:
-      "L'algorithme génère un premier jet organisé en articles et clauses claires.",
+      "L'algorithme génère un premier jet organisé en sections et paragraphes clairs.",
   },
   {
     step: "Étape III",
@@ -82,7 +82,7 @@ const steps = [
           <p
             class="font-mono text-xs uppercase tracking-[0.25em] text-[#111111]/70"
           >
-            Assistant de Rédaction Juridique & Administrative
+            Assistant de Rédaction de Documents Professionnels
           </p>
         </div>
 
@@ -101,7 +101,7 @@ const steps = [
             <p
               class="text-xl sm:text-2xl font-serif text-[#111111]/80 leading-relaxed"
             >
-              HelpMeDraft transforme une intention orale en un acte écrit
+              HelpMeDraft transforme une intention orale en un document écrit
               rigoureux. Gardez la totale maîtrise sur le fond, gagnez du temps
               sur la forme.
             </p>
@@ -253,7 +253,7 @@ const steps = [
             @click="onRegister"
             class="btn rounded-none bg-[#E0533C] hover:bg-[#c8442e] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-10 border-none transition-colors"
           >
-            Créer mon premier acte
+            Créer mon premier document
           </button>
         </div>
       </div>

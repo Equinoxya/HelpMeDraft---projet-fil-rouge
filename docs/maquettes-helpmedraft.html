@@ -1,0 +1,777 @@
+<title>Maquettes HelpMeDraft</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --paper:#ffffff;
+    --ground:#eceef1;
+    --surface:#f5f6f8;
+    --ink:#191b1f;
+    --ink-2:#585d66;
+    --ink-3:#878d97;
+    --line:#c4c8ce;
+    --line-soft:#dee1e6;
+    --block:#e3e6ea;
+    --mark:#33527e;
+    --mark-soft:#e5ebf4;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  :root:not([data-theme="light"]){}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --paper:#16181c;
+      --ground:#0e1013;
+      --surface:#1d2026;
+      --ink:#e9ebee;
+      --ink-2:#a2a8b2;
+      --ink-3:#767c86;
+      --line:#3a3f47;
+      --line-soft:#2a2e35;
+      --block:#272b32;
+      --mark:#8fb0e0;
+      --mark-soft:#1e2833;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --paper:#16181c;
+    --ground:#0e1013;
+    --surface:#1d2026;
+    --ink:#e9ebee;
+    --ink-2:#a2a8b2;
+    --ink-3:#767c86;
+    --line:#3a3f47;
+    --line-soft:#2a2e35;
+    --block:#272b32;
+    --mark:#8fb0e0;
+    --mark-soft:#1e2833;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.55;
+    padding:0 16px;
+    padding-block:32px 56px;
+  }
+  .wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+
+  /* ---------- Document head ---------- */
+  .doc-head{
+    background:var(--paper);
+    border:1px solid var(--line);
+    padding:28px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .kicker{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--mark);
+    margin:0;
+  }
+  h1{
+    font-size:clamp(24px,4.4vw,34px);
+    line-height:1.15;
+    margin:0;
+    font-weight:700;
+    letter-spacing:-.015em;
+    text-wrap:balance;
+  }
+  .doc-head p{margin:0;color:var(--ink-2);max-width:62ch}
+  .meta{
+    display:flex;flex-wrap:wrap;gap:8px 28px;
+    font-family:var(--mono);font-size:11.5px;color:var(--ink-3);
+    border-top:1px solid var(--line-soft);padding-top:14px;
+  }
+  .meta b{color:var(--ink-2);font-weight:500}
+
+  /* ---------- Plate ---------- */
+  .plate{
+    background:var(--paper);
+    border:1px solid var(--line);
+    padding:22px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    break-inside:avoid;
+  }
+  .plate-head{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;border-bottom:1px solid var(--line-soft);padding-bottom:12px}
+  .ref{
+    font-family:var(--mono);font-size:11px;font-weight:600;
+    color:var(--mark);background:var(--mark-soft);
+    padding:3px 7px;letter-spacing:.06em;
+  }
+  .plate-head h2{font-size:17px;margin:0;font-weight:600;letter-spacing:-.01em}
+  .route{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);margin-left:auto}
+
+  .plate-body{display:grid;grid-template-columns:1fr 250px;gap:18px;align-items:start}
+  @media (max-width:760px){.plate-body{grid-template-columns:1fr}}
+
+  /* ---------- Wireframe canvas ---------- */
+  .wf{
+    border:1.5px solid var(--line);
+    background:var(--surface);
+    font-size:11px;
+    color:var(--ink-2);
+    overflow:hidden;
+  }
+  .wf-bar{
+    display:flex;align-items:center;gap:6px;
+    border-bottom:1.5px solid var(--line);
+    background:var(--block);
+    padding:6px 9px;
+    font-family:var(--mono);font-size:10px;color:var(--ink-3);
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line);flex:none}
+  .wf-in{padding:12px;display:flex;flex-direction:column;gap:10px}
+
+  /* wireframe primitives */
+  .nav{display:flex;align-items:center;gap:10px;border:1px dashed var(--line);padding:7px 9px}
+  .logo{width:22px;height:22px;background:var(--ink);flex:none}
+  .nav-links{margin-left:auto;display:flex;gap:8px}
+  .box{background:var(--block);border:1px solid var(--line-soft)}
+  .ph{height:9px;background:var(--block);border-radius:1px}
+  .btn{
+    border:1.5px solid var(--ink);padding:5px 10px;text-align:center;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--ink);
+    text-transform:uppercase;background:transparent;white-space:nowrap;
+  }
+  .btn.solid{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .btn.ghost{border-style:dashed;color:var(--ink-3);border-color:var(--line)}
+  .field{border:1px solid var(--line);background:var(--paper);padding:7px 8px;font-family:var(--mono);font-size:9.5px;color:var(--ink-3)}
+  .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+  .card{border:1px solid var(--line);background:var(--paper);padding:9px;display:flex;flex-direction:column;gap:6px}
+  .row{display:flex;gap:8px}
+  .col{display:flex;flex-direction:column;gap:6px}
+  .grow{flex:1;min-width:0}
+  .title-blk{height:15px;background:var(--ink);opacity:.82;width:58%}
+  .title-sm{height:10px;background:var(--ink);opacity:.72;width:42%}
+  .pill{border:1px solid var(--line);padding:2px 7px;font-family:var(--mono);font-size:8.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);white-space:nowrap}
+  .num{
+    position:absolute;
+    font-family:var(--mono);font-size:9px;font-weight:600;
+    background:var(--mark);color:#fff;
+    width:15px;height:15px;display:grid;place-items:center;border-radius:50%;
+  }
+  .anchor{position:relative}
+
+  /* ---------- Notes ---------- */
+  .notes{display:flex;flex-direction:column;gap:9px}
+  .notes h3{
+    font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-3);margin:0;font-weight:500;
+  }
+  .note{display:flex;gap:8px;font-size:12.5px;line-height:1.45;color:var(--ink-2)}
+  .note .n{
+    font-family:var(--mono);font-size:9px;font-weight:600;flex:none;
+    background:var(--mark);color:#fff;width:15px;height:15px;
+    display:grid;place-items:center;border-radius:50%;margin-top:2px;
+  }
+  .note b{color:var(--ink);font-weight:600}
+
+  /* ---------- Flow ---------- */
+  .flow svg{width:100%;height:auto;display:block}
+  .legend{
+    display:flex;flex-wrap:wrap;gap:6px 18px;
+    font-family:var(--mono);font-size:10.5px;color:var(--ink-3);
+    border-top:1px solid var(--line-soft);padding-top:12px;
+  }
+  .legend span{display:flex;align-items:center;gap:6px}
+  .swatch{width:16px;height:9px;border:1px solid var(--line);flex:none}
+
+  .foot{
+    font-family:var(--mono);font-size:11px;color:var(--ink-3);
+    text-align:center;border-top:1px solid var(--line-soft);padding-top:18px;
+  }
+
+  @media print{
+    body{background:#fff;padding:0}
+    .wrap{max-width:none;gap:0}
+    .plate,.doc-head{border-color:#999;page-break-after:always;break-after:page;padding:14mm}
+    .foot{display:none}
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="doc-head">
+    <p class="kicker">Dossier de conception · § 5.3</p>
+    <h1>Maquettes HelpMeDraft</h1>
+    <p>Wireframes basse fidélité des sept écrans structurants et schéma d'enchaînement. Les planches fixent la composition, la hiérarchie et les libellés ; la charte graphique et le rendu final sont hors de leur propos.</p>
+    <div class="meta">
+      <span><b>Projet</b> HelpMeDraft — LexiCorp</span>
+      <span><b>Auteur</b> Ophélie Bellissens</span>
+      <span><b>Formation</b> CDA / CD2IA — Metz Numeric School</span>
+      <span><b>Planches</b> W-01 à W-08</span>
+    </div>
+  </header>
+
+  <!-- W-01 ACCUEIL -->
+  <section class="plate">
+    <div class="plate-head">
+      <span class="ref">W-01</span>
+      <h2>Accueil</h2>
+      <span class="route">/ · visiteur</span>
+    </div>
+    <div class="plate-body">
+      <div class="wf">
+        <div class="wf-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>helpmedraft</span></div>
+        <div class="wf-in">
+          <div class="nav anchor">
+            <span class="num" style="left:-7px;top:-7px">1</span>
+            <span class="logo"></span>
+            <span class="ph" style="width:88px"></span>
+            <span class="nav-links">
+              <span class="pill">Accueil</span><span class="pill">Connexion</span>
+              <span class="btn solid">Espace rédaction</span>
+            </span>
+          </div>
+          <div class="col anchor" style="gap:8px;padding:14px 4px">
+            <span class="num" style="left:-7px;top:6px">2</span>
+            <span class="lbl">— Accroche de positionnement</span>
+            <div class="ph" style="height:22px;width:92%"></div>
+            <div class="ph" style="height:22px;width:74%"></div>
+          </div>
+          <div class="row anchor">
+            <span class="num" style="left:-7px;top:-4px">3</span>
+            <div class="col grow" style="gap:5px">
+              <div class="ph" style="width:100%"></div>
+              <div class="ph" style="width:94%"></div>
+              <div class="ph" style="width:66%"></div>
+              <div class="row" style="margin-top:6px"><span class="btn solid">Commencer</span><span class="btn">Voir les modèles</span></div>
+            </div>
+            <div class="card grow">
+              <span class="lbl">[ Brouillon actif ]</span>
+              <div class="ph" style="width:80%"></div>
+              <div class="ph" style="width:100%"></div>
+              <div class="ph" style="width:88%"></div>
+            </div>
+          </div>
+          <div class="nav anchor" style="border-style:solid;border-color:var(--line-soft)">
+            <span class="num" style="left:-7px;top:-7px">4</span>
+            <span class="pill">Mentions légales</span><span class="pill">CGU</span><span class="pill">Confidentialité</span>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Intentions</h3>
+        <div class="note"><span class="n">1</span><span><b>Nav</b> — composant partagé. Deux entrées seulement pour le visiteur : se connecter, ou créer un compte.</span></div>
+        <div class="note"><span class="n">2</span><span><b>Accroche</b> sur deux lignes, sans image : le produit se démontre par le texte, pas par une illustration.</span></div>
+        <div class="note"><span class="n">3</span><span><b>Aperçu produit</b> à droite de l'argumentaire — montre un document en cours plutôt que de le décrire.</span></div>
+        <div class="note"><span class="n">4</span><span><b>Footer légal</b> — mentions, CGU et confidentialité accessibles depuis toute page (obligation LCEN et RGPD).</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- W-02 INSCRIPTION -->
+  <section class="plate">
+    <div class="plate-head">
+      <span class="ref">W-02</span>
+      <h2>Inscription</h2>
+      <span class="route">/register · garde guestOnly</span>
+    </div>
+    <div class="plate-body">
+      <div class="wf">
+        <div class="wf-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>helpmedraft/register</span></div>
+        <div class="wf-in">
+          <div class="nav"><span class="logo"></span><span class="ph" style="width:88px"></span></div>
+          <div class="card" style="gap:9px">
+            <span class="lbl">[ Inscription ]</span>
+            <div class="title-blk"></div>
+            <div class="row">
+              <div class="col grow"><span class="lbl">Prénom</span><div class="field">Jean</div></div>
+              <div class="col grow"><span class="lbl">Nom</span><div class="field">Dupont</div></div>
+            </div>
+            <div class="col"><span class="lbl">Adresse email</span><div class="field">jean.dupont@exemple.fr</div></div>
+            <div class="col anchor">
+              <span class="num" style="left:-7px;top:-4px">1</span>
+              <span class="lbl">Mot de passe</span><div class="field">••••••••　　　　　　　　　　　　　　　　👁</div>
+            </div>
+            <div class="box anchor" style="padding:8px;display:flex;flex-direction:column;gap:5px">
+              <span class="num" style="left:-7px;top:-7px">2</span>
+              <span class="lbl">Exigences de sécurité</span>
+              <div class="row" style="flex-wrap:wrap;gap:4px 14px">
+                <span class="pill">☐ 8 caractères min.</span><span class="pill">☐ Une majuscule</span>
+                <span class="pill">☐ Une minuscule</span><span class="pill">☐ Un chiffre</span>
+              </div>
+            </div>
+            <div class="row anchor" style="align-items:flex-start;gap:7px">
+              <span class="num" style="left:-7px;top:-4px">3</span>
+              <span class="pill" style="padding:3px 6px">☐</span>
+              <div class="col grow" style="gap:3px">
+                <div class="ph" style="width:96%"></div><div class="ph" style="width:58%"></div>
+              </div>
+            </div>
+            <span class="btn solid">Créer mon compte</span>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Intentions</h3>
+        <div class="note"><span class="n">1</span><span><b>Bascule de visibilité</b> du mot de passe : évite l'erreur de saisie sans imposer un second champ de confirmation.</span></div>
+        <div class="note"><span class="n">2</span><span><b>Politique affichée en permanence</b>, cochée en direct. La règle est annoncée avant l'échec, pas après.</span></div>
+        <div class="note"><span class="n">3</span><span><b>Consentement RGPD explicite</b> — case non pré-cochée, liens vers CGU et politique de confidentialité. Le consentement est tracé en base (table <code>consentement</code>).</span></div>
+        <div class="note"><span class="n">—</span><span>Chaque champ porte un <b>label lié</b> (RGAA) ; les erreurs s'affichent sous le champ concerné.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- W-03 CONNEXION -->
+  <section class="plate">
+    <div class="plate-head">
+      <span class="ref">W-03</span>
+      <h2>Connexion et récupération</h2>
+      <span class="route">/login · /forgot-password · /reset-password</span>
+    </div>
+    <div class="plate-body">
+      <div class="wf">
+        <div class="wf-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>helpmedraft/login</span></div>
+        <div class="wf-in">
+          <div class="nav"><span class="logo"></span><span class="ph" style="width:88px"></span></div>
+          <div class="row" style="gap:10px;align-items:stretch">
+            <div class="card grow" style="gap:8px">
+              <span class="lbl">[ Authentification ]</span>
+              <div class="title-blk" style="width:70%"></div>
+              <div class="col"><span class="lbl">Adresse email</span><div class="field">votre.email@exemple.fr</div></div>
+              <div class="col anchor">
+                <span class="num" style="left:-7px;top:-4px">1</span>
+                <div class="row" style="justify-content:space-between"><span class="lbl">Mot de passe</span><span class="lbl" style="text-decoration:underline">Oublié ?</span></div>
+                <div class="field">••••••••　　　　　　　　　　　　👁</div>
+              </div>
+              <span class="btn solid">Se connecter</span>
+              <div class="ph" style="width:76%;margin:0 auto"></div>
+            </div>
+            <div class="col grow" style="gap:7px">
+              <div class="card anchor" style="gap:5px">
+                <span class="num" style="left:-7px;top:-7px">2</span>
+                <span class="lbl">/forgot-password</span>
+                <div class="field">email</div>
+                <span class="btn">Envoyer le lien</span>
+                <div class="ph" style="width:92%"></div>
+              </div>
+              <div class="card anchor" style="gap:5px">
+                <span class="num" style="left:-7px;top:-7px">3</span>
+                <span class="lbl">/reset-password?token=…</span>
+                <div class="field">nouveau mot de passe</div>
+                <span class="btn">Réinitialiser</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Intentions</h3>
+        <div class="note"><span class="n">1</span><span><b>« Oublié ? » collé au champ</b> concerné, pas relégué en bas de formulaire : c'est là que l'utilisateur bloque.</span></div>
+        <div class="note"><span class="n">2</span><span><b>Message de confirmation identique</b> que l'adresse existe ou non — anti-énumération de comptes.</span></div>
+        <div class="note"><span class="n">3</span><span>Écran atteint <b>uniquement par le lien reçu par courriel</b> : jeton à usage unique, valable 1 h. Toutes les sessions sont révoquées après changement.</span></div>
+        <div class="note"><span class="n">—</span><span>Les trois écrans portent la garde <b>guestOnly</b> : un utilisateur déjà connecté est renvoyé au tableau de bord.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- W-04 DASHBOARD -->
+  <section class="plate">
+    <div class="plate-head">
+      <span class="ref">W-04</span>
+      <h2>Tableau de bord</h2>
+      <span class="route">/dashboard · garde requiresAuth</span>
+    </div>
+    <div class="plate-body">
+      <div class="wf">
+        <div class="wf-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>helpmedraft/dashboard</span></div>
+        <div class="wf-in">
+          <div class="nav"><span class="logo"></span><span class="ph" style="width:80px"></span>
+            <span class="nav-links"><span class="pill">Mes documents</span><span class="pill">Compte ▾</span></span></div>
+          <div class="row anchor" style="justify-content:space-between;align-items:center">
+            <span class="num" style="left:-7px;top:-4px">1</span>
+            <div class="col" style="gap:4px"><div class="title-blk" style="width:180px"></div><div class="ph" style="width:230px"></div></div>
+            <span class="btn solid">+ Nouveau document</span>
+          </div>
+          <div class="row anchor" style="gap:7px">
+            <span class="num" style="left:-7px;top:-7px">2</span>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Documents</span><div class="title-sm" style="width:26px"></div></div>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Brouillons</span><div class="title-sm" style="width:26px"></div></div>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">À relire</span><div class="title-sm" style="width:26px"></div></div>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Quota IA / 24 h</span><div class="title-sm" style="width:42px"></div></div>
+          </div>
+          <div class="col anchor" style="gap:6px">
+            <span class="num" style="left:-7px;top:-4px">3</span>
+            <span class="lbl">Reprendre où vous en étiez</span>
+            <div class="card row" style="align-items:center;gap:8px">
+              <span class="pill">01</span>
+              <div class="col grow" style="gap:4px"><div class="title-sm" style="width:46%"></div><div class="ph" style="width:30%"></div></div>
+              <span class="pill">Brouillon</span><span class="pill">Modifié le 12/09</span>
+            </div>
+            <div class="card row" style="align-items:center;gap:8px">
+              <span class="pill">02</span>
+              <div class="col grow" style="gap:4px"><div class="title-sm" style="width:38%"></div><div class="ph" style="width:26%"></div></div>
+              <span class="pill">À relire</span><span class="pill">Modifié le 11/09</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Intentions</h3>
+        <div class="note"><span class="n">1</span><span><b>Action principale unique</b> en haut à droite. Le tableau de bord sert à reprendre un travail, pas à le contempler.</span></div>
+        <div class="note"><span class="n">2</span><span><b>Quatre compteurs</b>, dont le quota IA restant sur 24 h : l'utilisateur voit sa limite avant de la heurter dans l'éditeur.</span></div>
+        <div class="note"><span class="n">3</span><span><b>Documents récents</b> triés par date de modification, statut visible. Un clic mène directement à l'éditeur.</span></div>
+        <div class="note"><span class="n">—</span><span>État vide prévu : message et appel à créer le premier document.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- W-05 LISTE -->
+  <section class="plate">
+    <div class="plate-head">
+      <span class="ref">W-05</span>
+      <h2>Liste des documents</h2>
+      <span class="route">/documents · garde requiresAuth</span>
+    </div>
+    <div class="plate-body">
+      <div class="wf">
+        <div class="wf-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>helpmedraft/documents</span></div>
+        <div class="wf-in">
+          <div class="nav"><span class="logo"></span><span class="ph" style="width:80px"></span>
+            <span class="nav-links"><span class="pill">Tableau de bord</span><span class="pill">Compte ▾</span></span></div>
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div class="col" style="gap:3px"><span class="lbl">[ Espace personnel ]</span><div class="title-blk" style="width:160px"></div></div>
+            <span class="btn solid">+ Nouveau document</span>
+          </div>
+          <div class="row" style="gap:10px;align-items:flex-start">
+            <div class="col anchor" style="width:33%;gap:5px">
+              <span class="num" style="left:-7px;top:-4px">1</span>
+              <span class="lbl">Dossiers</span>
+              <div class="card" style="padding:6px;gap:4px">
+                <span class="pill" style="border-color:var(--ink)">Tous les documents · 12</span>
+                <span class="pill">Contrats · 5</span>
+                <span class="pill">Courriers · 4</span>
+                <span class="pill">Notes internes · 3</span>
+                <span class="btn ghost">+ Nouveau dossier</span>
+              </div>
+            </div>
+            <div class="col grow anchor" style="gap:6px">
+              <span class="num" style="left:-7px;top:-4px">2</span>
+              <div class="row" style="gap:5px">
+                <div class="field grow">Rechercher un document…</div>
+                <span class="pill">Statut ▾</span>
+              </div>
+              <div class="card row" style="align-items:center;gap:7px">
+                <div class="col grow" style="gap:4px"><div class="title-sm" style="width:52%"></div><div class="ph" style="width:34%"></div></div>
+                <span class="pill">Brouillon</span><span class="pill">⋯</span>
+              </div>
+              <div class="card row" style="align-items:center;gap:7px">
+                <div class="col grow" style="gap:4px"><div class="title-sm" style="width:44%"></div><div class="ph" style="width:30%"></div></div>
+                <span class="pill">Terminé</span><span class="pill">⋯</span>
+              </div>
+              <div class="card row" style="align-items:center;gap:7px">
+                <div class="col grow" style="gap:4px"><div class="title-sm" style="width:58%"></div><div class="ph" style="width:28%"></div></div>
+                <span class="pill">À relire</span><span class="pill">⋯</span>
+              </div>
+              <div class="row anchor" style="justify-content:center;gap:6px;padding-top:2px">
+                <span class="num" style="left:-7px;top:-4px">3</span>
+                <span class="pill">← Précédent</span><span class="pill">1 / 3</span><span class="pill">Suivant →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Intentions</h3>
+        <div class="note"><span class="n">1</span><span><b>Dossiers en colonne</b> avec compteurs. La suppression d'un dossier ne supprime pas ses documents : ils retournent à « Tous ».</span></div>
+        <div class="note"><span class="n">2</span><span><b>Recherche et filtre statut</b> au-dessus de la liste. Chaque ligne porte titre, date, statut et un menu d'actions (ouvrir, renommer, supprimer).</span></div>
+        <div class="note"><span class="n">3</span><span><b>Pagination serveur</b> — la liste n'est jamais chargée entièrement, les bornes de pagination sont validées côté API.</span></div>
+        <div class="note"><span class="n">—</span><span>L'API ne renvoie que les documents de l'utilisateur courant ; l'identifiant d'URL n'est jamais présumé légitime.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- W-06 EDITEUR -->
+  <section class="plate">
+    <div class="plate-head">
+      <span class="ref">W-06</span>
+      <h2>Éditeur de document</h2>
+      <span class="route">/documents/:id · écran le plus représentatif</span>
+    </div>
+    <div class="plate-body">
+      <div class="wf">
+        <div class="wf-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>helpmedraft/documents/a3f…</span></div>
+        <div class="wf-in">
+          <div class="nav anchor" style="border-style:solid;border-color:var(--line-soft)">
+            <span class="num" style="left:-7px;top:-7px">1</span>
+            <span class="pill">← Documents</span>
+            <div class="field grow" style="font-family:var(--sans);font-size:10.5px;color:var(--ink)">Titre du document</div>
+            <span class="pill">Statut ▾</span><span class="pill">Dossier ▾</span>
+            <span class="lbl">⟳ Enregistrement…</span>
+          </div>
+          <div class="row anchor" style="flex-wrap:wrap;gap:3px;border:1px solid var(--line);padding:5px;background:var(--block)">
+            <span class="num" style="left:-7px;top:-7px">2</span>
+            <span class="pill">G</span><span class="pill">I</span><span class="pill">S</span>
+            <span class="pill">H1</span><span class="pill">H2</span><span class="pill">H3</span>
+            <span class="pill">• Liste</span><span class="pill">1. Liste</span>
+            <span class="pill">Lien</span><span class="pill">Code</span><span class="pill">" Citation</span>
+            <span class="btn solid" style="margin-left:auto">✦ IA</span><span class="pill">✓ Aperçu</span>
+          </div>
+          <div class="row anchor" style="gap:0;border:1px solid var(--line);min-height:104px">
+            <span class="num" style="left:-7px;top:-7px">3</span>
+            <div class="col grow" style="padding:9px;gap:5px;background:var(--paper)">
+              <span class="lbl">Saisie Markdown</span>
+              <div class="ph" style="width:94%"></div><div class="ph" style="width:100%"></div>
+              <div class="ph" style="width:88%"></div><div class="ph" style="width:52%"></div>
+            </div>
+            <div class="col grow" style="padding:9px;gap:5px;border-left:1px solid var(--line)">
+              <span class="lbl">Aperçu du rendu</span>
+              <div class="title-sm" style="width:50%"></div>
+              <div class="ph" style="width:96%"></div><div class="ph" style="width:82%"></div>
+            </div>
+          </div>
+          <div class="card anchor" style="gap:5px">
+            <span class="num" style="left:-7px;top:-7px">4</span>
+            <div class="row" style="justify-content:space-between"><span class="lbl">Historique des interactions IA</span><span class="lbl">▾</span></div>
+            <div class="row" style="gap:6px;align-items:center"><span class="pill">Reformuler</span><div class="ph grow"></div><span class="pill">142 tokens</span></div>
+            <div class="row" style="gap:6px;align-items:center"><span class="pill">Corriger</span><div class="ph grow"></div><span class="pill">88 tokens</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Intentions</h3>
+        <div class="note"><span class="n">1</span><span><b>Titre éditable en place</b> et enregistrement automatique signalé. Aucun bouton « Enregistrer » : le document ne se perd pas.</span></div>
+        <div class="note"><span class="n">2</span><span><b>Barre d'outils groupée</b> par nature (emphase, titres, listes, insertions). <code>role="toolbar"</code> et <code>aria-label</code> pour la restitution vocale.</span></div>
+        <div class="note"><span class="n">3</span><span><b>Saisie et aperçu côte à côte</b>, aperçu masquable. Sur mobile, l'aperçu passe sous la saisie.</span></div>
+        <div class="note"><span class="n">4</span><span><b>Historique IA</b> repliable : action, avant, après, tokens. C'est la traçabilité exigée au cahier des charges.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- W-07 PANNEAU IA -->
+  <section class="plate">
+    <div class="plate-head">
+      <span class="ref">W-07</span>
+      <h2>Assistant IA</h2>
+      <span class="route">surcouche modale de /documents/:id</span>
+    </div>
+    <div class="plate-body">
+      <div class="wf">
+        <div class="wf-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>helpmedraft/documents/a3f… — modale</span></div>
+        <div class="wf-in" style="background:var(--block)">
+          <div class="col" style="gap:4px;opacity:.4">
+            <div class="ph" style="width:70%"></div><div class="ph" style="width:92%"></div>
+          </div>
+          <div class="card" style="gap:8px;border-width:1.5px;border-color:var(--ink)">
+            <div class="row" style="justify-content:space-between;align-items:center">
+              <span class="lbl">[ Assistant IA — Ollama ]</span><span class="pill">✕</span>
+            </div>
+            <div class="row anchor" style="gap:8px">
+              <span class="num" style="left:-7px;top:-4px">1</span>
+              <div class="col grow" style="gap:4px">
+                <span class="lbl">Action</span>
+                <div class="row" style="gap:4px"><span class="btn solid">Reformuler</span><span class="btn">Corriger</span><span class="btn">Compléter</span></div>
+              </div>
+            </div>
+            <div class="col anchor" style="gap:4px">
+              <span class="num" style="left:-7px;top:-4px">2</span>
+              <span class="lbl">Portée</span>
+              <div class="row" style="gap:4px"><span class="btn solid">Sélection</span><span class="btn">Document entier</span></div>
+            </div>
+            <div class="col anchor" style="gap:4px">
+              <span class="num" style="left:-7px;top:-4px">3</span>
+              <span class="lbl">Instructions particulières (optionnel)</span>
+              <div class="field">ton plus formel, garder la structure…</div>
+            </div>
+            <span class="btn solid">Générer</span>
+            <div class="col anchor" style="gap:5px;border-top:1px dashed var(--line);padding-top:8px">
+              <span class="num" style="left:-7px;top:2px">4</span>
+              <span class="lbl">Résultat proposé</span>
+              <div class="box" style="padding:8px;display:flex;flex-direction:column;gap:4px">
+                <div class="ph" style="width:98%"></div><div class="ph" style="width:90%"></div><div class="ph" style="width:64%"></div>
+              </div>
+              <div class="row" style="gap:5px"><span class="btn solid">Insérer</span><span class="btn">Remplacer</span><span class="btn ghost">Annuler</span></div>
+            </div>
+            <div class="row" style="justify-content:space-between"><span class="lbl">Quota : 14 / 20 restants</span><span class="lbl">Inférence locale</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Intentions</h3>
+        <div class="note"><span class="n">1</span><span><b>Trois actions, pas une de plus</b> — exactement le périmètre du cahier des charges.</span></div>
+        <div class="note"><span class="n">2</span><span><b>Portée explicite</b> : sélection ou document entier. L'utilisateur sait ce qu'il envoie au modèle.</span></div>
+        <div class="note"><span class="n">3</span><span><b>Consigne libre</b> transmise au prompt — c'est le prompt engineering dynamique demandé au cahier des charges.</span></div>
+        <div class="note"><span class="n">4</span><span><b>Rien n'est appliqué sans décision</b> : la proposition s'affiche à côté du texte, l'utilisateur insère, remplace ou annule.</span></div>
+        <div class="note"><span class="n">—</span><span>Quota restant affiché dans le panneau ; au-delà, l'API répond <code>429</code> et le message est explicite.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- W-08 ADMIN -->
+  <section class="plate">
+    <div class="plate-head">
+      <span class="ref">W-08</span>
+      <h2>Back-office</h2>
+      <span class="route">/admin · gardes requiresAuth + requiresAdmin</span>
+    </div>
+    <div class="plate-body">
+      <div class="wf">
+        <div class="wf-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>helpmedraft/admin</span></div>
+        <div class="wf-in">
+          <div class="nav"><span class="logo"></span><span class="ph" style="width:80px"></span>
+            <span class="nav-links"><span class="pill" style="border-color:var(--ink)">Administration</span><span class="pill">Compte ▾</span></span></div>
+          <div class="col" style="gap:3px"><span class="lbl">[ Back-office ]</span><div class="title-blk" style="width:150px"></div></div>
+          <div class="row anchor" style="gap:7px">
+            <span class="num" style="left:-7px;top:-7px">1</span>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Utilisateurs</span><div class="title-sm" style="width:26px"></div></div>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Documents</span><div class="title-sm" style="width:32px"></div></div>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Appels IA (24 h)</span><div class="title-sm" style="width:26px"></div></div>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Appels IA (7 j)</span><div class="title-sm" style="width:32px"></div></div>
+          </div>
+          <div class="col anchor" style="gap:0;border:1px solid var(--line)">
+            <span class="num" style="left:-7px;top:-7px">2</span>
+            <div class="row" style="background:var(--block);padding:6px 8px;gap:8px">
+              <span class="lbl grow">Utilisateur</span><span class="lbl" style="width:52px">Rôle</span>
+              <span class="lbl" style="width:62px">Quota / 24h</span><span class="lbl" style="width:34px">Docs</span>
+              <span class="lbl" style="width:34px">IA</span><span class="lbl" style="width:56px">Actions</span>
+            </div>
+            <div class="row" style="padding:6px 8px;gap:8px;align-items:center;background:var(--paper)">
+              <div class="ph grow" style="width:auto"></div><span class="pill" style="width:52px">user ▾</span>
+              <span class="field" style="width:62px;padding:3px 5px">20</span>
+              <span class="lbl" style="width:34px">12</span><span class="lbl" style="width:34px">37</span>
+              <span class="pill" style="width:56px">Supprimer</span>
+            </div>
+            <div class="row" style="padding:6px 8px;gap:8px;align-items:center;background:var(--paper);border-top:1px solid var(--line-soft)">
+              <div class="ph grow" style="width:auto"></div><span class="pill" style="width:52px">admin ▾</span>
+              <span class="field" style="width:62px;padding:3px 5px">50</span>
+              <span class="lbl" style="width:34px">4</span><span class="lbl" style="width:34px">9</span>
+              <span class="pill ghost" style="width:56px;opacity:.45">—</span>
+            </div>
+          </div>
+          <div class="row anchor" style="justify-content:center;gap:6px">
+            <span class="num" style="left:-7px;top:-4px">3</span>
+            <span class="pill">← Précédent</span><span class="pill">1 / 2</span><span class="pill">Suivant →</span>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Intentions</h3>
+        <div class="note"><span class="n">1</span><span><b>Statistiques globales</b> : comptes, documents, appels IA sur 24 h et 7 jours — l'usage du modèle est ce qui coûte.</span></div>
+        <div class="note"><span class="n">2</span><span><b>Rôle et quota modifiables en ligne</b>, sans écran de détail. Un administrateur ne peut ni se retirer ses droits ni supprimer son propre compte : la ligne est neutralisée.</span></div>
+        <div class="note"><span class="n">3</span><span><b>Liste paginée</b> côté serveur, avec les compteurs d'usage calculés par agrégation.</span></div>
+        <div class="note"><span class="n">—</span><span>Masquer l'entrée du menu ne protège rien : le rôle est <b>relu en base à chaque appel</b> d'une route <code>/admin</code>.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLUX -->
+  <section class="plate">
+    <div class="plate-head">
+      <span class="ref">W-09</span>
+      <h2>Enchaînement des écrans</h2>
+      <span class="route">gardes de navigation</span>
+    </div>
+    <div class="flow">
+      <svg viewBox="0 0 900 600" role="img" aria-label="Schéma d'enchaînement des écrans de HelpMeDraft, du visiteur à l'espace authentifié">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-3)"/>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink)">
+
+          <!-- zone publique -->
+          <rect x="16" y="16" width="250" height="196" fill="var(--surface)" stroke="var(--line)" stroke-dasharray="4 3"/>
+          <text x="28" y="36" fill="var(--ink-3)" font-size="10" letter-spacing="1.4">ZONE PUBLIQUE</text>
+          <rect x="28" y="48" width="140" height="30" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="40" y="67" fill="var(--ink)">/ Accueil</text>
+          <rect x="28" y="88" width="226" height="22" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="38" y="103" fill="var(--ink-2)" font-size="10">/fonctionnalites · /modeles · /tarifs</text>
+          <rect x="28" y="118" width="226" height="22" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="38" y="133" fill="var(--ink-2)" font-size="10">/mentions-legales · /cgu</text>
+          <rect x="28" y="148" width="226" height="22" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="38" y="163" fill="var(--ink-2)" font-size="10">/confidentialite</text>
+          <text x="28" y="192" fill="var(--ink-3)" font-size="9.5">Footer présent sur tous les écrans</text>
+
+          <!-- zone auth -->
+          <rect x="325" y="16" width="250" height="196" fill="var(--surface)" stroke="var(--line)" stroke-dasharray="4 3"/>
+          <text x="337" y="36" fill="var(--ink-3)" font-size="10" letter-spacing="1.4">AUTHENTIFICATION</text>
+          <text x="337" y="50" fill="var(--mark)" font-size="9.5">garde : guestOnly</text>
+          <rect x="337" y="60" width="150" height="26" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="349" y="77">/register</text>
+          <rect x="337" y="96" width="150" height="26" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="349" y="113">/login</text>
+          <rect x="337" y="132" width="200" height="24" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="347" y="148" fill="var(--ink-2)" font-size="10">/forgot-password</text>
+          <rect x="337" y="164" width="200" height="24" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="347" y="180" fill="var(--ink-2)" font-size="10">/reset-password · courriel</text>
+          <path d="M497,73 C520,73 520,105 497,108" fill="none" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+          <path d="M412,122 L412,130" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+          <path d="M437,156 L437,162" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+          <path d="M545,176 C570,176 570,112 492,109" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#ar)"/>
+
+          <!-- fleche publique -> auth -->
+          <path d="M266,64 L331,72" stroke="var(--ink-3)" stroke-width="1.4" marker-end="url(#ar)"/>
+          <text x="272" y="58" fill="var(--ink-3)" font-size="9.5">Se connecter</text>
+
+          <!-- zone authentifiee -->
+          <rect x="16" y="248" width="868" height="292" fill="var(--surface)" stroke="var(--line)" stroke-dasharray="4 3"/>
+          <text x="30" y="270" fill="var(--ink-3)" font-size="10" letter-spacing="1.4">ZONE AUTHENTIFIÉE</text>
+          <text x="30" y="284" fill="var(--mark)" font-size="9.5">garde : requiresAuth</text>
+
+          <path d="M412,196 L412,240 L200,240 L200,300" fill="none" stroke="var(--ink)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="420" y="232" fill="var(--ink-2)" font-size="9.5">authentification réussie</text>
+
+          <rect x="112" y="304" width="176" height="34" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="126" y="325">/dashboard</text>
+
+          <path d="M200,338 L200,376" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+
+          <rect x="112" y="380" width="176" height="34" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="126" y="401">/documents</text>
+
+          <path d="M288,390 L346,368" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+          <rect x="350" y="344" width="200" height="30" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="362" y="363" fill="var(--ink-2)" font-size="10">/documents/nouveau</text>
+
+          <path d="M450,374 L450,398" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+          <text x="458" y="390" fill="var(--ink-3)" font-size="9">1er enregistrement</text>
+
+          <path d="M288,404 L346,414" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+          <rect x="350" y="402" width="200" height="34" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="362" y="423">/documents/:id</text>
+
+          <path d="M550,419 L606,419" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+          <rect x="610" y="396" width="180" height="46" fill="var(--mark-soft)" stroke="var(--mark)" stroke-width="1.4"/>
+          <text x="622" y="415" fill="var(--mark)" font-size="10">Panneau IA (modale)</text>
+          <text x="622" y="431" fill="var(--ink-2)" font-size="9">insérer · remplacer · annuler</text>
+
+          <path d="M450,436 L450,466 L200,466 L200,418" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#ar)"/>
+          <text x="256" y="480" fill="var(--ink-3)" font-size="9">retour à la liste</text>
+
+          <rect x="610" y="304" width="180" height="46" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="622" y="323">/admin</text>
+          <text x="622" y="339" fill="var(--mark)" font-size="9">garde : requiresAdmin</text>
+          <path d="M288,318 L606,320" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#ar)"/>
+          <text x="368" y="313" fill="var(--ink-3)" font-size="9">via Nav, si role = admin — sinon redirection /dashboard</text>
+
+          <path d="M112,321 L60,321 L60,510 L430,510" fill="none" stroke="var(--ink-3)" stroke-width="1.2" marker-end="url(#ar)"/>
+          <text x="440" y="514" fill="var(--ink-2)" font-size="10">déconnexion → retour / Accueil</text>
+        </g>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="border-width:1.5px;border-color:var(--ink);background:var(--paper)"></span> écran principal</span>
+      <span><span class="swatch" style="background:var(--paper)"></span> écran secondaire</span>
+      <span><span class="swatch" style="background:var(--mark-soft);border-color:var(--mark)"></span> surcouche modale</span>
+      <span><span class="swatch" style="background:var(--surface);border-style:dashed"></span> zone d'accès</span>
+      <span>— navigation directe　··· retour ou condition</span>
+    </div>
+  </section>
+
+  <p class="foot">Dossier projet CDA · § 5.3 Les maquettes et enchaînement des maquettes · Annexe § 12.1</p>
+</div>

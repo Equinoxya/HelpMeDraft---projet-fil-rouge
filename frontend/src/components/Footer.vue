@@ -48,8 +48,8 @@ const contactEmail = "contact@helpmedraft.fr";
           <p
             class="font-serif text-base text-[#111111]/80 leading-relaxed max-w-sm"
           >
-            Plateforme d'assistance à la rédaction administrative et juridique.
-            Passez de l'intention à l'acte écrit sans friction.
+            Plateforme d'assistance à la rédaction de documents professionnels.
+            Passez de l'intention au document abouti sans friction.
           </p>
         </div>
 
@@ -90,7 +90,7 @@ const contactEmail = "contact@helpmedraft.fr";
         <h3
           class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]"
         >
-          [ Juridique ]
+          [ Informations légales ]
         </h3>
 
         <ul class="space-y-3 font-mono text-xs uppercase tracking-wider">

@@ -54,7 +54,7 @@ async function handleSubmit() {
             Connexion
           </h1>
           <p class="font-serif text-[#111111]/70 text-base mt-2">
-            Accédez à vos dossiers juridiques et modèles d'actes.
+            Accédez à vos documents et à vos modèles.
           </p>
         </div>
 
@@ -175,7 +175,7 @@ async function handleSubmit() {
         <p
           class="mt-8 pt-6 border-t border-[#111111]/20 font-serif text-center text-sm text-[#111111]/70"
         >
-          Pas encore de compte Studio ?
+          Pas encore de compte ?
           <RouterLink
             :to="{ name: 'register' }"
             class="font-sans font-bold text-[#111111] hover:text-[#E0533C] underline ml-1"

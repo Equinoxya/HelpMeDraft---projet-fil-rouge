@@ -5,7 +5,7 @@ const features = [
   {
     title: "Rédaction Assistée par IA",
     description:
-      "Laissez notre assistant Ollama vous aider à rédiger, reformuler ou corriger vos documents administratifs et juridiques.",
+      "Laissez notre assistant Ollama vous aider à rédiger, reformuler ou corriger vos documents professionnels : courriels, notes et rapports.",
     icon: "brain",
     items: [
       "Reformulation de textes",
@@ -69,7 +69,7 @@ const iconMap: Record<string, string> = {
         </h1>
         <p class="text-lg text-[#111111]/70 max-w-3xl">
           HelpMeDraft vous accompagne à chaque étape de la rédaction
-          administrative et juridique.
+          de vos documents professionnels.
         </p>
       </header>
 

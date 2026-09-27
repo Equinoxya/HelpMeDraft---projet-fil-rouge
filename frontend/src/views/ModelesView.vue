@@ -3,6 +3,32 @@ import { RouterLink } from "vue-router";
 
 const categories = [
   {
+    name: "Courriels & Rapports",
+    description: "Écrits professionnels du quotidien : emails, notes, rapports...",
+    templates: [
+      {
+        name: "Email professionnel",
+        description: "Relance, réponse client ou demande d'information",
+        icon: "mail",
+      },
+      {
+        name: "Note de service",
+        description: "Communication interne structurée",
+        icon: "edit-3",
+      },
+      {
+        name: "Rapport d'activité",
+        description: "Synthèse périodique avec constats et suites à donner",
+        icon: "file-text",
+      },
+      {
+        name: "Note de synthèse",
+        description: "Résumé d'un dossier pour décision",
+        icon: "clipboard",
+      },
+    ],
+  },
+  {
     name: "Contrats",
     description: "Contrats de travail, location, prestation de services...",
     templates: [

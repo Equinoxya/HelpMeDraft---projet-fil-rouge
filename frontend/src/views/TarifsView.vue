@@ -37,7 +37,7 @@ const pricingPlans = [
     name: "Entreprise",
     price: "49,99 €",
     period: "/mois",
-    description: "Pour les équipes et cabinets",
+    description: "Pour les équipes et les PME",
     features: [
       "Tout en illimité",
       "500 requêtes IA/jour",
