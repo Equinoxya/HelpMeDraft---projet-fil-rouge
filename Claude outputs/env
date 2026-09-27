@@ -1,0 +1,20 @@
+# HelpMeDraft — backend/.env (NE PAS COMMIT)
+
+# ── Sécurité JWT ──────────────────────────────────────────────────────────────
+JWT_SECRET_KEY=A_REMPLACER_par_python_-c_"import secrets; print(secrets.token_urlsafe(64))"
+
+# ── Emailing (Flask-Mail) — sandbox Mailtrap en dev ───────────────────────────
+MAIL_SERVER=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=A_REMPLACER_identifiant_mailtrap
+MAIL_PASSWORD=A_REMPLACER_mot_de_passe_mailtrap
+MAIL_USE_TLS=True
+MAIL_USE_SSL=False
+MAIL_DEFAULT_SENDER=contact@helpmedraft.fr
+
+# ── IA locale (Ollama) ────────────────────────────────────────────────────────
+OLLAMA_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.1
+
+# ── Frontend ──────────────────────────────────────────────────────────────────
+FRONTEND_URL=http://localhost:5173

@@ -402,7 +402,7 @@ function handleCancel() {
                 id="titre"
                 v-model="titre"
                 type="text"
-                placeholder="Ex. Contrat de location meublée"
+                placeholder="Ex. Compte rendu de réunion du 12 mars"
                 maxlength="255"
                 class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-serif text-lg text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C] transition-shadow"
               />

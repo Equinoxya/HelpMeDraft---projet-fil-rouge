@@ -1,6 +1,6 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from database.db import SessionLocal, User, UserSession, Consentement, PasswordReset
-from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session, rotate_refresh_token, generate_reset_token, is_password_valid, hash_reset_token, is_reset_token_expired, is_password_valid
+from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session, rotate_refresh_token, generate_reset_token, is_password_valid, hash_reset_token, is_reset_token_expired, hash_refresh_token
 from app.services.email_service import send_reset_password_email
 from sqlalchemy import select
 from functools import wraps
@@ -11,6 +11,29 @@ from utilitaires import utc_now_naive
 from app.extension import mail, limiter
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+
+REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30 jours
+
+
+def set_refresh_cookie(response, refresh_token: str):
+    """
+    Pose le cookie de refresh de façon homogène sur toutes les routes.
+    - httponly : le cookie est invisible pour JavaScript, donc un XSS ne peut
+      pas exfiltrer le jeton de session longue durée.
+    - secure : piloté par APP_ENV (False en dev sur http://localhost, True
+      partout ailleurs) pour que le jeton ne puisse pas transiter en clair.
+    - path=/auth : le cookie n'est envoyé qu'aux routes d'authentification,
+      ce qui réduit la surface exposée (et le CSRF au seul /auth/refresh).
+    """
+    response.set_cookie(
+        "refresh_token", refresh_token,
+        httponly=True,
+        secure=current_app.config["COOKIE_SECURE"],
+        samesite="Lax",
+        max_age=REFRESH_COOKIE_MAX_AGE,
+        path="/auth",
+    )
+    return response
 
 @auth_bp.route("/register", methods=["POST"])
 @limiter.limit("3 per hour")
@@ -83,11 +106,7 @@ def login():
         "access_token": access_token,
         "user": {"id": user.user_id, "email": user.email, "firstname" : user.firstname, "lastname": user.lastname, "role": user.role}
     })
-        response.set_cookie(
-            "refresh_token", refresh_token,
-            httponly=True, secure=False, samesite="Lax",
-            max_age=60*60*24*30, path="/auth"
-        )
+        set_refresh_cookie(response, refresh_token)
         return response, 200
         
 @auth_bp.route("/refresh", methods=["POST"])
@@ -105,11 +124,7 @@ def refresh():
     new_access_token = generate_access_token(user_id)
     
     response= jsonify({'access_token' : new_access_token})
-    response.set_cookie(
-        "refresh_token", new_refresh_token,
-        httponly=True, secure=False, samesite="Lax",
-        max_age=60*60*24*30, path="/auth"
-    )
+    set_refresh_cookie(response, new_refresh_token)
     return response, 200
         
 @auth_bp.route("/logout", methods=['POST'])
@@ -118,7 +133,11 @@ def logout():
     if not token:
         return jsonify({"error": "Aucune session active"}), 400
     with SessionLocal() as db_session:
-        stmt = select(UserSession).where(UserSession.refresh_token == token)
+        # La base ne contient que l'empreinte : on hache le jeton du cookie
+        # pour retrouver la session à supprimer.
+        stmt = select(UserSession).where(
+            UserSession.refresh_token_hash == hash_refresh_token(token)
+        )
         session = db_session.execute(stmt).scalar_one_or_none()
         if session is not None:
             db_session.delete(session)

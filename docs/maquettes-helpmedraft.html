@@ -399,33 +399,34 @@
           </div>
           <div class="row anchor" style="gap:7px">
             <span class="num" style="left:-7px;top:-7px">2</span>
-            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Documents</span><div class="title-sm" style="width:26px"></div></div>
-            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Brouillons</span><div class="title-sm" style="width:26px"></div></div>
-            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">À relire</span><div class="title-sm" style="width:26px"></div></div>
-            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Quota IA / 24 h</span><div class="title-sm" style="width:42px"></div></div>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Documents créés</span><div class="title-sm" style="width:26px"></div><span class="lbl">↑ Total sur le compte</span></div>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Brouillons</span><div class="title-sm" style="width:26px"></div><span class="lbl">↑ À terminer</span></div>
+            <div class="card grow" style="gap:3px;align-items:flex-start"><span class="lbl">Documents finalisés</span><div class="title-sm" style="width:26px"></div><span class="lbl">↑ Prêts à l'export</span></div>
           </div>
           <div class="col anchor" style="gap:6px">
             <span class="num" style="left:-7px;top:-4px">3</span>
-            <span class="lbl">Reprendre où vous en étiez</span>
-            <div class="card row" style="align-items:center;gap:8px">
-              <span class="pill">01</span>
-              <div class="col grow" style="gap:4px"><div class="title-sm" style="width:46%"></div><div class="ph" style="width:30%"></div></div>
-              <span class="pill">Brouillon</span><span class="pill">Modifié le 12/09</span>
+            <div class="row" style="gap:6px;align-items:center"><span class="pill">01</span><span class="lbl">Que souhaitez-vous faire ?</span></div>
+            <div class="row" style="gap:7px">
+              <div class="card grow" style="gap:4px"><span class="pill" style="width:20px">▤</span><div class="title-sm" style="width:64%"></div><div class="ph" style="width:96%"></div><div class="ph" style="width:70%"></div></div>
+              <div class="card grow" style="gap:4px"><span class="pill" style="width:20px">▦</span><div class="title-sm" style="width:58%"></div><div class="ph" style="width:92%"></div><div class="ph" style="width:64%"></div></div>
+              <div class="card grow" style="gap:4px"><span class="pill" style="width:20px">↥</span><div class="title-sm" style="width:62%"></div><div class="ph" style="width:94%"></div><div class="ph" style="width:58%"></div></div>
             </div>
-            <div class="card row" style="align-items:center;gap:8px">
-              <span class="pill">02</span>
-              <div class="col grow" style="gap:4px"><div class="title-sm" style="width:38%"></div><div class="ph" style="width:26%"></div></div>
-              <span class="pill">À relire</span><span class="pill">Modifié le 11/09</span>
+          </div>
+          <div class="col anchor" style="gap:5px">
+            <span class="num" style="left:-7px;top:-4px">4</span>
+            <div class="row" style="gap:6px;align-items:center">
+              <div class="field grow">Rechercher par titre, type ou statut…</div><span class="lbl">0 document(s)</span>
             </div>
+            <div class="card" style="align-items:center;padding:14px"><span class="lbl">Aucun document trouvé.</span></div>
           </div>
         </div>
       </div>
       <div class="notes">
         <h3>Intentions</h3>
         <div class="note"><span class="n">1</span><span><b>Action principale unique</b> en haut à droite. Le tableau de bord sert à reprendre un travail, pas à le contempler.</span></div>
-        <div class="note"><span class="n">2</span><span><b>Quatre compteurs</b>, dont le quota IA restant sur 24 h : l'utilisateur voit sa limite avant de la heurter dans l'éditeur.</span></div>
-        <div class="note"><span class="n">3</span><span><b>Documents récents</b> triés par date de modification, statut visible. Un clic mène directement à l'éditeur.</span></div>
-        <div class="note"><span class="n">—</span><span>État vide prévu : message et appel à créer le premier document.</span></div>
+        <div class="note"><span class="n">2</span><span><b>Trois compteurs</b> alignés sur les statuts du modèle : total, brouillons à terminer, documents finalisés.</span></div>
+        <div class="note"><span class="n">3</span><span><b>Trois portes d'entrée</b> vers la rédaction — page blanche, modèle, ou document existant — plutôt qu'un seul bouton qui laisse l'utilisateur devant le vide.</span></div>
+        <div class="note"><span class="n">4</span><span><b>Recherche et liste</b> avec un état vide explicite, qui dit quoi faire au lieu de n'afficher qu'un cadre.</span></div>
       </div>
     </div>
   </section>
@@ -511,8 +512,8 @@
             <span class="pill">← Documents</span>
             <div class="field grow" style="font-family:var(--sans);font-size:10.5px;color:var(--ink)">Titre du document</div>
             <span class="pill">Statut ▾</span><span class="pill">Dossier ▾</span>
-            <span class="lbl">⟳ Enregistrement…</span>
           </div>
+          <div class="row" style="justify-content:flex-end"><span class="lbl">✓ Enregistré automatiquement</span></div>
           <div class="row anchor" style="flex-wrap:wrap;gap:3px;border:1px solid var(--line);padding:5px;background:var(--block)">
             <span class="num" style="left:-7px;top:-7px">2</span>
             <span class="pill">G</span><span class="pill">I</span><span class="pill">S</span>
@@ -534,8 +535,12 @@
               <div class="ph" style="width:96%"></div><div class="ph" style="width:82%"></div>
             </div>
           </div>
+          <div class="row anchor" style="justify-content:flex-end;gap:6px">
+            <span class="num" style="left:-7px;top:-4px">4</span>
+            <span class="btn ghost">Annuler</span><span class="btn solid">Enregistrer</span>
+          </div>
           <div class="card anchor" style="gap:5px">
-            <span class="num" style="left:-7px;top:-7px">4</span>
+            <span class="num" style="left:-7px;top:-7px">5</span>
             <div class="row" style="justify-content:space-between"><span class="lbl">Historique des interactions IA</span><span class="lbl">▾</span></div>
             <div class="row" style="gap:6px;align-items:center"><span class="pill">Reformuler</span><div class="ph grow"></div><span class="pill">142 tokens</span></div>
             <div class="row" style="gap:6px;align-items:center"><span class="pill">Corriger</span><div class="ph grow"></div><span class="pill">88 tokens</span></div>
@@ -544,10 +549,11 @@
       </div>
       <div class="notes">
         <h3>Intentions</h3>
-        <div class="note"><span class="n">1</span><span><b>Titre éditable en place</b> et enregistrement automatique signalé. Aucun bouton « Enregistrer » : le document ne se perd pas.</span></div>
+        <div class="note"><span class="n">1</span><span><b>Titre, statut et dossier sur une seule ligne</b> : les trois métadonnées du document se règlent sans quitter l'écran de rédaction.</span></div>
         <div class="note"><span class="n">2</span><span><b>Barre d'outils groupée</b> par nature (emphase, titres, listes, insertions). <code>role="toolbar"</code> et <code>aria-label</code> pour la restitution vocale.</span></div>
         <div class="note"><span class="n">3</span><span><b>Saisie et aperçu côte à côte</b>, aperçu masquable. Sur mobile, l'aperçu passe sous la saisie.</span></div>
-        <div class="note"><span class="n">4</span><span><b>Historique IA</b> repliable : action, avant, après, tokens. C'est la traçabilité exigée au cahier des charges.</span></div>
+        <div class="note"><span class="n">4</span><span><b>Enregistrement automatique</b> 2,5 s après la dernière frappe, doublé d'un bouton explicite. L'indicateur d'état n'apparaît qu'une fois le titre saisi : sans titre, rien n'est enregistré.</span></div>
+        <div class="note"><span class="n">5</span><span><b>Historique IA</b> repliable : action, avant, après, tokens. C'est la traçabilité exigée au cahier des charges.</span></div>
       </div>
     </div>
   </section>

@@ -58,9 +58,20 @@ def decode_access_token(token: str) -> dict:
         raise ValueError("Token invalide")
 
 
-# ── Refresh token (stocké en base dans UserSession) ──────────
+# ── Refresh token (empreinte stockée en base dans UserSession) ───────────────
+# SÉCURITÉ : le jeton en clair ne quitte jamais le couple serveur -> cookie du
+# client. En base on ne garde que son empreinte SHA-256, comme pour les jetons
+# de réinitialisation de mot de passe. Conséquence : une fuite de la table
+# user_session (dump, injection SQL, sauvegarde mal protégée) ne permet plus de
+# rejouer les sessions actives, car l'empreinte n'est pas inversible.
+# SHA-256 sans sel suffit ici — contrairement à un mot de passe, le jeton est
+# aléatoire sur 64 octets, donc non attaquable par dictionnaire.
 def generate_refresh_token() -> str:
     return secrets.token_urlsafe(64)
+
+
+def hash_refresh_token(plain_token: str) -> str:
+    return hashlib.sha256(plain_token.encode()).hexdigest()
 
 
 def create_session(user_id: str) -> str:
@@ -68,18 +79,20 @@ def create_session(user_id: str) -> str:
     with SessionLocal() as db_session:
         user_session = UserSession(
             user_id=user_id,
-            refresh_token=refresh_token,
+            refresh_token_hash=hash_refresh_token(refresh_token),
             refresh_token_exp=utc_now_naive()
                 + datetime.timedelta(days=REFRESH_TOKEN_EXPIRES_DAYS),
         )
         db_session.add(user_session)
         db_session.commit()
+    # Seul l'appelant (la route) reçoit le jeton en clair, pour le cookie.
     return refresh_token
 
 
 def verify_refresh_token(refresh_token: str) -> str:
+    token_hash = hash_refresh_token(refresh_token)
     with SessionLocal() as db_session:
-        stmt = select(UserSession).where(UserSession.refresh_token == refresh_token)
+        stmt = select(UserSession).where(UserSession.refresh_token_hash == token_hash)
         session = db_session.execute(stmt).scalar_one_or_none()
         if session is None:
             raise ValueError("Refresh token invalide")
@@ -103,8 +116,9 @@ def rotate_refresh_token(old_refresh_token: str) -> tuple[str, str]:
     Retourne (user_id, nouveau_refresh_token).
     Lève ValueError si le token est invalide, expiré, ou réutilisé.
     """
+    old_token_hash = hash_refresh_token(old_refresh_token)
     with SessionLocal() as db_session:
-        stmt = select(UserSession).where(UserSession.refresh_token == old_refresh_token)
+        stmt = select(UserSession).where(UserSession.refresh_token_hash == old_token_hash)
         session = db_session.execute(stmt).scalar_one_or_none()
 
         if session is None:
@@ -125,7 +139,7 @@ def rotate_refresh_token(old_refresh_token: str) -> tuple[str, str]:
         new_refresh_token = generate_refresh_token()
         new_session = UserSession(
             user_id=session.user_id,
-            refresh_token=new_refresh_token,
+            refresh_token_hash=hash_refresh_token(new_refresh_token),
             refresh_token_exp=utc_now_naive() + datetime.timedelta(days=REFRESH_TOKEN_EXPIRES_DAYS),
         )
         db_session.add(new_session)

@@ -4,7 +4,26 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "change_moi_en_prod")
+    # SÉCURITÉ : aucune valeur de repli. Une clé de secours en dur dans le code
+    # source permettrait à l'application de démarrer sans .env avec une clé
+    # connue de quiconque lit le dépôt : n'importe qui pourrait alors forger un
+    # access token valide pour n'importe quel user_id (usurpation d'identité).
+    # On préfère un échec bruyant au démarrage à un démarrage silencieusement
+    # vulnérable (« fail fast, fail loud »).
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+    if not JWT_SECRET_KEY:
+        raise RuntimeError(
+            "JWT_SECRET_KEY est absente de l'environnement. "
+            "Copier .env.example en backend/.env puis générer une clé : "
+            'python -c "import secrets; print(secrets.token_urlsafe(64))"'
+        )
+
+    # Environnement d'exécution : pilote l'attribut Secure du cookie de refresh.
+    # En dev le front tourne en http://localhost, un cookie Secure ne serait
+    # jamais envoyé ; hors dev, Secure est obligatoire sinon le jeton peut
+    # transiter en clair sur HTTP et être capté (OWASP A02:2021).
+    APP_ENV = os.getenv("APP_ENV", "development")
+    COOKIE_SECURE = APP_ENV != "development"
     MAIL_SERVER = os.getenv("MAIL_SERVER")
     MAIL_PORT = int(os.getenv("MAIL_PORT", 2525))
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")

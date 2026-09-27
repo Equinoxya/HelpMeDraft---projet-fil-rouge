@@ -12,6 +12,7 @@ import { EditorState } from "@codemirror/state";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 // Props (modelValue optionnel avec valeur par défaut)
 const props = defineProps<{
@@ -75,9 +76,22 @@ const markedOptions = {
 };
 
 // Contenu pour l'aperçu
+// SÉCURITÉ — XSS stocké (OWASP A03:2021 Injection).
+// marked convertit le Markdown en HTML mais ne filtre PAS le HTML brut qu'il
+// rencontre : un document contenant <img src=x onerror="alert(1)"> produit
+// cette balise telle quelle, et v-html l'injecte sans échappement, donc le
+// gestionnaire onerror s'exécute. Comme l'éditeur enregistre automatiquement
+// le contenu, la charge est persistée en base et rejouée à chaque ouverture
+// du document (XSS stocké, et non simplement réfléchi).
+// DOMPurify supprime les balises et attributs dangereux (script, on*, iframe,
+// javascript: ...) après la conversion Markdown et avant l'injection.
 const previewHtml = computed(() => {
   try {
-    return marked.parse(internalValue.value || "", markedOptions);
+    const rawHtml = marked.parse(
+      internalValue.value || "",
+      markedOptions,
+    ) as string;
+    return DOMPurify.sanitize(rawHtml, { USE_PROFILES: { html: true } });
   } catch {
     return "<p>Erreur de rendu</p>";
   }

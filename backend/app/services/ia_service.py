@@ -5,7 +5,7 @@ OLLAMA_TIMEOUT = 60
 
 PROMPT_TEMPLATES = {
     "reformuler": (
-        "Tu es un assistant de rédaction juridique et administrative. "
+        "Tu es un assistant de rédaction de documents professionnels. "
         "Reformule le texte suivant pour le rendre plus clair et plus professionnel, "
         "sans changer son sens ni ajouter d'informations nouvelles. "
         "Réponds uniquement avec le texte reformulé, sans commentaire ni introduction.\n\n"
@@ -18,7 +18,7 @@ PROMPT_TEMPLATES = {
         "Texte à corriger :\n{contenu}"
     ),
     "completer": (
-        "Tu es un assistant de rédaction juridique et administrative. "
+        "Tu es un assistant de rédaction de documents professionnels. "
         "Complète le texte suivant de façon cohérente avec ce qui précède, "
         "en respectant le ton et le sujet. "
         "Réponds uniquement avec la suite proposée, sans répéter le texte existant.\n\n"

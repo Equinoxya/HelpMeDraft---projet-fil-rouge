@@ -19,9 +19,9 @@ def create_app():
     app.register_blueprint(dossier_bp)
     app.register_blueprint(ia_bp)
     app.register_blueprint(admin_bp)
-    
+
     @app.errorhandler(429)
     def ratelimit_handler(e):
         return jsonify({"error" : "Trop de tentatives, réessayer plus tard"}), 429
-    
+
     return app

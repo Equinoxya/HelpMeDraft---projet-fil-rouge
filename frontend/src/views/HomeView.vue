@@ -45,7 +45,7 @@ const features = [
     code: "[ 03 ]",
     title: "Souveraineté des Données",
     description:
-      "Vos écrits restent les vôtres. Hébergement européen, aucun entraînement public sur vos données confidentielles.",
+      "Vos écrits restent les vôtres : traitement local, aucune donnée transmise à un tiers, aucun entraînement sur vos documents confidentiels.",
   },
 ];
 

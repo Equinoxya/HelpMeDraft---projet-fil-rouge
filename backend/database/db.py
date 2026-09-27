@@ -66,7 +66,7 @@ class PasswordReset(Base):
     __tablename__ = "password_reset"
     
     id:          Mapped[str]      = mapped_column(String(36),  primary_key=True, default=gen_uuid)
-    user_id:     Mapped[str]      = mapped_column(String(36),  ForeignKey("user.user_id"), nullable=False)
+    user_id:     Mapped[str]      = mapped_column(String(36),  ForeignKey("user.user_id", ondelete="CASCADE"), nullable=False)
     token_hash:  Mapped[str]      = mapped_column(String(512), nullable=False)
     expires_at:  Mapped[datetime] = mapped_column(DateTime,    nullable=False)
     used:        Mapped[bool]     = mapped_column(Boolean,     nullable=False, default=False)
@@ -79,11 +79,16 @@ class UserSession(Base):
     __tablename__ = "user_session"
 
     id_session:        Mapped[str]      = mapped_column(String(36),  primary_key=True, default=gen_uuid)
-    refresh_token:     Mapped[str]      = mapped_column(String(512), nullable=False, unique=True)
+    # SÉCURITÉ : on ne stocke JAMAIS le refresh token lui-même, seulement son
+    # empreinte SHA-256 (64 caractères hexadécimaux). Une fuite de la base ne
+    # permet donc pas de rejouer une session active. Même principe que
+    # password_reset.token_hash. VARCHAR(128) pour rester aligné sur
+    # schema_mysql.sql et migration_durcissement.sql.
+    refresh_token_hash: Mapped[str]     = mapped_column(String(128), nullable=False, unique=True)
     refresh_token_exp: Mapped[datetime] = mapped_column(DateTime,    nullable=False)
     revoke:            Mapped[bool] = mapped_column(Boolean, nullable= False, default=False)
     created_at:        Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive)
-    user_id:           Mapped[str]      = mapped_column(String(36),  ForeignKey("user.user_id"), nullable=False)
+    user_id:           Mapped[str]      = mapped_column(String(36),  ForeignKey("user.user_id", ondelete="CASCADE"), nullable=False)
 
     user: Mapped[User] = relationship("User", back_populates="sessions")
 
@@ -94,7 +99,7 @@ class Dossier(Base):
     id_dossier: Mapped[str]      = mapped_column(String(36),  primary_key=True, default=gen_uuid)
     name:       Mapped[str]      = mapped_column(String(100), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive)
-    user_id:    Mapped[str]      = mapped_column(String(36),  ForeignKey("user.user_id"), nullable=False)
+    user_id:    Mapped[str]      = mapped_column(String(36),  ForeignKey("user.user_id", ondelete="CASCADE"), nullable=False)
 
     user:      Mapped[User]           = relationship("User",     back_populates="dossiers")
     documents: Mapped[list[Document]] = relationship("Document", back_populates="dossier")
@@ -112,7 +117,7 @@ class Document(Base):
     updated_at:  Mapped[datetime] = mapped_column(DateTime,    nullable=False, default=utc_now_naive, onupdate=utc_now_naive)
     
     id_dossier:  Mapped[str | None] = mapped_column(String(36), ForeignKey("dossier.id_dossier", ondelete="SET NULL"), nullable=True)
-    user_id:     Mapped[str]        = mapped_column(String(36), ForeignKey("user.user_id"), nullable=False)
+    user_id:     Mapped[str]        = mapped_column(String(36), ForeignKey("user.user_id", ondelete="CASCADE"), nullable=False)
 
     dossier: Mapped[Dossier | None] = relationship("Dossier", back_populates="documents")
     user:    Mapped[User]           = relationship("User",    back_populates="documents")
@@ -126,7 +131,7 @@ class Consentement(Base):
     type_consentement: Mapped[str]      = mapped_column(String(50), nullable=False) # ex: 'openai_data_processing'
     accepte:           Mapped[bool]     = mapped_column(Boolean,    nullable=False, default=False)
     date_consentement: Mapped[datetime] = mapped_column(DateTime,   nullable=False, default=utc_now_naive)
-    user_id:           Mapped[str]      = mapped_column(String(36), ForeignKey("user.user_id"), nullable=False)
+    user_id:           Mapped[str]      = mapped_column(String(36), ForeignKey("user.user_id", ondelete="CASCADE"), nullable=False)
 
     user: Mapped[User] = relationship("User", back_populates="consentements")
 
@@ -141,7 +146,7 @@ class IA(Base):
     tokens_used:    Mapped[int]      = mapped_column(Integer, default=0) # Utile pour les métriques de back-office !
     created_at:     Mapped[datetime] = mapped_column(DateTime,   nullable=False, default=utc_now_naive)
     
-    user_id:        Mapped[str]      = mapped_column(String(36), ForeignKey("user.user_id"), nullable=False)
+    user_id:        Mapped[str]      = mapped_column(String(36), ForeignKey("user.user_id", ondelete="CASCADE"), nullable=False)
     id_document:    Mapped[str]      = mapped_column(String(36), ForeignKey("document.id_document"), nullable=False)
 
     user:     Mapped[User]     = relationship("User",     back_populates="ias")
