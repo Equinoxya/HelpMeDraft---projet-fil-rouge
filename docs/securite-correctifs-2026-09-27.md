@@ -2,7 +2,7 @@
 
 Session du 27/09/2026. Matière pour les sections 8 (sécurité) et 11 (veille sur les vulnérabilités) du dossier projet CDA.
 
-Cinq correctifs appliqués (1, 2, 3, 4, 5), une reformulation (7), une décision en attente (6).
+Six correctifs appliqués (1, 2, 3, 4, 5, 6) et une reformulation (7).
 
 ---
 
@@ -176,7 +176,7 @@ COOKIE_SECURE = APP_ENV != "development"
 
 Le défaut est le cas sûr : toute valeur autre que `development` — y compris une variable oubliée mais renseignée — active `Secure`.
 
-`auth_routes.py` : les deux `set_cookie` dupliqués de `/auth/login` et `/auth/refresh` sont remplacés par un helper unique, `set_refresh_cookie()`. Un seul endroit à relire pour auditer la politique de cookie, et plus de risque que les deux routes divergent. `httponly`, `path="/auth"` et `samesite="Lax"` sont conservés.
+`auth_routes.py` : les deux `set_cookie` dupliqués de `/auth/login` et `/auth/refresh` sont remplacés par un helper unique, `set_refresh_cookie()`. Un seul endroit à relire pour auditer la politique de cookie, et plus de risque que les deux routes divergent. `httponly` et `path="/auth"` sont conservés ; `samesite` passe à `Strict` au point 6.
 
 **Test** — dans `test_securite.py`, l'en-tête `Set-Cookie` de `/auth/login` est inspecté :
 
@@ -199,6 +199,45 @@ Ce n'est pas seulement un problème d'intégrité référentielle. Le droit à l
 
 ---
 
+## 6. Protection CSRF 🟠
+
+**Fichier** : `backend/app/routes/auth_routes.py`
+
+**Pourquoi c'était un défaut.** Le refresh token étant dans un cookie, le navigateur le joint automatiquement. `POST /auth/refresh` est donc déclenchable depuis un site tiers : l'attaquant ne lit pas la réponse (le CORS ne l'autorise pas, seul `http://localhost:5173` est admis), mais l'effet de bord se produit quand même.
+
+Ici il est particulier, et c'est ce qui rend le cas intéressant à documenter : la route applique une **rotation**. Une requête forgée invalide le jeton légitime de la victime, et le rejeu suivant par le vrai front est interprété par la détection de réutilisation comme une fraude → toutes ses sessions sont révoquées. L'impact est donc un **déni de service sur le compte**, pas une usurpation.
+
+Les autres routes ne sont pas concernées : elles s'authentifient par en-tête `Authorization: Bearer`, que le navigateur n'ajoute jamais de lui-même. Un formulaire tiers ne peut pas les appeler au nom du client. Le CSRF est structurellement limité aux routes qui s'authentifient par cookie — ici la seule `/auth/refresh`, déjà restreinte par `path=/auth`.
+
+**Options étudiées.**
+
+| | Coût front | Apport | Limite |
+|---|---|---|---|
+| **A** — `SameSite=Strict` | aucun | ferme aussi les navigations top-level que `Lax` laisse passer | front et API doivent être sur le même site (eTLD+1) ; défense déléguée au navigateur |
+| **B** — double-submit token (`Lax` + cookie `csrf_token` lisible + en-tête `X-CSRF-Token`) | `api.ts` à modifier | ne dépend pas du navigateur | **neutralisée par un XSS**, qui peut lire le cookie et forger l'en-tête — suppose donc le point 1 corrigé |
+| **C** — A + B | coût de B | défense en profondeur | cumule les deux contraintes |
+
+**Décision : option A.** Le refresh est la seule route sensible en cookie, `path=/auth` limite déjà la surface, et le pire cas est un déni de service sur un compte. L'option B se justifierait s'il y avait d'autres routes mutatives authentifiées par cookie ; elle reste notée ici parce qu'elle illustre un point de raisonnement utile — **une protection CSRF par double-submit ne tient que si le XSS est fermé** : les deux failles sont liées, et corriger le point 1 était le préalable.
+
+**Correctif** — dans `set_refresh_cookie()` :
+
+```python
+response.set_cookie(
+    "refresh_token", refresh_token,
+    httponly=True,
+    secure=current_app.config["COOKIE_SECURE"],
+    samesite="Strict",          # était "Lax"
+    max_age=REFRESH_COOKIE_MAX_AGE,
+    path="/auth",
+)
+```
+
+**Contrainte de déploiement à retenir.** `SameSite` raisonne en *sites* (eTLD+1), pas en origines. En dev, front (`:5173`) et API (`:5000`) sont tous deux sur `localhost` : même site, le cookie passe malgré les ports différents. En production il faudra deux sous-domaines d'un même domaine, ou l'API derrière un reverse proxy sur le domaine du front. Un front et une API sur deux domaines distincts casseraient le refresh.
+
+**Test** — dans `test_securite.py` : l'en-tête `Set-Cookie` de `/auth/login` contient `SameSite=Strict`, en dev comme en `APP_ENV=production` (`Secure; HttpOnly; Path=/auth; SameSite=Strict`). Le parcours complet inscription → connexion → refresh → création de document → déconnexion reste vert, ce qui confirme que `Strict` ne casse pas le refresh en dev.
+
+---
+
 ## 7. Affirmation non fondée sur la page d'accueil 🟠
 
 **Fichier** : `frontend/src/views/HomeView.vue`
@@ -210,38 +249,6 @@ Avant : *« Vos écrits restent les vôtres. Hébergement européen, aucun entra
 Après : *« Vos écrits restent les vôtres : traitement local, aucune donnée transmise à un tiers, aucun entraînement sur vos documents confidentiels. »*
 
 À rapprocher du point 2 de `migration_durcissement.sql`, qui renomme le consentement `openai_data_processing` en `traitement_ia_local` : même mise en cohérence du discours avec l'architecture réelle.
-
----
-
-## 6. Protection CSRF — décision à prendre 🟠 *(non implémenté)*
-
-Le refresh token étant dans un cookie, le navigateur l'envoie automatiquement. `POST /auth/refresh` est donc déclenchable depuis un site tiers : l'attaquant ne lit pas la réponse (le CORS l'en empêche, il n'autorise que `http://localhost:5173`), mais l'effet de bord survient quand même. Ici il est particulier : la route applique une **rotation**. Une requête forgée invalide le jeton légitime de la victime, et le rejeu suivant par le vrai front est interprété comme une réutilisation frauduleuse → toutes ses sessions sont révoquées. Le résultat est un déni de service sur le compte, pas une usurpation.
-
-`SameSite=Lax` bloque déjà les POST cross-site dans tous les navigateurs actuels. Le sujet est donc de savoir jusqu'où formaliser au-delà de ce défaut.
-
-### Option A — `SameSite=Strict` sur le cookie de refresh
-
-Une ligne dans `set_refresh_cookie`. Ferme aussi les navigations top-level, que `Lax` laisse passer.
-
-- *Front* : rien à changer. Le front et l'API sont sur des origines distinctes en dev (`5173` / `5000`) mais `SameSite` raisonne en sites (eTLD+1), et `localhost` est le même site : `/auth/refresh` continue de fonctionner. En production, front et API doivent être sur le même site — sous-domaines d'un même domaine, ou API derrière un reverse proxy sur le domaine du front.
-- *Limite* : contrainte de déploiement, et défense qui repose entièrement sur le navigateur.
-
-### Option B — double-submit token (`Lax` + en-tête)
-
-Un cookie `csrf_token` non-`httponly` posé à la connexion, que le front relit et renvoie dans un en-tête `X-CSRF-Token` ; le serveur compare les deux sur `/auth/refresh`. Un site tiers peut faire envoyer le cookie mais ne peut pas le lire pour construire l'en-tête.
-
-- *Front* : `authService`/`api.ts` doivent lire le cookie et ajouter l'en-tête sur le refresh.
-- *Limite* : un XSS lit le cookie CSRF et neutralise la protection. À noter pour le dossier : cette défense **suppose** que le point 1 est corrigé — les deux failles sont liées.
-
-### Option C — les deux (`Strict` + double-submit)
-
-Défense en profondeur, le coût de B en plus de la contrainte de A.
-
-### Recommandation
-
-**Option A** pour l'état actuel du projet, et l'exigence de même site notée comme contrainte de déploiement. Le refresh est la seule route sensible en cookie, `path=/auth` limite déjà la surface, et le pire cas est un déni de service sur un compte — pas une usurpation. L'Option B se justifierait s'il y avait d'autres routes mutatives en cookie ; aujourd'hui tout le reste passe par `Authorization: Bearer`, insensible au CSRF puisque le navigateur ne joint pas d'en-tête automatiquement.
-
-Pour le dossier, l'Option B reste la plus intéressante à documenter, même non retenue : elle montre le raisonnement sur le lien XSS ↔ CSRF.
 
 ---
 

@@ -1,0 +1,488 @@
+<title>Journal de veille HelpMeDraft</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --paper:#ffffff;
+    --ground:#e9ecef;
+    --surface:#f4f6f8;
+    --ink:#15181d;
+    --ink-2:#4d545e;
+    --ink-3:#7d858f;
+    --line:#c9ced5;
+    --line-soft:#e0e4e9;
+
+    --crit:#a8201a;      --crit-bg:#fbeceb;
+    --high:#8a4b00;      --high-bg:#fdf1e3;
+    --med:#6b5800;       --med-bg:#fbf5df;
+    --ok:#1b5e3f;        --ok-bg:#e8f3ed;
+    --reg:#2f4a7d;       --reg-bg:#eaeff8;
+
+    --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --paper:#14171b;
+      --ground:#0c0e11;
+      --surface:#1b1f25;
+      --ink:#e8eaed;
+      --ink-2:#a5acb5;
+      --ink-3:#79818b;
+      --line:#383e46;
+      --line-soft:#282d34;
+
+      --crit:#f08b84;      --crit-bg:#2e1715;
+      --high:#e0a259;      --high-bg:#2b1f10;
+      --med:#d8c364;       --med-bg:#272212;
+      --ok:#7cc79d;        --ok-bg:#132419;
+      --reg:#9db6e4;       --reg-bg:#161e2c;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --paper:#14171b;
+    --ground:#0c0e11;
+    --surface:#1b1f25;
+    --ink:#e8eaed;
+    --ink-2:#a5acb5;
+    --ink-3:#79818b;
+    --line:#383e46;
+    --line-soft:#282d34;
+    --crit:#f08b84;      --crit-bg:#2e1715;
+    --high:#e0a259;      --high-bg:#2b1f10;
+    --med:#d8c364;       --med-bg:#272212;
+    --ok:#7cc79d;        --ok-bg:#132419;
+    --reg:#9db6e4;       --reg-bg:#161e2c;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--ground);color:var(--ink);
+    font-family:var(--sans);font-size:15.5px;line-height:1.6;
+    padding:0 16px;padding-block:32px 60px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+
+  header.doc{
+    background:var(--paper);border:1px solid var(--line);
+    padding:30px;display:flex;flex-direction:column;gap:14px;
+  }
+  .eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--reg);margin:0;font-weight:600;
+  }
+  h1{font-size:clamp(25px,4.6vw,36px);line-height:1.12;margin:0;font-weight:700;letter-spacing:-.018em;text-wrap:balance}
+  header.doc p{margin:0;color:var(--ink-2);max-width:66ch}
+  .meta{
+    display:flex;flex-wrap:wrap;gap:8px 26px;
+    font-family:var(--mono);font-size:11.5px;color:var(--ink-3);
+    border-top:1px solid var(--line-soft);padding-top:14px;
+  }
+  .meta b{color:var(--ink-2);font-weight:500}
+
+  section.block{background:var(--paper);border:1px solid var(--line);padding:26px;display:flex;flex-direction:column;gap:16px}
+  h2{font-size:19px;margin:0;font-weight:600;letter-spacing:-.01em}
+  h2 .n{font-family:var(--mono);font-size:12px;color:var(--ink-3);margin-right:10px;font-weight:500}
+  .intro{margin:0;color:var(--ink-2);max-width:70ch}
+
+  /* ---------- Synthesis table ---------- */
+  .tablewrap{overflow-x:auto;border:1px solid var(--line-soft)}
+  table{border-collapse:collapse;width:100%;min-width:740px;font-size:13.5px}
+  thead th{
+    background:var(--surface);text-align:left;padding:10px 12px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-2);font-weight:600;border-bottom:1px solid var(--line);
+  }
+  tbody td{padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:nth-child(even){background:var(--surface)}
+  td.ref{font-family:var(--mono);font-size:12px;white-space:nowrap}
+  td.comp{font-weight:600;white-space:nowrap}
+
+  .tag{
+    display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;
+    letter-spacing:.07em;text-transform:uppercase;padding:3px 7px;white-space:nowrap;border:1px solid;
+  }
+  .t-crit{color:var(--crit);background:var(--crit-bg);border-color:var(--crit)}
+  .t-high{color:var(--high);background:var(--high-bg);border-color:var(--high)}
+  .t-med{color:var(--med);background:var(--med-bg);border-color:var(--med)}
+  .t-ok{color:var(--ok);background:var(--ok-bg);border-color:var(--ok)}
+  .t-reg{color:var(--reg);background:var(--reg-bg);border-color:var(--reg)}
+
+  /* ---------- Detail cards ---------- */
+  .card{border:1px solid var(--line);border-left-width:4px;background:var(--paper);padding:18px 20px;display:flex;flex-direction:column;gap:11px}
+  .card.crit{border-left-color:var(--crit)}
+  .card.high{border-left-color:var(--high)}
+  .card.med{border-left-color:var(--med)}
+  .card.ok{border-left-color:var(--ok)}
+  .card.reg{border-left-color:var(--reg)}
+  .card-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline}
+  .card-head h3{font-size:16px;margin:0;font-weight:600;flex:1;min-width:200px}
+  .card-head .id{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+  .card p{margin:0;color:var(--ink-2)}
+  .card p strong{color:var(--ink);font-weight:600}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:13.5px;align-items:baseline}
+  .kv dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap;padding-top:2px}
+  .kv dd{margin:0;color:var(--ink-2)}
+  @media (max-width:560px){.kv{grid-template-columns:1fr;gap:2px}.kv dd{margin-bottom:7px}}
+  code{font-family:var(--mono);font-size:.88em;background:var(--surface);padding:1px 5px;border:1px solid var(--line-soft)}
+  .verdict{
+    border-top:1px solid var(--line-soft);padding-top:10px;margin-top:2px;
+    font-size:14px;
+  }
+  .verdict b{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:3px;font-weight:600}
+
+  ul.plain{margin:0;padding-left:20px;color:var(--ink-2);display:flex;flex-direction:column;gap:5px}
+  ul.plain li::marker{color:var(--ink-3)}
+
+  .sources{font-size:13px;color:var(--ink-2)}
+  .sources a{color:var(--reg);text-decoration:underline;text-underline-offset:2px}
+  .sources li{margin-bottom:5px}
+
+  .foot{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:center;border-top:1px solid var(--line-soft);padding-top:18px}
+
+  @media print{
+    body{background:#fff;padding:0}
+    .wrap{max-width:none;gap:0}
+    section.block,header.doc{border-color:#999;page-break-inside:avoid;padding:12mm}
+    .card{page-break-inside:avoid}
+    .foot{display:none}
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="doc">
+    <p class="eyebrow">Dossier projet CDA · § 11</p>
+    <h1>Journal de veille HelpMeDraft</h1>
+    <p>Veille sur les vulnérabilités de sécurité et les évolutions réglementaires affectant les composants du projet, sur la période avril – septembre 2026. Chaque entrée est confrontée à la configuration réelle de l'application : une vulnérabilité publiée n'est pas nécessairement une vulnérabilité exploitable ici.</p>
+    <div class="meta">
+      <span><b>Projet</b> HelpMeDraft — LexiCorp</span>
+      <span><b>Auteur</b> Ophélie Bellissens</span>
+      <span><b>Période</b> avril → septembre 2026</span>
+      <span><b>Entrées</b> 8</span>
+    </div>
+  </header>
+
+  <!-- ============ MÉTHODE ============ -->
+  <section class="block">
+    <h2><span class="n">01</span>Méthode de veille</h2>
+    <p class="intro">La veille porte sur trois périmètres, chacun avec ses sources et sa fréquence. Le principe directeur : surveiller ce que le projet utilise réellement, et non l'actualité de la sécurité en général.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Périmètre</th><th>Sources suivies</th><th>Fréquence</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="comp">Dépendances</td>
+            <td>GitHub Advisory Database, avis <code>pnpm audit</code> et <code>pip-audit</code>, Dependabot sur le dépôt</td>
+            <td>À chaque installation, et revue hebdomadaire</td>
+          </tr>
+          <tr>
+            <td class="comp">Sécurité applicative</td>
+            <td>NVD / CVE.org, alertes CISA, OWASP Top 10, bulletins ANSSI (CERT-FR)</td>
+            <td>Hebdomadaire</td>
+          </tr>
+          <tr>
+            <td class="comp">Réglementaire</td>
+            <td>CNIL, Commission européenne (AI Act), numerique.gouv.fr (RGAA)</td>
+            <td>Mensuelle</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="intro">Une entrée n'est retenue que si le composant concerné figure dans <code>requirements.txt</code>, <code>package.json</code>, ou dans l'environnement d'exécution (Ollama, SGBD). Chaque entrée se termine par un <strong>verdict d'applicabilité</strong> : la version utilisée est-elle dans la plage affectée, et les conditions d'exploitation sont-elles réunies dans cette application ?</p>
+  </section>
+
+  <!-- ============ SYNTHÈSE ============ -->
+  <section class="block">
+    <h2><span class="n">02</span>Tableau de synthèse</h2>
+    <p class="intro">Vue d'ensemble des huit entrées retenues sur la période. La colonne « Impact ici » est le résultat de l'analyse, pas la sévérité publiée.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Composant</th><th>Référence</th><th>Nature</th><th>Sévérité</th><th>Impact ici</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="ref">31/03/2026</td>
+            <td class="comp">axios</td>
+            <td class="ref">—<br><span style="color:var(--ink-3)">pas de CVE</span></td>
+            <td>Compromission de la chaîne d'approvisionnement npm : deux versions piégées diffusant un cheval de Troie</td>
+            <td><span class="tag t-crit">Critique</span></td>
+            <td><span class="tag t-ok">Non affecté</span></td>
+            <td>Vérification du fichier de verrouillage</td>
+          </tr>
+          <tr>
+            <td class="ref">04/2026</td>
+            <td class="comp">Ollama</td>
+            <td class="ref">CVE-2026-7482</td>
+            <td>Lecture hors limites dans le chargeur de modèles GGUF, exploitable sans authentification</td>
+            <td><span class="tag t-crit">9.1 Critique</span></td>
+            <td><span class="tag t-high">À vérifier</span></td>
+            <td>Mise à jour ≥ 0.17.1</td>
+          </tr>
+          <tr>
+            <td class="ref">05/2026</td>
+            <td class="comp">Ollama (Windows)</td>
+            <td class="ref">CVE-2026-42248<br>CVE-2026-42249</td>
+            <td>Mise à jour automatique détournable en vecteur d'exécution de code persistante</td>
+            <td><span class="tag t-high">Élevée</span></td>
+            <td><span class="tag t-high">Concerné</span></td>
+            <td>Poste de développement Windows</td>
+          </tr>
+          <tr>
+            <td class="ref">2026</td>
+            <td class="comp">DOMPurify</td>
+            <td class="ref">CVE-2026-0540</td>
+            <td>Contournement du nettoyage XSS : cinq éléments manquants dans l'expression régulière <code>SAFE_FOR_XML</code></td>
+            <td><span class="tag t-med">5.1 Moyenne</span></td>
+            <td><span class="tag t-crit">Affecté</span></td>
+            <td>Mise à jour ≥ 3.3.2</td>
+          </tr>
+          <tr>
+            <td class="ref">2026</td>
+            <td class="comp">DOMPurify</td>
+            <td class="ref">CVE-2026-65912</td>
+            <td>Contournement de la validation d'URI via <code>ADD_ATTR</code> en fonction de prédicat</td>
+            <td><span class="tag t-med">5.1 Moyenne</span></td>
+            <td><span class="tag t-ok">Non applicable</span></td>
+            <td>Configuration non utilisée</td>
+          </tr>
+          <tr>
+            <td class="ref">2026</td>
+            <td class="comp">PyJWT</td>
+            <td class="ref">CVE-2026-48526</td>
+            <td>Contournement d'authentification : clé publique de l'émetteur utilisable comme secret HMAC</td>
+            <td><span class="tag t-high">7.4 Élevée</span></td>
+            <td><span class="tag t-ok">Non affecté</span></td>
+            <td>Version 2.15.0 &gt; 2.13.0</td>
+          </tr>
+          <tr>
+            <td class="ref">02/08/2026</td>
+            <td class="comp">AI Act</td>
+            <td class="ref">UE 2024/1689</td>
+            <td>Entrée en application des obligations de transparence pour les systèmes d'IA interactifs et génératifs</td>
+            <td><span class="tag t-reg">Réglementaire</span></td>
+            <td><span class="tag t-crit">Concerné</span></td>
+            <td>Mention d'information à ajouter</td>
+          </tr>
+          <tr>
+            <td class="ref">03/2026</td>
+            <td class="comp">RGAA</td>
+            <td class="ref">RGAA 5</td>
+            <td>Annonce de la version 5 : intégration des WCAG 2.2, l'Arcom devient autorité de contrôle</td>
+            <td><span class="tag t-reg">Réglementaire</span></td>
+            <td><span class="tag t-med">À anticiper</span></td>
+            <td>Audit sur RGAA 4.1.2</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ FICHES SÉCURITÉ ============ -->
+  <section class="block">
+    <h2><span class="n">03</span>Vulnérabilités — fiches détaillées</h2>
+
+    <div class="card crit">
+      <div class="card-head">
+        <h3>axios — compromission de la chaîne d'approvisionnement npm</h3>
+        <span class="id">31 mars 2026</span>
+      </div>
+      <dl class="kv">
+        <dt>Nature</dt><dd>Un compte de mainteneur npm a été compromis. Deux versions piégées d'<code>axios</code> ont été publiées le 31 mars 2026 à 1 h UTC, ainsi que le paquet <code>plain-crypto-js</code>.</dd>
+        <dt>Versions</dt><dd><code>axios@1.14.1</code> et <code>axios@0.30.4</code> — retirées du registre depuis.</dd>
+        <dt>Charge</dt><dd>Un programme d'amorçage identifie le système d'exploitation de la victime, contacte un serveur de commande et contrôle, puis télécharge un cheval de Troie d'accès distant adapté à macOS, Windows ou Linux.</dd>
+        <dt>Indicateurs</dt><dd>Domaine de commande <code>sfrclak[.]com</code> ; empreinte SHA-256 du programme d'amorçage <code>e10b1fa8…4c2e0e09</code>.</dd>
+        <dt>Réaction</dt><dd>Alertes CISA (20 avril), Microsoft (1<sup>er</sup> avril), agence de cybersécurité de Singapour. Pas de numéro CVE : il ne s'agit pas d'un défaut du code mais d'une compromission de la distribution.</dd>
+      </dl>
+      <div class="verdict">
+        <b>Verdict pour HelpMeDraft</b>
+        <strong>Non affecté.</strong> Le projet utilise <code>axios@^1.18.1</code>, postérieure aux versions piégées, et aucune installation n'a eu lieu dans la fenêtre de diffusion. Vérification faite sur <code>pnpm-lock.yaml</code>.
+        <br><br>
+        <strong>Ce que cet incident change dans ma pratique.</strong> Une dépendance saine peut devenir malveillante sans que son code change de nature : c'est le canal de distribution qui a été attaqué. Trois conséquences retenues — figer les versions par un fichier de verrouillage commité, ne jamais mettre à jour une dépendance juste avant une échéance sans relire les notes de version, et considérer <code>pnpm audit</code> comme un contrôle de routine et non comme une formalité.
+      </div>
+    </div>
+
+    <div class="card crit">
+      <div class="card-head">
+        <h3>Ollama — lecture hors limites dans le chargeur GGUF</h3>
+        <span class="id">CVE-2026-7482 · CVSS 9.1</span>
+      </div>
+      <dl class="kv">
+        <dt>Nature</dt><dd>Lecture hors limites en tas dans le chargeur de modèles GGUF. Lorsqu'un fichier GGUF déclare des décalages et tailles de tenseurs supérieurs à la taille réelle du fichier, le serveur lit au-delà du tampon alloué pendant la quantification.</dd>
+        <dt>Versions</dt><dd>Toutes antérieures à <strong>0.17.1</strong>.</dd>
+        <dt>Exploitation</dt><dd><strong>Sans authentification</strong>, à distance. L'attaquant envoie un fichier GGUF forgé à <code>/api/create</code>, puis exfiltre la mémoire lue via <code>/api/push</code>.</dd>
+        <dt>Aggravation</dt><dd>Serveur exposé sur <code>0.0.0.0</code> plutôt que sur l'interface locale.</dd>
+      </dl>
+      <div class="verdict">
+        <b>Verdict pour HelpMeDraft</b>
+        <strong>À vérifier et corriger.</strong> Le projet appelle Ollama sur <code>http://localhost:11434</code> : le serveur n'est pas exposé au réseau, ce qui réduit fortement la surface. Mais la version installée sur le poste doit être contrôlée (<code>ollama --version</code>) et mise à jour si elle est antérieure à 0.17.1.
+        <br><br>
+        <strong>Le point de conception qu'elle valide.</strong> Le choix d'un moteur d'inférence local (§ 5.2.4) supprime le risque de transmission des données à un tiers, mais il en introduit un autre : un service supplémentaire à maintenir, avec ses propres vulnérabilités. Le cahier des charges arbitrait entre OpenAI et Ollama sur le terrain du RGPD ; cette CVE rappelle que l'arbitrage a aussi une dimension d'exploitation. Une clause du projet mérite d'être écrite noir sur blanc : <em>Ollama ne doit jamais écouter sur autre chose que l'interface de bouclage.</em>
+      </div>
+    </div>
+
+    <div class="card high">
+      <div class="card-head">
+        <h3>Ollama sous Windows — mise à jour automatique détournable</h3>
+        <span class="id">CVE-2026-42248 · CVE-2026-42249</span>
+      </div>
+      <dl class="kv">
+        <dt>Nature</dt><dd>Des défauts non corrigés transforment le mécanisme de mise à jour automatique d'Ollama sous Windows en vecteur d'exécution de code à distance persistante.</dd>
+        <dt>Portée</dt><dd>Poste de développement Windows — l'environnement de travail du projet.</dd>
+      </dl>
+      <div class="verdict">
+        <b>Verdict pour HelpMeDraft</b>
+        <strong>Concerne le poste, pas l'application.</strong> La vulnérabilité ne touche pas le code de HelpMeDraft mais la machine qui l'héberge en développement. Elle est retenue dans ce journal parce que la sécurité d'un projet ne s'arrête pas à son code : un poste de développement compromis donne accès au dépôt, aux fichiers <code>.env</code> et aux jetons.
+      </div>
+    </div>
+
+    <div class="card crit">
+      <div class="card-head">
+        <h3>DOMPurify — contournement du nettoyage XSS</h3>
+        <span class="id">CVE-2026-0540 · CVSS 5.1</span>
+      </div>
+      <dl class="kv">
+        <dt>Nature</dt><dd>L'expression régulière <code>SAFE_FOR_XML</code> omet cinq éléments de type « texte brut ». Une charge telle que <code>&lt;/noscript&gt;&lt;img src=x onerror=alert(1)&gt;</code> placée dans une valeur d'attribut survit au nettoyage et s'exécute.</dd>
+        <dt>Versions</dt><dd>3.1.3 à 3.3.1, et 2.5.3 à 2.5.8.</dd>
+        <dt>Corrigé dans</dt><dd><strong>3.3.2</strong> et 2.5.9.</dd>
+      </dl>
+      <div class="verdict">
+        <b>Verdict pour HelpMeDraft</b>
+        <strong>Affecté — correction à appliquer.</strong> Le projet déclare <code>dompurify@^3.2.7</code>, qui tombe dans la plage vulnérable. Mise à jour vers <code>^3.3.2</code> requise.
+        <br><br>
+        <strong>C'est l'entrée la plus instructive de ce journal.</strong> DOMPurify a été ajoutée précisément pour corriger la faille XSS de l'aperçu Markdown (§ 7.1.2). Découvrir qu'elle porte elle-même une vulnérabilité de contournement illustre une limite qu'il faut avoir en tête : <em>une mesure de sécurité est un composant comme un autre, avec sa propre surface d'attaque et son propre cycle de correctifs.</em> Ajouter une bibliothèque de nettoyage ne clôt pas le sujet XSS, cela le déplace vers la maintenance de cette bibliothèque. C'est aussi l'argument en faveur de la défense en profondeur : le stockage du Markdown brut plutôt que du HTML (§ 5.2.4) reste une protection indépendante de DOMPurify.
+      </div>
+    </div>
+
+    <div class="card ok">
+      <div class="card-head">
+        <h3>DOMPurify — contournement de la validation d'URI</h3>
+        <span class="id">CVE-2026-65912 · CVSS 5.1</span>
+      </div>
+      <dl class="kv">
+        <dt>Nature</dt><dd>Lorsque <code>ADD_ATTR</code> est fourni comme fonction de prédicat via <code>EXTRA_ELEMENT_HANDLING.attributeCheck</code>, un protocole dangereux comme <code>javascript:</code> peut survivre au nettoyage.</dd>
+        <dt>Versions</dt><dd>Toutes antérieures à 3.3.2.</dd>
+      </dl>
+      <div class="verdict">
+        <b>Verdict pour HelpMeDraft</b>
+        <strong>Non applicable.</strong> L'appel du projet est <code>DOMPurify.sanitize(rawHtml, { USE_PROFILES: { html: true } })</code> : aucune fonction de prédicat <code>ADD_ATTR</code> n'est fournie, la condition d'exploitation n'est donc pas réunie. La mise à jour vers 3.3.2 la corrige néanmoins au passage.
+        <br><br>
+        Cette entrée est conservée parce qu'elle montre l'intérêt de lire les conditions d'exploitation plutôt que la seule plage de versions : deux CVE sur la même bibliothèque et la même plage n'ont pas le même impact réel ici.
+      </div>
+    </div>
+
+    <div class="card ok">
+      <div class="card-head">
+        <h3>PyJWT — contournement d'authentification par confusion d'algorithme</h3>
+        <span class="id">CVE-2026-48526 · CVSS 7.4</span>
+      </div>
+      <dl class="kv">
+        <dt>Nature</dt><dd>Lorsqu'un vérificateur accepte à la fois des algorithmes asymétriques et HMAC, la bibliothèque ne valide pas l'usage des clés : un attaquant peut utiliser la clé publique de l'émetteur comme secret HMAC et forger des jetons valides.</dd>
+        <dt>Versions</dt><dd>Antérieures à <strong>2.13.0</strong>.</dd>
+      </dl>
+      <div class="verdict">
+        <b>Verdict pour HelpMeDraft</b>
+        <strong>Non affecté.</strong> Le projet utilise <code>PyJWT==2.15.0</code>, postérieure au correctif. La condition d'exploitation ne serait de toute façon pas réunie : l'application n'emploie qu'un seul algorithme, HS256, et le précise explicitement au décodage.
+        <br><br>
+        <strong>Bonne pratique confirmée.</strong> Cette famille de failles — la « confusion d'algorithme » — se neutralise en passant toujours une liste d'algorithmes explicite à <code>jwt.decode()</code>, jamais en laissant la bibliothèque déduire l'algorithme de l'en-tête du jeton, qui est fourni par l'attaquant.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RÉGLEMENTAIRE ============ -->
+  <section class="block">
+    <h2><span class="n">04</span>Évolutions réglementaires</h2>
+
+    <div class="card reg">
+      <div class="card-head">
+        <h3>AI Act — obligations de transparence applicables</h3>
+        <span class="id">Règlement UE 2024/1689 · 2 août 2026</span>
+      </div>
+      <dl class="kv">
+        <dt>Ce qui s'applique</dt><dd>Les systèmes d'IA interactifs doivent informer clairement l'utilisateur qu'il interagit avec une intelligence artificielle et non avec une personne. Les contenus générés ou modifiés par IA doivent être marqués, par un marquage visible et par un filigrane techniquement détectable.</dd>
+        <dt>Délais</dt><dd>La divulgation visible est immédiatement obligatoire. Les outils commercialisés avant le 2 août 2026 ont jusqu'au 2 décembre 2026 pour le filigrane technique.</dd>
+        <dt>Contrôle</dt><dd>En France : CNIL, DGCCRF et Arcom. Les autorités peuvent exiger l'accès à la documentation technique.</dd>
+        <dt>Sanctions</dt><dd>Jusqu'à 15 M€ ou 3 % du chiffre d'affaires mondial pour un manquement aux obligations de transparence.</dd>
+      </dl>
+      <div class="verdict">
+        <b>Verdict pour HelpMeDraft</b>
+        <strong>Directement concerné.</strong> L'application produit du texte au moyen d'un modèle de langage : elle entre dans le champ des obligations de transparence.
+        <br><br>
+        Le projet couvre déjà une partie de l'exigence — le panneau est intitulé « Assistant IA — Ollama », l'action demandée est explicite, et aucune proposition n'est appliquée sans décision de l'utilisateur (§ 5.3.5). Trois compléments restent à prévoir :
+        <ul class="plain" style="margin-top:9px">
+          <li>une mention d'information non ambiguë au premier usage de l'assistant, et non seulement un titre de panneau ;</li>
+          <li>une trace, dans le document, des passages issus d'une génération — le journal <code>ia</code> la conserve déjà côté base (§ 5.4.4), il reste à l'exposer ;</li>
+          <li>une clause dédiée dans les CGU et la politique de confidentialité, distincte du consentement au traitement des données.</li>
+        </ul>
+        <br>
+        <strong>Ce que cette échéance révèle.</strong> Le cahier des charges a été rédigé avant l'entrée en application du règlement et ne mentionne que le RGPD. Une exigence réglementaire peut donc apparaître <em>pendant</em> un projet : c'est exactement ce que la veille sert à détecter, et c'est la raison pour laquelle elle est un livrable et non une activité optionnelle.
+      </div>
+    </div>
+
+    <div class="card reg">
+      <div class="card-head">
+        <h3>RGAA — annonce de la version 5</h3>
+        <span class="id">numerique.gouv.fr · mars 2026</span>
+      </div>
+      <dl class="kv">
+        <dt>Ce qui change</dt><dd>Intégration des WCAG 2.2, critères adaptés aux applications mobiles et aux documents bureautiques, reformulation et simplification des critères existants.</dd>
+        <dt>Cadre légal</dt><dd>L'Arcom devient autorité de contrôle ; un téléservice est mis en place pour les déclarations d'accessibilité.</dd>
+        <dt>Calendrier</dt><dd>Publication prévue fin 2026. Le RGAA 4.1.2 reste en vigueur, et les déclarations publiées avant la sortie restent valides 18 mois.</dd>
+      </dl>
+      <div class="verdict">
+        <b>Verdict pour HelpMeDraft</b>
+        <strong>Pas de reprise à prévoir, mais une précision à apporter.</strong> L'audit d'accessibilité reste à réaliser (§ 5.1.4) et sera mené sur le <strong>RGAA 4.1.2</strong>, version en vigueur — le dossier doit nommer cette version plutôt que « le RGAA » sans précision. La version 5 « précise ou complète » les critères sans les infirmer : le travail effectué sur 4.1.2 garde sa valeur.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SUITES ============ -->
+  <section class="block">
+    <h2><span class="n">05</span>Actions retenues</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Priorité</th><th>Action</th><th>Origine</th><th>Nature</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag t-crit">1</span></td><td>Mettre à jour DOMPurify vers <code>^3.3.2</code></td><td>CVE-2026-0540</td><td>Dépendance</td></tr>
+          <tr><td><span class="tag t-crit">2</span></td><td>Contrôler la version d'Ollama et mettre à jour vers ≥ 0.17.1</td><td>CVE-2026-7482</td><td>Environnement</td></tr>
+          <tr><td><span class="tag t-high">3</span></td><td>Ajouter une mention d'information sur l'usage de l'IA au premier usage de l'assistant</td><td>AI Act</td><td>Fonctionnalité</td></tr>
+          <tr><td><span class="tag t-high">4</span></td><td>Ajouter une clause « contenus générés par IA » aux CGU et à la politique de confidentialité</td><td>AI Act</td><td>Contenu légal</td></tr>
+          <tr><td><span class="tag t-med">5</span></td><td>Préciser « RGAA 4.1.2 » partout où le dossier écrit « RGAA »</td><td>RGAA 5</td><td>Documentation</td></tr>
+          <tr><td><span class="tag t-med">6</span></td><td>Documenter la règle : Ollama ne doit écouter que sur l'interface de bouclage</td><td>CVE-2026-7482</td><td>Déploiement</td></tr>
+          <tr><td><span class="tag t-med">7</span></td><td>Activer Dependabot sur le dépôt et intégrer <code>pnpm audit</code> / <code>pip-audit</code> au pipeline d'intégration continue</td><td>axios</td><td>Outillage</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ SOURCES ============ -->
+  <section class="block sources">
+    <h2><span class="n">06</span>Sources</h2>
+    <ul>
+      <li><a href="https://www.cisa.gov/news-events/alerts/2026/04/20/supply-chain-compromise-impacts-axios-node-package-manager">CISA — Supply Chain Compromise Impacts Axios Node Package Manager</a> (20 avril 2026)</li>
+      <li><a href="https://www.tenable.com/blog/supply-chain-attack-on-axios-npm-package-scope-impact-and-remediations">Tenable — Supply chain attack on Axios npm package: scope, impact, and remediations</a></li>
+      <li><a href="https://www.microsoft.com/en-us/security/blog/2026/04/01/mitigating-the-axios-npm-supply-chain-compromise/">Microsoft Security — Mitigating the Axios npm supply chain compromise</a> (1<sup>er</sup> avril 2026)</li>
+      <li><a href="https://www.runzero.com/blog/ollama/">runZero — Ollama vulnerability CVE-2026-7482</a></li>
+      <li><a href="https://www.helpnetsecurity.com/2026/05/05/ollama-windows-vulnerabilities-cve-2026-42248-cve-2026-42249/">Help Net Security — Unpatched flaws turn Ollama's auto-updater into a persistent RCE vector</a> (5 mai 2026)</li>
+      <li><a href="https://github.com/advisories/GHSA-v2wj-7wpq-c8vv">GitHub Advisory Database — CVE-2026-0540, DOMPurify Cross-site Scripting</a></li>
+      <li><a href="https://www.vulncheck.com/advisories/dompurify-before-uri-validation-bypass-via-add-attr">VulnCheck — DOMPurify before 3.3.2 URI validation bypass via ADD_ATTR (CVE-2026-65912)</a></li>
+      <li><a href="https://www.strix.ai/cve/CVE-2026-48526">CVE-2026-48526 — PyJWT authentication bypass</a></li>
+      <li><a href="https://france.representation.ec.europa.eu/informations-et-evenements/informations/ia-la-commission-commencera-faire-appliquer-la-legislation-de-lue-et-les-nouvelles-exigences-de-2026-07-31_fr">Commission européenne — Application de la législation sur l'IA et nouvelles exigences de transparence</a> (2 août 2026)</li>
+      <li><a href="https://www.pole-excellence-cyber.org/europe/ai-act-obligations-2-aout-2026/">Pôle d'excellence cyber — AI Act : les obligations applicables depuis août 2026</a></li>
+      <li><a href="https://www.numerique.gouv.fr/actualites/nouvelle-version-rgaa-2026/">numerique.gouv.fr — Nouvelle version du RGAA</a> (mars 2026)</li>
+    </ul>
+  </section>
+
+  <p class="foot">Dossier projet CDA · § 11 — Description de la veille effectuée durant le projet</p>
+</div>

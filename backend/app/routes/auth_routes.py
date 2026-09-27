@@ -24,12 +24,29 @@ def set_refresh_cookie(response, refresh_token: str):
       partout ailleurs) pour que le jeton ne puisse pas transiter en clair.
     - path=/auth : le cookie n'est envoyé qu'aux routes d'authentification,
       ce qui réduit la surface exposée (et le CSRF au seul /auth/refresh).
+    - samesite=Strict : protection CSRF. Le refresh token étant dans un cookie,
+      le navigateur le joindrait automatiquement à une requête POST déclenchée
+      depuis un site tiers vers /auth/refresh. L'attaquant ne lit pas la réponse
+      (le CORS ne l'autorise pas), mais l'effet de bord se produit : la route
+      applique une ROTATION, donc la requête forgée invalide le jeton légitime
+      de la victime, et le rejeu suivant par le vrai front est interprété comme
+      une réutilisation frauduleuse -> toutes ses sessions sont révoquées. Le
+      résultat est un déni de service sur le compte.
+      "Lax" bloque déjà les POST cross-site ; "Strict" ferme en plus les
+      navigations top-level. CONTRAINTE DE DÉPLOIEMENT : le cookie n'est envoyé
+      que si le front et l'API sont sur le même site (au sens eTLD+1). En dev
+      les deux sont sur localhost, donc même site malgré les ports 5173 et 5000.
+      En production, il faut deux sous-domaines d'un même domaine, ou l'API
+      derrière un reverse proxy sur le domaine du front.
+      Les autres routes ne sont pas concernées : elles s'authentifient par
+      en-tête Authorization: Bearer, que le navigateur n'ajoute jamais tout
+      seul — un formulaire tiers ne peut donc pas les appeler au nom du client.
     """
     response.set_cookie(
         "refresh_token", refresh_token,
         httponly=True,
         secure=current_app.config["COOKIE_SECURE"],
-        samesite="Lax",
+        samesite="Strict",
         max_age=REFRESH_COOKIE_MAX_AGE,
         path="/auth",
     )

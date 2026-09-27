@@ -6,6 +6,7 @@ Couvre :
       détection de rejeu, logout par empreinte ;
   [3] JWT_SECRET_KEY : démarrage refusé si la variable est absente ;
   [4] cookie de refresh : HttpOnly, Path=/auth, Secure piloté par APP_ENV ;
+  [6] CSRF : SameSite=Strict sur le cookie de refresh ;
   [5] ON DELETE CASCADE : vérifié en SQL pur, hors SQLAlchemy (RGPD art. 17).
 
 Le test XSS du point [1] est côté frontend (voir frontend/test_xss.mjs).
@@ -62,6 +63,10 @@ print("[parcours] OK  connexion 200")
 assert "HttpOnly" in cookie_hdr and "Path=/auth" in cookie_hdr, cookie_hdr
 assert "Secure" not in cookie_hdr, cookie_hdr
 print("[4] OK  dev : HttpOnly + Path=/auth, sans Secure ->", cookie_hdr)
+
+# --- Test 6 : SameSite=Strict (CSRF) ----------------------------------------
+assert "SameSite=Strict" in cookie_hdr, cookie_hdr
+print("[6] OK  SameSite=Strict pose\u0301 sur le cookie de refresh")
 
 # --- Test 2 : la base ne contient que l'empreinte ---------------------------
 with SessionLocal() as db:
