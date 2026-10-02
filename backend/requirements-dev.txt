@@ -1,0 +1,6 @@
+# Dépendances de DÉVELOPPEMENT uniquement — jamais installées en production.
+# Installation : pip install -r requirements-dev.txt
+#
+# Versions figées comme dans requirements.txt, et pour la même raison : un
+# `pip install` doit produire le même environnement six mois plus tard (§ 6.2.1).
+pytest==9.1.1          # exécution des tests unitaires et d'intégration
