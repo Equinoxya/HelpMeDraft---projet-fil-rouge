@@ -216,7 +216,11 @@ def delete_document(id_document):
         db_session.delete(document)
         db_session.commit()
 
-        return "", 
+        # 204 No Content : la suppression a réussi et il n'y a rien à renvoyer.
+        # Le code de statut est OBLIGATOIRE ici. Sans lui, `return "",` est un
+        # tuple à un seul élément et Flask ne sait pas construire la réponse :
+        # la ligne est supprimée en base, mais l'appel se termine en erreur 500.
+        return "", 204
     
 @document_bp.route("/stats", methods=["GET"])
 def document_stats():
