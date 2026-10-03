@@ -4,7 +4,8 @@ import { RouterLink } from "vue-router";
 const categories = [
   {
     name: "Courriels & Rapports",
-    description: "Écrits professionnels du quotidien : emails, notes, rapports...",
+    description:
+      "Écrits professionnels du quotidien : emails, notes, rapports...",
     templates: [
       {
         name: "Email professionnel",
@@ -148,7 +149,7 @@ const iconMap: Record<string, string> = {
       <!-- En-tête -->
       <header class="mb-16">
         <p
-          class="font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3"
+          class="font-mono text-xs uppercase tracking-widest text-[#C4341C] font-bold mb-3"
         >
           // MODÈLES DE DOCUMENTS
         </p>
@@ -199,7 +200,7 @@ const iconMap: Record<string, string> = {
                 </div>
                 <div>
                   <h3
-                    class="font-serif text-lg font-normal mb-1 group-hover:text-[#E0533C] transition-colors"
+                    class="font-serif text-lg font-normal mb-1 group-hover:text-[#C4341C] transition-colors"
                   >
                     {{ template.name }}
                   </h3>
@@ -210,7 +211,7 @@ const iconMap: Record<string, string> = {
               </div>
               <div class="mt-4 flex justify-end">
                 <span
-                  class="font-mono text-lg font-bold text-[#111111] group-hover:text-[#E0533C] transition-colors"
+                  class="font-mono text-lg font-bold text-[#111111] group-hover:text-[#C4341C] transition-colors"
                 >
                   →
                 </span>
@@ -233,7 +234,7 @@ const iconMap: Record<string, string> = {
         </p>
         <a
           href="mailto:contact@helpmedraft.fr"
-          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-8 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#E0533C] transition-colors"
+          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-8 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#C4341C] transition-colors"
         >
           Nous contacter
         </a>

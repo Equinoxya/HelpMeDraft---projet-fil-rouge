@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-  ref,
-  computed,
-  watch,
-  onMounted,
-  onBeforeUnmount,
-  nextTick,
-} from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import documentService from "../services/documentService";
 import type { DocumentStatus } from "../types/document";
@@ -385,7 +378,7 @@ function handleCancel() {
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA] flex flex-col"
   >
     <!-- MAIN CONTENT -->
     <main
@@ -395,7 +388,7 @@ function handleCancel() {
       <div class="flex items-center justify-between gap-4 mb-8">
         <RouterLink
           to="/documents"
-          class="font-mono text-xs uppercase tracking-wider text-[#111111] hover:text-[#E0533C] transition-colors font-bold inline-flex items-center gap-2"
+          class="font-mono text-xs uppercase tracking-wider text-[#111111] hover:text-[#C4341C] transition-colors font-bold inline-flex items-center gap-2"
         >
           ← Retour aux documents
         </RouterLink>
@@ -404,7 +397,7 @@ function handleCancel() {
           v-if="isEditMode"
           type="button"
           :disabled="isDeleting || isLoading"
-          class="font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#E0533C] text-[#E0533C] hover:bg-[#E0533C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors"
+          class="font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#C4341C] text-[#C4341C] hover:bg-[#C4341C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors"
           @click="handleDelete"
         >
           {{ isDeleting ? "Suppression…" : "Supprimer le document" }}
@@ -416,7 +409,7 @@ function handleCancel() {
         class="bg-[#FAF8F5] border-2 border-[#111111] p-6 sm:p-10 shadow-[8px_8px_0px_0px_rgba(17,17,17,1)]"
       >
         <span
-          class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-4"
+          class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-4"
         >
           [ {{ isEditMode ? "Mode Édition" : "Nouveau Brouillon" }} ]
         </span>
@@ -427,7 +420,7 @@ function handleCancel() {
           class="p-12 text-center font-mono text-xs uppercase tracking-widest text-[#111111]/60 flex flex-col items-center gap-3"
         >
           <span
-            class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#E0533C] rounded-full animate-spin"
+            class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#C4341C] rounded-full animate-spin"
           ></span>
           Chargement du document…
         </div>
@@ -436,7 +429,7 @@ function handleCancel() {
           <!-- ALERTE ERREUR -->
           <div
             v-if="errorMessage"
-            class="mb-6 p-4 border border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold flex items-center gap-2"
+            class="mb-6 p-4 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold flex items-center gap-2"
             role="alert"
           >
             <svg
@@ -464,7 +457,7 @@ function handleCancel() {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="w-4 h-4 text-[#E0533C] shrink-0"
+              class="w-4 h-4 text-[#C4341C] shrink-0"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -494,7 +487,7 @@ function handleCancel() {
                 type="text"
                 placeholder="Ex. Compte rendu de réunion du 12 mars"
                 maxlength="255"
-                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-serif text-lg text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C] transition-shadow"
+                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-serif text-lg text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C] transition-shadow"
               />
             </div>
 
@@ -508,7 +501,7 @@ function handleCancel() {
               <select
                 id="status"
                 v-model="status"
-                class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
               >
                 <option value="brouillon">Brouillon</option>
                 <option value="a_relire">À relire</option>
@@ -525,7 +518,7 @@ function handleCancel() {
               <select
                 id="dossier"
                 v-model="idDossier"
-                class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
               >
                 <option value="">Aucun dossier</option>
                 <option
@@ -558,7 +551,7 @@ function handleCancel() {
             </span>
             <span
               v-else-if="autoSaveStatus === 'error'"
-              class="font-mono text-[10px] uppercase tracking-wider text-[#E0533C] font-bold"
+              class="font-mono text-[10px] uppercase tracking-wider text-[#C4341C] font-bold"
             >
               ⚠ Échec de l'enregistrement auto — pensez à enregistrer
               manuellement
@@ -572,13 +565,13 @@ function handleCancel() {
           >
             <div class="flex items-center justify-between">
               <span
-                class="font-mono text-xs uppercase tracking-widest font-bold text-[#E0533C]"
+                class="font-mono text-xs uppercase tracking-widest font-bold text-[#C4341C]"
               >
                 [ Assistant IA — Ollama ]
               </span>
               <button
                 type="button"
-                class="font-mono text-xs text-[#111111]/60 hover:text-[#E0533C]"
+                class="font-mono text-xs text-[#111111]/60 hover:text-[#C4341C]"
                 @click="closeIaPanel"
               >
                 ✕ Fermer
@@ -635,7 +628,7 @@ function handleCancel() {
 
             <div
               v-if="iaError"
-              class="font-mono text-xs text-[#E0533C] font-bold"
+              class="font-mono text-xs text-[#C4341C] font-bold"
             >
               {{ iaError }}
             </div>
@@ -643,7 +636,7 @@ function handleCancel() {
             <button
               type="button"
               :disabled="iaLoading"
-              class="h-10 px-5 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase tracking-wider hover:bg-[#E0533C] disabled:opacity-50 transition-colors"
+              class="h-10 px-5 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase tracking-wider hover:bg-[#C4341C] disabled:opacity-50 transition-colors"
               @click="handleGenerateIa"
             >
               {{ iaLoading ? "Génération en cours…" : "Générer" }}
@@ -661,7 +654,7 @@ function handleCancel() {
                 aria-hidden="true"
               >
                 <div
-                  class="h-full bg-[#E0533C] transition-[width] duration-1000 ease-linear"
+                  class="h-full bg-[#C4341C] transition-[width] duration-1000 ease-linear"
                   :style="{ width: `${iaAvancement * 100}%` }"
                 ></div>
               </div>
@@ -673,7 +666,7 @@ function handleCancel() {
                 </p>
                 <button
                   type="button"
-                  class="shrink-0 font-mono text-[10px] uppercase tracking-wider underline hover:text-[#E0533C] transition-colors"
+                  class="shrink-0 font-mono text-[10px] uppercase tracking-wider underline hover:text-[#C4341C] transition-colors"
                   @click="annulerGenerationIa"
                 >
                   Annuler
@@ -698,7 +691,7 @@ function handleCancel() {
               <div class="flex gap-3">
                 <button
                   type="button"
-                  class="h-9 px-4 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase hover:bg-[#E0533C] transition-colors"
+                  class="h-9 px-4 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase hover:bg-[#C4341C] transition-colors"
                   @click="applyIaResult"
                 >
                   Insérer
@@ -737,7 +730,7 @@ function handleCancel() {
             <button
               type="button"
               :disabled="isSaving || !isTitreValid"
-              class="h-12 px-6 font-mono text-xs uppercase tracking-widest bg-[#111111] text-[#F4F1EA] border border-[#111111] hover:bg-[#E0533C] disabled:opacity-50 transition-colors shadow-[4px_4px_0px_0px_rgba(224,83,60,1)] hover:shadow-none"
+              class="h-12 px-6 font-mono text-xs uppercase tracking-widest bg-[#111111] text-[#F4F1EA] border border-[#111111] hover:bg-[#C4341C] disabled:opacity-50 transition-colors shadow-[4px_4px_0px_0px_rgba(224,83,60,1)] hover:shadow-none"
               @click="handleSave"
             >
               {{ isSaving ? "Enregistrement…" : "Enregistrer" }}

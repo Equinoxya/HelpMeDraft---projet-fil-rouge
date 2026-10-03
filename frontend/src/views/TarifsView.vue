@@ -66,7 +66,7 @@ const includedFeatures = [
       <!-- En-tête -->
       <header class="mb-16 text-center">
         <p
-          class="font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3"
+          class="font-mono text-xs uppercase tracking-widest text-[#C4341C] font-bold mb-3"
         >
           // TARIFS
         </p>
@@ -88,7 +88,7 @@ const includedFeatures = [
           :key="plan.name"
           class="bg-[#FAF8F5] border-2 border-[#111111] p-8 flex flex-col"
           :class="{
-            'border-[#E0533C] shadow-[6px_6px_0px_0px_#E0533C]': plan.isPopular,
+            'border-[#C4341C] shadow-[6px_6px_0px_0px_#C4341C]': plan.isPopular,
           }"
         >
           <div class="mb-6">
@@ -118,7 +118,7 @@ const includedFeatures = [
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                class="w-4 h-4 text-[#E0533C]"
+                class="w-4 h-4 text-[#C4341C]"
               >
                 <path
                   d="M20 6L9 17l-5-5"
@@ -137,7 +137,7 @@ const includedFeatures = [
             :to="plan.ctaTo.startsWith('mailto:') ? plan.ctaTo : plan.ctaTo"
             class="w-full text-center block py-3 px-6 border-2 border-[#111111] font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors"
             :class="{
-              'bg-[#111111] text-[#F4F1EA] hover:bg-[#E0533C] border-[#111111]':
+              'bg-[#111111] text-[#F4F1EA] hover:bg-[#C4341C] border-[#111111]':
                 plan.isPopular,
             }"
           >
@@ -160,7 +160,7 @@ const includedFeatures = [
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
-              class="w-5 h-5 text-[#E0533C] flex-shrink-0"
+              class="w-5 h-5 text-[#C4341C] flex-shrink-0"
             >
               <path
                 d="M20 6L9 17l-5-5"
@@ -181,7 +181,7 @@ const includedFeatures = [
         <p class="font-serif text-xl mb-6">Besoin d'une formule sur mesure ?</p>
         <a
           href="mailto:contact@helpmedraft.fr"
-          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-8 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#E0533C] transition-colors"
+          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-8 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#C4341C] transition-colors"
         >
           Nous contacter
           <svg

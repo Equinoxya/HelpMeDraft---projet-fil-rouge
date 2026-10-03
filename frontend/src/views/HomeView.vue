@@ -73,12 +73,12 @@ const steps = [
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA]"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA]"
   >
     <!-- HERO SECTION : STYLE ÉDITORIAL MONUMENTAL -->
     <header class="border-b border-[#111111] pt-16 pb-20 lg:pt-24 lg:pb-28">
       <div class="max-w-7xl mx-auto px-6 lg:px-12">
-        <div class="inline-block border-l-2 border-[#E0533C] pl-4 mb-8">
+        <div class="inline-block border-l-2 border-[#C4341C] pl-4 mb-8">
           <p
             class="font-mono text-xs uppercase tracking-[0.25em] text-[#111111]/70"
           >
@@ -90,7 +90,7 @@ const steps = [
           class="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-[0.95] text-[#111111] uppercase mb-12"
         >
           Le mot juste.<br />
-          <span class="text-[#E0533C] underline decoration-4 underline-offset-8"
+          <span class="text-[#C4341C] underline decoration-4 underline-offset-8"
             >Sans l'effort</span
           >
           du premier jet.
@@ -109,7 +109,7 @@ const steps = [
             <div class="flex flex-col sm:flex-row gap-4 pt-2">
               <button
                 @click="onRegister"
-                class="inline-flex items-center justify-center select-none font-semibold cursor-pointer bg-[#111111] hover:bg-[#E0533C] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-8 border-none transition-colors"
+                class="inline-flex items-center justify-center select-none font-semibold cursor-pointer bg-[#111111] hover:bg-[#C4341C] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-8 border-none transition-colors"
               >
                 Générer un document
               </button>
@@ -134,7 +134,7 @@ const steps = [
                   class="font-mono text-xs uppercase tracking-widest text-[#111111]/50"
                   >[ Brouillon Actif ]</span
                 >
-                <span class="font-mono text-xs text-[#E0533C] font-bold"
+                <span class="font-mono text-xs text-[#C4341C] font-bold"
                   >MODE ÉDITION</span
                 >
               </div>
@@ -143,7 +143,7 @@ const steps = [
                 class="font-serif text-base sm:text-lg text-[#111111] min-h-[96px] leading-relaxed"
               >
                 <span
-                  class="font-sans font-bold text-xs uppercase tracking-wider block mb-2 text-[#E0533C]"
+                  class="font-sans font-bold text-xs uppercase tracking-wider block mb-2 text-[#C4341C]"
                   >Article 4 — Restitution</span
                 >
                 « {{ typedText
@@ -156,7 +156,7 @@ const steps = [
               <div
                 class="mt-8 pt-4 border-t-2 border-dashed border-[#111111]/20 bg-[#111111]/5 p-4 font-mono text-xs text-[#111111]/80"
               >
-                <span class="font-bold text-[#E0533C]">NOTE D'ANALYSE :</span>
+                <span class="font-bold text-[#C4341C]">NOTE D'ANALYSE :</span>
                 Vérifier si le bien se situe en zone tendue pour ajuster le
                 délai légal à 1 mois.
               </div>
@@ -178,7 +178,7 @@ const steps = [
             class="p-8 sm:p-12 hover:bg-[#F4F1EA] transition-colors"
           >
             <span
-              class="font-mono text-xs text-[#E0533C] font-bold block mb-6"
+              class="font-mono text-xs text-[#C4341C] font-bold block mb-6"
               >{{ item.code }}</span
             >
             <h2
@@ -202,7 +202,7 @@ const steps = [
         >
           <div>
             <span
-              class="font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold"
+              class="font-mono text-xs uppercase tracking-widest text-[#C4341C] font-bold"
               >Protocole</span
             >
             <h2
@@ -251,7 +251,7 @@ const steps = [
         <div class="pt-4">
           <button
             @click="onRegister"
-            class="inline-flex items-center justify-center select-none font-semibold cursor-pointer bg-[#E0533C] hover:bg-[#c8442e] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-10 border-none transition-colors"
+            class="inline-flex items-center justify-center select-none font-semibold cursor-pointer bg-[#C4341C] hover:bg-[#A72C18] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-10 border-none transition-colors"
           >
             Créer mon premier document
           </button>

@@ -58,7 +58,7 @@ const iconMap: Record<string, string> = {
       <!-- En-tête -->
       <header class="mb-16">
         <p
-          class="font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3"
+          class="font-mono text-xs uppercase tracking-widest text-[#C4341C] font-bold mb-3"
         >
           // FONCTIONNALITÉS
         </p>
@@ -68,8 +68,8 @@ const iconMap: Record<string, string> = {
           Tout ce dont vous avez besoin pour rédiger sans effort
         </h1>
         <p class="text-lg text-[#111111]/70 max-w-3xl">
-          HelpMeDraft vous accompagne à chaque étape de la rédaction
-          de vos documents professionnels.
+          HelpMeDraft vous accompagne à chaque étape de la rédaction de vos
+          documents professionnels.
         </p>
       </header>
 
@@ -104,7 +104,7 @@ const iconMap: Record<string, string> = {
                   :key="item"
                   class="flex items-center gap-2 font-mono text-sm"
                 >
-                  <span class="text-[#E0533C]">▹</span>
+                  <span class="text-[#C4341C]">▹</span>
                   <span>{{ item }}</span>
                 </li>
               </ul>
@@ -117,7 +117,7 @@ const iconMap: Record<string, string> = {
       <section class="mt-16 text-center">
         <RouterLink
           to="/documents/nouveau"
-          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-8 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#E0533C] transition-colors"
+          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-8 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#C4341C] transition-colors"
         >
           Commencer à rédiger
           <svg

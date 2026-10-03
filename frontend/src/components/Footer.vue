@@ -68,7 +68,7 @@ const contactEmail = "contact@helpmedraft.fr";
       <!-- BLOC NAVIGATION (3 cols) -->
       <nav class="md:col-span-3 p-8 lg:p-12 space-y-6">
         <h3
-          class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]"
+          class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C]"
         >
           [ Navigation ]
         </h3>
@@ -77,7 +77,7 @@ const contactEmail = "contact@helpmedraft.fr";
           <li v-for="link in navLinks" :key="link.to">
             <RouterLink
               :to="link.to"
-              class="hover:text-[#E0533C] hover:underline underline-offset-4 transition-colors block py-1 focus-visible:outline-2 focus-visible:outline-black"
+              class="hover:text-[#C4341C] hover:underline underline-offset-4 transition-colors block py-1 focus-visible:outline-2 focus-visible:outline-black"
             >
               → {{ link.label }}
             </RouterLink>
@@ -88,7 +88,7 @@ const contactEmail = "contact@helpmedraft.fr";
       <!-- BLOC LÉGAL (3 cols) -->
       <nav class="md:col-span-3 p-8 lg:p-12 space-y-6">
         <h3
-          class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]"
+          class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C]"
         >
           [ Informations légales ]
         </h3>
@@ -97,7 +97,7 @@ const contactEmail = "contact@helpmedraft.fr";
           <li v-for="link in legalLinks" :key="link.to">
             <RouterLink
               :to="link.to"
-              class="hover:text-[#E0533C] hover:underline underline-offset-4 transition-colors block py-1 focus-visible:outline-2 focus-visible:outline-black"
+              class="hover:text-[#C4341C] hover:underline underline-offset-4 transition-colors block py-1 focus-visible:outline-2 focus-visible:outline-black"
             >
               {{ link.label }}
             </RouterLink>
@@ -111,14 +111,14 @@ const contactEmail = "contact@helpmedraft.fr";
       >
         <div class="space-y-6">
           <h3
-            class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]"
+            class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C]"
           >
             [ Contact ]
           </h3>
 
           <a
             :href="`mailto:${contactEmail}`"
-            class="font-mono text-xs break-all hover:text-[#E0533C] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-black"
+            class="font-mono text-xs break-all hover:text-[#C4341C] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-black"
           >
             {{ contactEmail }}
           </a>

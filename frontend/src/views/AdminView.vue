@@ -110,7 +110,7 @@ onMounted(fetchAll);
     <div class="max-w-7xl mx-auto px-6 lg:px-12 pt-12 md:pt-16">
       <header class="mb-10 pb-6 border-b-2 border-[#111111]">
         <span
-          class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+          class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-2"
         >
           [ Back-office ]
         </span>
@@ -123,7 +123,7 @@ onMounted(fetchAll);
 
       <div
         v-if="errorMessage"
-        class="mb-6 p-4 border border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold"
+        class="mb-6 p-4 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold"
         role="alert"
       >
         {{ errorMessage }}
@@ -134,7 +134,7 @@ onMounted(fetchAll);
         class="p-12 text-center font-mono text-xs uppercase tracking-widest text-[#111111]/60 flex flex-col items-center gap-3"
       >
         <span
-          class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#E0533C] rounded-full animate-spin"
+          class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#C4341C] rounded-full animate-spin"
         ></span>
         Chargement…
       </div>
@@ -269,7 +269,7 @@ onMounted(fetchAll);
                       deletingUserId === user.id ||
                       user.id === authStore.user?.id
                     "
-                    class="font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[#E0533C] text-[#E0533C] hover:bg-[#E0533C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors"
+                    class="font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[#C4341C] text-[#C4341C] hover:bg-[#C4341C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors"
                     @click="handleDelete(user)"
                   >
                     {{ deletingUserId === user.id ? "…" : "Supprimer" }}

@@ -25,9 +25,12 @@ describe("statusLabels", () => {
 });
 
 describe("getStatusStyle", () => {
-  it.each(STATUTS)("TU-F01 · rend une classe non vide pour « %s »", (statut) => {
-    expect(getStatusStyle(statut)).toBeTruthy();
-  });
+  it.each(STATUTS)(
+    "TU-F01 · rend une classe non vide pour « %s »",
+    (statut) => {
+      expect(getStatusStyle(statut)).toBeTruthy();
+    },
+  );
 
   it("distingue visuellement les trois statuts", () => {
     const styles = STATUTS.map(getStatusStyle);

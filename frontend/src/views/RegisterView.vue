@@ -77,7 +77,7 @@ const isFormValid = computed(
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA] flex flex-col"
   >
     <!-- FORM SECTION -->
     <main class="flex-1 flex items-center justify-center px-4 py-12 lg:py-20">
@@ -86,7 +86,7 @@ const isFormValid = computed(
       >
         <div class="border-b border-[#111111]/20 pb-6 mb-8">
           <span
-            class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+            class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-2"
           >
             [ Inscription Studio ]
           </span>
@@ -102,7 +102,7 @@ const isFormValid = computed(
 
         <div
           v-if="errorMessage"
-          class="mb-6 p-4 border border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold"
+          class="mb-6 p-4 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold"
           role="alert"
         >
           ANNULATION : {{ errorMessage }}
@@ -125,7 +125,7 @@ const isFormValid = computed(
                 placeholder="Jean"
                 autocomplete="given-name"
                 required
-                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
               />
             </div>
 
@@ -143,7 +143,7 @@ const isFormValid = computed(
                 placeholder="Dupont"
                 autocomplete="family-name"
                 required
-                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
               />
             </div>
           </div>
@@ -163,7 +163,7 @@ const isFormValid = computed(
               placeholder="jean.dupont@exemple.fr"
               autocomplete="email"
               required
-              class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+              class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
             />
           </div>
 
@@ -183,7 +183,7 @@ const isFormValid = computed(
                 placeholder="••••••••"
                 autocomplete="new-password"
                 required
-                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
               />
               <button
                 type="button"
@@ -233,9 +233,9 @@ const isFormValid = computed(
 
           <!-- Exigences Mot de passe -->
           <div
-            class="border-l-2 border-[#E0533C] bg-[#111111]/5 p-4 font-mono text-xs"
+            class="border-l-2 border-[#C4341C] bg-[#111111]/5 p-4 font-mono text-xs"
           >
-            <span class="font-bold text-[#E0533C] uppercase block mb-2"
+            <span class="font-bold text-[#C4341C] uppercase block mb-2"
               >Exigences de sécurité :</span
             >
             <ul class="grid sm:grid-cols-2 gap-2 text-[#111111]/70">
@@ -270,10 +270,10 @@ const isFormValid = computed(
                 placeholder="••••••••"
                 autocomplete="new-password"
                 required
-                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
                 :class="
                   confirmMdp && !mdpsMatch
-                    ? 'border-[#E0533C]'
+                    ? 'border-[#C4341C]'
                     : 'border-[#111111]'
                 "
               />
@@ -323,7 +323,7 @@ const isFormValid = computed(
             </div>
             <p
               v-if="confirmMdp && !mdpsMatch"
-              class="font-mono text-xs text-[#E0533C] mt-1"
+              class="font-mono text-xs text-[#C4341C] mt-1"
             >
               Les mots de passe ne correspondent pas.
             </p>
@@ -335,7 +335,7 @@ const isFormValid = computed(
               v-model="rgpdConsent"
               type="checkbox"
               required
-              class="mt-1 h-4 w-4 rounded-none border-[#111111] accent-[#E0533C]"
+              class="mt-1 h-4 w-4 rounded-none border-[#111111] accent-[#C4341C]"
             />
             <span class="font-serif text-sm text-[#111111]/80 leading-snug">
               J’accepte la politique de confidentialité et le traitement de mes
@@ -347,7 +347,7 @@ const isFormValid = computed(
           <button
             type="submit"
             :disabled="!isFormValid || isSubmitting"
-            class="w-full h-14 bg-[#111111] hover:bg-[#E0533C] disabled:bg-[#111111]/30 disabled:cursor-not-allowed text-[#F4F1EA] font-mono text-xs uppercase tracking-widest transition-colors border-none"
+            class="w-full h-14 bg-[#111111] hover:bg-[#C4341C] disabled:bg-[#111111]/30 disabled:cursor-not-allowed text-[#F4F1EA] font-mono text-xs uppercase tracking-widest transition-colors border-none"
           >
             {{ isSubmitting ? "Création en cours..." : "Créer mon compte" }}
           </button>
@@ -359,7 +359,7 @@ const isFormValid = computed(
           Déjà un compte ?
           <RouterLink
             :to="{ name: 'login' }"
-            class="font-sans font-bold text-[#111111] hover:text-[#E0533C] underline ml-1"
+            class="font-sans font-bold text-[#111111] hover:text-[#C4341C] underline ml-1"
           >
             Se connecter
           </RouterLink>

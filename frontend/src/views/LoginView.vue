@@ -34,7 +34,7 @@ async function handleSubmit() {
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA] flex flex-col"
   >
     <!-- MAIN LOGIN CARD -->
     <main class="flex-1 flex items-center justify-center px-4 py-12 lg:py-20">
@@ -44,7 +44,7 @@ async function handleSubmit() {
         <!-- HEADER DE LA CARTE -->
         <div class="border-b border-[#111111]/20 pb-6 mb-8">
           <span
-            class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+            class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-2"
           >
             [ Authentification ]
           </span>
@@ -61,7 +61,7 @@ async function handleSubmit() {
         <!-- MESSAGE D'ERREUR -->
         <div
           v-if="errorMessage"
-          class="mb-6 p-4 border border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold"
+          class="mb-6 p-4 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold"
           role="alert"
         >
           ERREUR : {{ errorMessage }}
@@ -84,7 +84,7 @@ async function handleSubmit() {
               placeholder="votre.email@exemple.fr"
               autocomplete="email"
               required
-              class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+              class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
             />
           </div>
 
@@ -99,7 +99,7 @@ async function handleSubmit() {
               </label>
               <RouterLink
                 to="/forgot-password"
-                class="font-mono text-xs text-[#111111]/60 hover:text-[#E0533C] underline decoration-1 underline-offset-4"
+                class="font-mono text-xs text-[#111111]/60 hover:text-[#C4341C] underline decoration-1 underline-offset-4"
               >
                 Oublié ?
               </RouterLink>
@@ -113,7 +113,7 @@ async function handleSubmit() {
                 placeholder="••••••••"
                 autocomplete="current-password"
                 required
-                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
               />
               <button
                 type="button"
@@ -165,7 +165,7 @@ async function handleSubmit() {
           <button
             type="submit"
             :disabled="isSubmitting"
-            class="w-full h-14 bg-[#111111] hover:bg-[#E0533C] disabled:bg-[#111111]/30 disabled:cursor-not-allowed text-[#F4F1EA] font-mono text-xs uppercase tracking-widest transition-colors border-none mt-4"
+            class="w-full h-14 bg-[#111111] hover:bg-[#C4341C] disabled:bg-[#111111]/30 disabled:cursor-not-allowed text-[#F4F1EA] font-mono text-xs uppercase tracking-widest transition-colors border-none mt-4"
           >
             {{ isSubmitting ? "Connexion en cours..." : "Se connecter" }}
           </button>
@@ -178,7 +178,7 @@ async function handleSubmit() {
           Pas encore de compte ?
           <RouterLink
             :to="{ name: 'register' }"
-            class="font-sans font-bold text-[#111111] hover:text-[#E0533C] underline ml-1"
+            class="font-sans font-bold text-[#111111] hover:text-[#C4341C] underline ml-1"
           >
             Créer un compte
           </RouterLink>

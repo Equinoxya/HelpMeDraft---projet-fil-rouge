@@ -80,7 +80,9 @@ describe("assainissement du rendu Markdown", () => {
   });
 
   it("supprime une iframe pointant vers un site tiers", () => {
-    const rendu = rendreEnDom('<iframe src="https://exemple-malveillant.test"></iframe>');
+    const rendu = rendreEnDom(
+      '<iframe src="https://exemple-malveillant.test"></iframe>',
+    );
     expect(rendu.querySelector("iframe")).toBeNull();
   });
 
@@ -90,8 +92,14 @@ describe("assainissement du rendu Markdown", () => {
     ["bascule de details", '<details open ontoggle="alert(1)">x</details>'],
     ["objet embarqué", '<object data="javascript:alert(1)"></object>'],
     ["balise embed", '<embed src="javascript:alert(1)">'],
-    ["form action", '<form action="javascript:alert(1)"><button>ok</button></form>'],
-    ["svg imbriqué", '<svg><a xlink:href="javascript:alert(1)"><text>clic</text></a></svg>'],
+    [
+      "form action",
+      '<form action="javascript:alert(1)"><button>ok</button></form>',
+    ],
+    [
+      "svg imbriqué",
+      '<svg><a xlink:href="javascript:alert(1)"><text>clic</text></a></svg>',
+    ],
     ["casse mélangée", '<IMG SRC=x OnErRoR="alert(1)">'],
   ])("neutralise aussi : %s", (_nom, charge) => {
     const rendu = rendreEnDom(charge);
@@ -131,7 +139,9 @@ describe("assainissement du rendu Markdown", () => {
 
   it("affiche comme du texte un extrait de code parlant de balises", () => {
     // Un document professionnel peut légitimement citer du HTML.
-    const rendu = rendreEnDom("La balise `<script>` sert à charger du JavaScript.");
+    const rendu = rendreEnDom(
+      "La balise `<script>` sert à charger du JavaScript.",
+    );
     expect(rendu.querySelector("script")).toBeNull();
     expect(rendu.querySelector("code")?.textContent).toBe("<script>");
   });
