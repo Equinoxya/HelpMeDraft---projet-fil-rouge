@@ -9,6 +9,7 @@ Deux responsabilités testées séparément :
 
 Aucun appel réseau : `requests.post` est remplacé par un double.
 """
+
 import json
 
 import pytest
@@ -23,8 +24,8 @@ from app.services.ia_service import (
     temperature_pour,
 )
 
-
 # ── Construction du prompt ───────────────────────────────────────────────────
+
 
 @pytest.mark.parametrize("action", ["reformuler", "corriger", "completer"])
 def test_tu09_build_prompt_insere_le_contenu_dans_le_gabarit(action):
@@ -57,6 +58,7 @@ def test_build_prompt_ignore_une_consigne_vide(consigne):
 
 # ── Appel au service d'inférence ─────────────────────────────────────────────
 
+
 class _ReponseFactice:
     """
     Double d'une réponse Ollama en flux NDJSON.
@@ -69,9 +71,7 @@ class _ReponseFactice:
 
     def __init__(self, charge):
         blocs = charge if isinstance(charge, list) else [{**charge, "done": True}]
-        self._lignes = [
-            json.dumps(bloc).encode("utf-8") for bloc in blocs
-        ]
+        self._lignes = [json.dumps(bloc).encode("utf-8") for bloc in blocs]
 
     def raise_for_status(self):
         return None
@@ -128,12 +128,11 @@ def test_tu13_call_ollama_traduit_un_delai_de_connexion_depasse(app, monkeypatch
     message le dit, et l'erreur reste une RuntimeError pour que la route la
     traduise en 502 plutôt qu'en 500.
     """
+
     def _connexion_trop_longue(*a, **k):
         raise requests.exceptions.ConnectTimeout()
 
-    monkeypatch.setattr(
-        "app.services.ia_service.requests.post", _connexion_trop_longue
-    )
+    monkeypatch.setattr("app.services.ia_service.requests.post", _connexion_trop_longue)
     with app.app_context():
         with pytest.raises(RuntimeError, match="Impossible de joindre Ollama"):
             call_ollama("un prompt")
@@ -180,6 +179,7 @@ def test_call_ollama_borne_la_connexion_mais_pas_la_lecture(app, monkeypatch):
 
 
 # ── Lecture du flux NDJSON ───────────────────────────────────────────────────
+
 
 def test_call_ollama_recompose_le_texte_depuis_le_flux(app, monkeypatch):
     """
@@ -256,6 +256,7 @@ def test_call_ollama_refuse_un_flux_illisible(app, monkeypatch):
     RuntimeError — donc un 502 explicite — et non une exception non
     interprétée remontée en 500.
     """
+
     class _FluxCasse(_ReponseFactice):
         def iter_lines(self):
             return iter([b"<html>502 Bad Gateway</html>"])
@@ -270,6 +271,7 @@ def test_call_ollama_refuse_un_flux_illisible(app, monkeypatch):
 
 
 # ── Mode raisonnement ────────────────────────────────────────────────────────
+
 
 def test_call_ollama_desactive_le_mode_raisonnement(app, monkeypatch):
     """
@@ -303,9 +305,7 @@ def test_call_ollama_desactive_le_mode_raisonnement(app, monkeypatch):
     )
 
 
-def test_call_ollama_reessaie_sans_think_si_le_modele_ne_le_supporte_pas(
-    app, monkeypatch
-):
+def test_call_ollama_reessaie_sans_think_si_le_modele_ne_le_supporte_pas(app, monkeypatch):
     """
     Ollama répond 400 « "<modèle>" does not support thinking » quand on passe
     `think` à un modèle qui n'a pas de mode raisonnement. Le modèle venant de
@@ -321,9 +321,7 @@ def test_call_ollama_reessaie_sans_think_si_le_modele_ne_le_supporte_pas(
         charge = k.get("json", {})
         appels.append(charge)
         if "think" in charge:
-            reponse = _ReponseEnErreur(
-                400, {"error": '"llama3.1" does not support thinking'}
-            )
+            reponse = _ReponseEnErreur(400, {"error": '"llama3.1" does not support thinking'})
             raise requests.exceptions.HTTPError(response=reponse)
         return _ReponseFactice({"response": "Texte généré."})
 
@@ -349,6 +347,7 @@ def test_call_ollama_lit_le_detail_avant_de_liberer_la_connexion(app, monkeypatc
     ordinaire ne fait pas — c'est précisément ce qui avait laissé passer le
     bug.
     """
+
     class _CorpsFermable(_ReponseEnErreur):
         def __init__(self):
             super().__init__(400, {"error": '"llama3.1" does not support thinking'})
@@ -419,6 +418,7 @@ def test_call_ollama_ne_masque_pas_les_autres_erreurs_400(app, monkeypatch):
 # modèle a raisonné quand même, et son monologue — plusieurs pages, en anglais,
 # pour corriger une phrase de quarante caractères — est arrivé COLLÉ au texte
 # utile, dans le champ que l'application propose d'insérer dans le document.
+
 
 def test_nettoyer_raisonnement_garde_ce_qui_suit_la_balise():
     brut = (
@@ -491,6 +491,7 @@ def test_call_ollama_ne_renvoie_jamais_le_raisonnement(app, monkeypatch):
 
 # ── Température par action ───────────────────────────────────────────────────
 
+
 def test_temperature_corriger_est_la_plus_basse():
     """
     Corriger l'orthographe demande au modèle de ne rien changer d'autre. Une
@@ -523,6 +524,7 @@ def test_la_route_transmet_la_temperature_de_l_action(app, monkeypatch):
 
 # ── Fenêtre de contexte ──────────────────────────────────────────────────────
 
+
 def test_call_ollama_transmet_num_ctx(app, monkeypatch):
     """
     Régression. Sans `num_ctx` explicite, Ollama applique un défaut de 4096
@@ -545,6 +547,7 @@ def test_call_ollama_transmet_num_ctx(app, monkeypatch):
 
     assert "num_ctx" in envoye["options"], "num_ctx n'est pas transmis à Ollama"
     assert envoye["options"]["num_ctx"] == app.config["OLLAMA_NUM_CTX"]
+
 
 def test_call_ollama_maintient_le_modele_en_memoire(app, monkeypatch):
     """
@@ -597,7 +600,7 @@ def test_la_fenetre_de_contexte_est_dimensionnee_pas_genereuse(app):
     """
     besoin = (
         app.config["IA_MAX_CONTENU_LENGTH"] / CARACTERES_PAR_JETON  # entrée
-        + 70                                                        # gabarit
+        + 70  # gabarit
         + app.config["IA_MAX_CONTENU_LENGTH"] / CARACTERES_PAR_JETON  # sortie
     )
     fenetre = app.config["OLLAMA_NUM_CTX"]
@@ -689,6 +692,7 @@ def test_la_borne_de_contenu_reste_une_attente_acceptable(app):
 
 
 # ── Messages d'erreur exploitables ───────────────────────────────────────────
+
 
 class _ReponseEnErreur:
     """Double d'une réponse HTTP en erreur, telle que requests l'attache."""

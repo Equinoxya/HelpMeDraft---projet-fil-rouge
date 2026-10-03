@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tests d'intégration de la chaîne d'authentification (§ 9.4).
 
@@ -11,6 +10,7 @@ CONCEPTION — ce qui est stocké en base, l'égalité de deux réponses, la
 révocation en cascade. Ce sont les plus utiles : un test qui se contente de
 constater un 200 passerait aussi sur une implémentation défaillante.
 """
+
 import hashlib
 from datetime import timedelta
 
@@ -26,13 +26,19 @@ def cookie_de(client):
 def test_inscription_cree_le_compte_et_le_consentement(client):
     """L'inscription INCLUT le recueil du consentement (§ 5.6.3) : les deux
     lignes sont écrites dans la même transaction, ou aucune."""
-    reponse = client.post("/auth/register", json={
-        "lastname": "Bellissens", "firstname": "Ophelie",
-        "email": "nouvelle@example.test", "mdp": "MotDePasse1",
-        "rgpd_consent": True,
-    })
+    reponse = client.post(
+        "/auth/register",
+        json={
+            "lastname": "Bellissens",
+            "firstname": "Ophelie",
+            "email": "nouvelle@example.test",
+            "mdp": "MotDePasse1",
+            "rgpd_consent": True,
+        },
+    )
     assert reponse.status_code == 201
     from database.db import Consentement, User
+
     with SessionLocal() as db:
         user = db.query(User).filter_by(email="nouvelle@example.test").one()
         consentements = db.query(Consentement).filter_by(user_id=user.user_id).all()
@@ -42,30 +48,44 @@ def test_inscription_cree_le_compte_et_le_consentement(client):
 
 
 def test_inscription_refusee_sans_consentement(client):
-    reponse = client.post("/auth/register", json={
-        "lastname": "X", "firstname": "Y", "email": "sans-consentement@example.test",
-        "mdp": "MotDePasse1", "rgpd_consent": False,
-    })
+    reponse = client.post(
+        "/auth/register",
+        json={
+            "lastname": "X",
+            "firstname": "Y",
+            "email": "sans-consentement@example.test",
+            "mdp": "MotDePasse1",
+            "rgpd_consent": False,
+        },
+    )
     assert reponse.status_code == 400
     from database.db import User
+
     with SessionLocal() as db:
         assert db.query(User).filter_by(email="sans-consentement@example.test").first() is None
 
 
 def test_inscription_refusee_si_mot_de_passe_non_conforme(client):
-    reponse = client.post("/auth/register", json={
-        "lastname": "X", "firstname": "Y", "email": "faible@example.test",
-        "mdp": "motdepasse", "rgpd_consent": True,
-    })
+    reponse = client.post(
+        "/auth/register",
+        json={
+            "lastname": "X",
+            "firstname": "Y",
+            "email": "faible@example.test",
+            "mdp": "motdepasse",
+            "rgpd_consent": True,
+        },
+    )
     assert reponse.status_code == 400
 
 
 def test_le_mot_de_passe_n_est_jamais_stocke_en_clair(client, compte):
     from database.db import User
+
     with SessionLocal() as db:
         user = db.query(User).filter_by(email=compte["email"]).one()
     assert "MotDePasse1" not in user.mdp_hash
-    assert user.mdp_hash.startswith("$2")          # empreinte bcrypt
+    assert user.mdp_hash.startswith("$2")  # empreinte bcrypt
 
 
 def test_adresse_deja_utilisee_renvoie_409_ecart_documente(client, compte):
@@ -77,25 +97,30 @@ def test_adresse_deja_utilisee_renvoie_409_ecart_documente(client, compte):
     correction soit un choix explicite : le jour où la route renverra 201, ce test
     échouera et devra être réécrit — ce qui est exactement le signal voulu.
     """
-    reponse = client.post("/auth/register", json={
-        "lastname": "Test", "firstname": "Doublon",
-        "email": compte["email"], "mdp": "MotDePasse1", "rgpd_consent": True,
-    })
+    reponse = client.post(
+        "/auth/register",
+        json={
+            "lastname": "Test",
+            "firstname": "Doublon",
+            "email": compte["email"],
+            "mdp": "MotDePasse1",
+            "rgpd_consent": True,
+        },
+    )
     assert reponse.status_code == 409
 
 
 # ── Connexion ────────────────────────────────────────────────────────────────
 def test_connexion_pose_un_cookie_correctement_attribue(client, compte):
-    reponse = client.post("/auth/login",
-                          json={"email": compte["email"], "mdp": compte["mdp"]})
+    reponse = client.post("/auth/login", json={"email": compte["email"], "mdp": compte["mdp"]})
     assert reponse.status_code == 200
     assert "access_token" in reponse.get_json()
 
     entete = reponse.headers.get("Set-Cookie", "")
     # Chaque attribut répond à une menace distincte (§ 7.4.3).
-    assert "HttpOnly" in entete                   # un XSS ne lit pas le jeton
-    assert "Path=/auth" in entete                 # portée minimale
-    assert "SameSite=Strict" in entete            # CSRF sur /auth/refresh
+    assert "HttpOnly" in entete  # un XSS ne lit pas le jeton
+    assert "Path=/auth" in entete  # portée minimale
+    assert "SameSite=Strict" in entete  # CSRF sur /auth/refresh
     # APP_ENV=development : Secure absent, sinon le cookie ne passerait pas
     # sur http://localhost et l'authentification serait cassée en dev (§ 6.3).
     assert "Secure" not in entete
@@ -119,10 +144,10 @@ def test_en_base_on_stocke_l_empreinte_pas_le_jeton(client, compte):
 def test_mot_de_passe_errone_et_compte_inexistant_sont_indiscernables(client, compte):
     """Anti-énumération (§ 8.8) : le test compare les CORPS, pas seulement les
     codes. Deux 401 porteurs de messages différents rétabliraient la fuite."""
-    mauvais_mdp = client.post("/auth/login",
-                              json={"email": compte["email"], "mdp": "MauvaisMdp1"})
-    inconnu = client.post("/auth/login",
-                          json={"email": "jamais-vu@example.test", "mdp": "MotDePasse1"})
+    mauvais_mdp = client.post("/auth/login", json={"email": compte["email"], "mdp": "MauvaisMdp1"})
+    inconnu = client.post(
+        "/auth/login", json={"email": "jamais-vu@example.test", "mdp": "MotDePasse1"}
+    )
     assert mauvais_mdp.status_code == inconnu.status_code == 401
     assert mauvais_mdp.get_json() == inconnu.get_json()
 
@@ -154,15 +179,16 @@ def test_rejouer_un_jeton_consomme_revoque_toutes_les_sessions(client, connecte)
     D'où la vérification de l'état de la base.
     """
     ancien = connecte["refresh"]
-    client.post("/auth/refresh")                   # l'ancien jeton est consommé
+    client.post("/auth/refresh")  # l'ancien jeton est consommé
 
     client.set_cookie("refresh_token", ancien, path="/auth")
     rejeu = client.post("/auth/refresh")
 
     assert rejeu.status_code == 401
     with SessionLocal() as db:
-        assert db.query(UserSession).count() == 0, \
+        assert db.query(UserSession).count() == 0, (
             "la réutilisation doit révoquer toutes les sessions, pas seulement refuser"
+        )
 
 
 def test_refresh_sans_cookie_est_refuse(client):
@@ -199,8 +225,9 @@ def test_me_exige_un_jeton(client):
 
 
 def test_me_refuse_un_jeton_invalide(client):
-    assert client.get("/auth/me",
-                      headers={"Authorization": "Bearer pas-un-jeton"}).status_code == 401
+    assert (
+        client.get("/auth/me", headers={"Authorization": "Bearer pas-un-jeton"}).status_code == 401
+    )
 
 
 def test_me_renvoie_le_profil_et_jamais_l_empreinte(client, connecte):
@@ -217,8 +244,7 @@ def test_me_renvoie_le_profil_et_jamais_l_empreinte(client, connecte):
 def test_forgot_password_repond_pareil_que_l_adresse_existe_ou_non(client, compte):
     """Même raisonnement anti-énumération que sur /login (§ 8.8)."""
     connue = client.post("/auth/forgot-password", json={"email": compte["email"]})
-    inconnue = client.post("/auth/forgot-password",
-                           json={"email": "jamais-vu@example.test"})
+    inconnue = client.post("/auth/forgot-password", json={"email": "jamais-vu@example.test"})
     assert connue.status_code == inconnue.status_code == 200
     assert connue.get_json() == inconnue.get_json()
 
@@ -233,13 +259,17 @@ def test_reset_password_revoque_les_sessions_ouvertes(client, compte, connecte):
 
     jeton_clair, empreinte = generate_reset_token()
     with SessionLocal() as db:
-        db.add(PasswordReset(user_id=connecte["user_id"], token_hash=empreinte,
-                             expires_at=utc_now_naive() + timedelta(hours=1)))
+        db.add(
+            PasswordReset(
+                user_id=connecte["user_id"],
+                token_hash=empreinte,
+                expires_at=utc_now_naive() + timedelta(hours=1),
+            )
+        )
         db.commit()
-        assert db.query(UserSession).count() == 1   # une session est bien ouverte
+        assert db.query(UserSession).count() == 1  # une session est bien ouverte
 
-    reponse = client.post("/auth/reset-password",
-                          json={"token": jeton_clair, "mdp": "NouveauMdp1"})
+    reponse = client.post("/auth/reset-password", json={"token": jeton_clair, "mdp": "NouveauMdp1"})
     assert reponse.status_code == 200
 
     with SessionLocal() as db:
@@ -247,10 +277,18 @@ def test_reset_password_revoque_les_sessions_ouvertes(client, compte, connecte):
         assert db.query(PasswordReset).one().used is True
 
     # L'ancien mot de passe ne fonctionne plus, le nouveau fonctionne.
-    assert client.post("/auth/login",
-                       json={"email": compte["email"], "mdp": "MotDePasse1"}).status_code == 401
-    assert client.post("/auth/login",
-                       json={"email": compte["email"], "mdp": "NouveauMdp1"}).status_code == 200
+    assert (
+        client.post(
+            "/auth/login", json={"email": compte["email"], "mdp": "MotDePasse1"}
+        ).status_code
+        == 401
+    )
+    assert (
+        client.post(
+            "/auth/login", json={"email": compte["email"], "mdp": "NouveauMdp1"}
+        ).status_code
+        == 200
+    )
 
 
 def test_un_jeton_de_reinitialisation_ne_sert_qu_une_fois(client, compte):
@@ -259,14 +297,17 @@ def test_un_jeton_de_reinitialisation_ne_sert_qu_une_fois(client, compte):
 
     jeton_clair, empreinte = generate_reset_token()
     with SessionLocal() as db:
-        db.add(PasswordReset(user_id=compte["user_id"], token_hash=empreinte,
-                             expires_at=utc_now_naive() + timedelta(hours=1)))
+        db.add(
+            PasswordReset(
+                user_id=compte["user_id"],
+                token_hash=empreinte,
+                expires_at=utc_now_naive() + timedelta(hours=1),
+            )
+        )
         db.commit()
 
-    premier = client.post("/auth/reset-password",
-                          json={"token": jeton_clair, "mdp": "NouveauMdp1"})
-    second = client.post("/auth/reset-password",
-                         json={"token": jeton_clair, "mdp": "EncoreAutre1"})
+    premier = client.post("/auth/reset-password", json={"token": jeton_clair, "mdp": "NouveauMdp1"})
+    second = client.post("/auth/reset-password", json={"token": jeton_clair, "mdp": "EncoreAutre1"})
     assert premier.status_code == 200
     assert second.status_code == 400
 
@@ -277,10 +318,14 @@ def test_un_jeton_de_reinitialisation_expire_est_refuse(client, compte):
 
     jeton_clair, empreinte = generate_reset_token()
     with SessionLocal() as db:
-        db.add(PasswordReset(user_id=compte["user_id"], token_hash=empreinte,
-                             expires_at=utc_now_naive() - timedelta(minutes=1)))
+        db.add(
+            PasswordReset(
+                user_id=compte["user_id"],
+                token_hash=empreinte,
+                expires_at=utc_now_naive() - timedelta(minutes=1),
+            )
+        )
         db.commit()
 
-    reponse = client.post("/auth/reset-password",
-                          json={"token": jeton_clair, "mdp": "NouveauMdp1"})
+    reponse = client.post("/auth/reset-password", json={"token": jeton_clair, "mdp": "NouveauMdp1"})
     assert reponse.status_code == 400

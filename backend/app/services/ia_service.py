@@ -42,15 +42,15 @@ PROMPT_TEMPLATES = {
 }
 
 
-
 def build_prompt(type_action: str, contenu: str, instructions: str | None = None) -> str:
     template = PROMPT_TEMPLATES.get(type_action)
     if template is None:
         raise ValueError(f"Type d'action inconnu: {type_action}")
-    prompt = template.format(contenu = contenu)
+    prompt = template.format(contenu=contenu)
     if instructions:
         prompt += f"\n\nConsigne particulière à respecter: {instructions}"
     return prompt
+
 
 # La consigne de prompt /no_think a été RETIRÉE, et c'est un constat de
 # mesure, pas un choix de style.
@@ -146,6 +146,7 @@ def _erreur_http(exception, model: str, detail: str | None = None) -> str:
         return f"Erreur Ollama ({statut}) : {detail}"
     return f"Erreur Ollama: {exception}"
 
+
 class _ThinkRefuse(Exception):
     """
     Ollama a rejeté le champ `think` parce que le modèle n'a pas de mode
@@ -221,19 +222,18 @@ def _lire_flux(response) -> tuple[str, int]:
             # qu'Ollama envoie. On évite ainsi la question de l'encodage
             # déclaré, qu'Ollama ne précise pas toujours.
             bloc = json.loads(ligne)
-        except ValueError:
+        except ValueError as e:
             raise RuntimeError(
                 "Réponse illisible d'Ollama : le flux ne contient pas du JSON "
                 "ligne par ligne. Vérifiez la version d'Ollama."
-            )
+            ) from e
 
         # Une erreur peut arriver EN COURS de flux, après un statut 200 :
         # raise_for_status() ne la verra jamais.
         detail = bloc.get("error")
         if detail:
             raise RuntimeError(
-                f"Erreur Ollama pendant la génération : "
-                f"{' '.join(str(detail).split())[:200]}"
+                f"Erreur Ollama pendant la génération : {' '.join(str(detail).split())[:200]}"
             )
 
         morceaux.append(bloc.get("response", ""))
@@ -279,18 +279,18 @@ def _appel(base_url: str, charge: dict, connect_timeout: int) -> tuple[str, int]
                 # HTTP pour le mettre en évidence.
                 detail = _detail_ollama(response)
                 if _est_think_refuse(e, detail):
-                    raise _ThinkRefuse()
-                raise RuntimeError(_erreur_http(e, model, detail))
+                    raise _ThinkRefuse() from e
+                raise RuntimeError(_erreur_http(e, model, detail)) from e
             return _lire_flux(response)
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.ConnectionError as e:
         # ConnectTimeout hérite de ConnectionError et tombe donc ici : un
         # délai de connexion dépassé veut dire la même chose qu'un refus de
         # connexion — Ollama n'est pas joignable à cette adresse.
         raise RuntimeError(
             f"Impossible de joindre Ollama sur {base_url}. "
             "Vérifiez qu'il est lancé sur votre machine."
-        )
-    except requests.exceptions.Timeout:
+        ) from e
+    except requests.exceptions.Timeout as e:
         # Filet de sécurité. Plus aucun délai n'est imposé à la lecture, donc
         # ce cas ne devrait plus se produire ; il reste traité pour qu'une
         # bibliothèque qui en lèverait un quand même donne une réponse 502
@@ -298,11 +298,11 @@ def _appel(base_url: str, charge: dict, connect_timeout: int) -> tuple[str, int]
         raise RuntimeError(
             f"La connexion à Ollama sur {base_url} n'a pas abouti. "
             "Vérifiez qu'il est lancé sur votre machine."
-        )
+        ) from e
     except requests.exceptions.HTTPError as e:
         if _est_think_refuse(e):
-            raise _ThinkRefuse()
-        raise RuntimeError(_erreur_http(e, model))
+            raise _ThinkRefuse() from e
+        raise RuntimeError(_erreur_http(e, model)) from e
 
 
 def _est_think_refuse(exception, detail: str | None = None) -> bool:
@@ -342,9 +342,7 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
     if temperature is None:
         temperature = TEMPERATURE_PAR_DEFAUT
 
-    charge = _charge_utile(
-        model, prompt, temperature, num_ctx, think, keep_alive
-    )
+    charge = _charge_utile(model, prompt, temperature, num_ctx, think, keep_alive)
     try:
         return _appel(base_url, charge, connect_timeout)
     except _ThinkRefuse:
@@ -354,11 +352,11 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
         del charge["think"]
         try:
             return _appel(base_url, charge, connect_timeout)
-        except _ThinkRefuse:
+        except _ThinkRefuse as e:
             # Ne devrait pas arriver : le champ a été retiré. Traduit quand
             # même, pour qu'une exception interne au module ne puisse jamais
             # remonter jusqu'à la route et s'y transformer en 500 opaque.
             raise RuntimeError(
                 f"Ollama refuse le mode raisonnement pour « {model} » alors "
                 "que le champ n'est plus envoyé. Vérifiez la version d'Ollama."
-            )
+            ) from e

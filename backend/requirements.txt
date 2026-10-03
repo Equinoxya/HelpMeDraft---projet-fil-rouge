@@ -8,6 +8,25 @@
 #   pip install -r requirements.txt
 #
 # Versions figées volontairement (reproductibilité des builds et de la CI).
+#
+# CE FICHIER EST LA SOURCE, PAS CE QUI EST INSTALLÉ EN CONTENEUR.
+#
+# Il ne verrouille que les dépendances DIRECTES. Les transitives — Werkzeug,
+# Jinja2, itsdangerous... — restaient libres de changer d'une installation à
+# l'autre (ticket KAN-102). Deux verrous en sont dérivés, avec les empreintes
+# de chaque archive :
+#
+#     requirements.lock        production, utilisé par backend/Dockerfile
+#     requirements-dev.lock    + outils de test et Ruff, utilisé par la CI
+#
+# Les régénérer après toute modification ici :
+#
+#     pip install pip-tools
+#     pip-compile --generate-hashes --strip-extras \
+#                 --output-file=requirements.lock requirements.txt
+#
+# Les empreintes ne sont pas du zèle : installées avec --require-hashes, elles
+# font échouer l'installation si un paquet a été altéré sur l'index.
 # ==============================================================================
 
 # ── Framework web ─────────────────────────────────────────────────────────────
@@ -28,3 +47,14 @@ requests==2.34.2             # appels HTTP vers l'API locale Ollama
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 python-dotenv==1.2.3         # chargement du fichier .env (app/config.py)
+
+# ── Exécution en conteneur ────────────────────────────────────────────────────
+# Le serveur de développement de Flask (run.py) est mono-processus et affiche un
+# avertissement explicite : il n'est pas destiné à la production. Gunicorn le
+# remplace dans l'image Docker.
+gunicorn==23.0.0
+
+# Pilote MySQL. database/db.py prévoit déjà l'URL mysql+pymysql:// pour le
+# conteneur, mais aucun pilote n'était installé : l'application échouait au
+# démarrage dès qu'on la branchait ailleurs que sur SQLite.
+PyMySQL==1.1.2

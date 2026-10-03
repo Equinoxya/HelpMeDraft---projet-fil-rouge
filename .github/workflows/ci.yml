@@ -1,0 +1,161 @@
+# ==============================================================================
+# HelpMeDraft — intégration continue
+#
+# Trois travaux indépendants, qui s'exécutent en parallèle : un échec du
+# frontend ne masque pas l'état du backend, et inversement. Le résultat se lit
+# d'un coup d'œil au lieu de demander une relance pour découvrir la suite.
+# ==============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Permet de relancer à la main depuis l'onglet Actions, sans pousser un
+  # commit vide pour cela.
+  workflow_dispatch:
+
+# Un nouveau push sur une branche annule l'exécution précédente : inutile de
+# payer une analyse complète d'un état déjà remplacé.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Backend ─────────────────────────────────────────────────────────────────
+  backend:
+    name: Backend — Ruff et pytest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements*.lock
+
+      # Mêmes protections que dans backend/Dockerfile, et pour les mêmes
+      # raisons (githubactions:S8541 et S8544) : empreintes vérifiées, et
+      # aucune archive source dont le setup.py s'exécuterait à l'installation.
+      # Le verrou de développement contient l'application, les outils de test
+      # et Ruff — en une seule commande, donc une seule surface.
+      - name: Installer les dépendances
+        run: |
+          pip install --require-hashes --only-binary :all: -r requirements-dev.lock
+
+      - name: Ruff — analyse statique
+        run: ruff check .
+
+      # Étape distincte de l'analyse, à dessein : un écart de mise en forme ne
+      # doit pas se confondre avec un défaut réel dans le rapport de la CI.
+      - name: Ruff — format
+        run: ruff format --check .
+
+      # Les clés sont TIRÉES AU HASARD à chaque exécution, et non écrites dans
+      # ce fichier. Deux raisons : une chaîne qui ressemble à un secret dans un
+      # dépôt en est signalée comme un — SonarCloud l'a d'ailleurs fait — et
+      # une valeur figée finit toujours par être recopiée ailleurs « parce
+      # qu'elle marchait ». config.py exige seulement que les deux existent et
+      # diffèrent.
+      - name: Générer des clés éphémères
+        run: |
+          {
+            echo "JWT_SECRET_KEY=$(openssl rand -base64 48)"
+            echo "SECRET_KEY=$(openssl rand -base64 48)"
+          } >> "$GITHUB_ENV"
+
+      - name: pytest
+        env:
+          # La base de test vit en mémoire : aucun service externe à démarrer,
+          # et aucune chance d'écrire dans une vraie base.
+          HELPMEDRAFT_DB_URL: "sqlite://"
+          APP_ENV: development
+        run: pytest --tb=short
+
+  # ── Frontend ────────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend — ESLint, types, tests et build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # « npm ci » et non « npm install » : il installe exactement ce que
+      # décrit package-lock.json et échoue si les deux divergent, au lieu de
+      # réécrire silencieusement le verrou.
+      # --ignore-scripts : les scripts de cycle de vie npm exécutent du code
+      # arbitraire à l'installation, voie d'attaque connue (S6505). Vérifié :
+      # ce projet n'en a pas besoin pour construire.
+      - name: Installer les dépendances
+        run: npm ci --ignore-scripts
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier
+        run: npm run format:check
+
+      - name: Vérification des types
+        run: npm run typecheck
+
+      - name: Tests unitaires
+        run: npm test
+
+      - name: Build de production
+        run: npm run build
+
+  # ── Images Docker ───────────────────────────────────────────────────────────
+  docker:
+    name: Docker — construction des images
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # SHA complet et non l'étiquette v3 : une étiquette peut être déplacée
+      # vers un autre commit, un SHA non (githubactions:S7637).
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      # La composition est validée AVANT les images : une erreur de syntaxe s'y
+      # détecte en quelques secondes, là où une construction prend des minutes.
+      # Mêmes raisons qu'au travail backend : des valeurs tirées au hasard
+      # plutôt qu'écrites dans le dépôt. La composition ne vérifie ici que leur
+      # PRÉSENCE, grâce aux déclarations ${VAR:?message}.
+      - name: Valider docker-compose.yml
+        run: |
+          export JWT_SECRET_KEY="$(openssl rand -base64 32)"
+          export SECRET_KEY="$(openssl rand -base64 32)"
+          export MYSQL_PASSWORD="$(openssl rand -base64 24)"
+          export MYSQL_ROOT_PASSWORD="$(openssl rand -base64 24)"
+          docker compose config --quiet
+
+      - name: Construire l'image du backend
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: ./backend
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Construire l'image du frontend
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: ./frontend
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

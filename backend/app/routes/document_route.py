@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
-from database.db import SessionLocal, Document, Dossier
-from sqlalchemy import select, func
+from sqlalchemy import func, select
+
 from app.routes.auth_routes import token_required
+from database.db import Document, Dossier, SessionLocal
 
 document_bp = Blueprint("documents", __name__, url_prefix="/documents")
 
@@ -68,19 +69,34 @@ def _validate_document_fields(data: dict, partial: bool = False):
     if not partial or "content" in data:
         content = data.get("content")
         if content is not None and not isinstance(content, str):
-            return None, (jsonify({"error": "Le champ content doit être une chaîne de caractères"}), 400)
+            return None, (
+                jsonify({"error": "Le champ content doit être une chaîne de caractères"}),
+                400,
+            )
         fields["content"] = content
 
     if not partial or "format" in data:
         doc_format = data.get("format", "markdown")
         if doc_format not in ALLOWED_FORMATS:
-            return None, (jsonify({"error": f"Le format doit être l'un de : {', '.join(sorted(ALLOWED_FORMATS))}"}), 400)
+            return None, (
+                jsonify(
+                    {"error": f"Le format doit être l'un de : {', '.join(sorted(ALLOWED_FORMATS))}"}
+                ),
+                400,
+            )
         fields["format"] = doc_format
-    
+
     if not partial or "status" in data:
         status = data.get("status", "brouillon")
         if status not in ALLOWED_STATUSES:
-            return None, (jsonify({"error": f"Le statut doit être l'un de : {', '.join(sorted(ALLOWED_STATUSES))}"}), 400)
+            return None, (
+                jsonify(
+                    {
+                        "error": f"Le statut doit être l'un de : {', '.join(sorted(ALLOWED_STATUSES))}"
+                    }
+                ),
+                400,
+            )
         fields["status"] = status
 
     if not partial or "id_dossier" in data:
@@ -137,7 +153,9 @@ def list_documents():
 
     with SessionLocal() as db_session:
         stmt = select(Document).where(Document.user_id == request.user_id)
-        count_stmt = select(func.count()).select_from(Document).where(Document.user_id == request.user_id)
+        count_stmt = (
+            select(func.count()).select_from(Document).where(Document.user_id == request.user_id)
+        )
 
         if id_dossier is not None:
             if not _dossier_belongs_to_user(db_session, id_dossier, request.user_id):
@@ -147,15 +165,19 @@ def list_documents():
 
         total = db_session.execute(count_stmt).scalar_one()
 
-        stmt = stmt.order_by(Document.updated_at.desc()).limit(per_page).offset((page - 1) * per_page)
+        stmt = (
+            stmt.order_by(Document.updated_at.desc()).limit(per_page).offset((page - 1) * per_page)
+        )
         documents = db_session.execute(stmt).scalars().all()
 
-        return jsonify({
-            "items": [_serialize_document(d) for d in documents],
-            "page": page,
-            "per_page": per_page,
-            "total": total,
-        }), 200
+        return jsonify(
+            {
+                "items": [_serialize_document(d) for d in documents],
+                "page": page,
+                "per_page": per_page,
+                "total": total,
+            }
+        ), 200
 
 
 @document_bp.route("/<id_document>", methods=["GET"])
@@ -221,7 +243,8 @@ def delete_document(id_document):
         # tuple à un seul élément et Flask ne sait pas construire la réponse :
         # la ligne est supprimée en base, mais l'appel se termine en erreur 500.
         return "", 204
-    
+
+
 @document_bp.route("/stats", methods=["GET"])
 def document_stats():
     with SessionLocal() as db_session:
@@ -236,7 +259,9 @@ def document_stats():
         for status, count in rows:
             counts[status] = count
 
-        return jsonify({
-            "total": sum(counts.values()),
-            **counts,
-        }), 200
+        return jsonify(
+            {
+                "total": sum(counts.values()),
+                **counts,
+            }
+        ), 200

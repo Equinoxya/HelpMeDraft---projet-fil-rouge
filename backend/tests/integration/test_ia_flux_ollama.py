@@ -24,6 +24,7 @@ Ces deux cas ne sont visibles que face à un vrai serveur. D'où ce fichier :
 un `http.server` minimal qui imite /api/generate, pour exercer la vraie pile
 HTTP de `requests`.
 """
+
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -31,7 +32,6 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import pytest
 
 from app.services.ia_service import call_ollama
-
 
 # Flux volontairement découpé en plein milieu des mots, avec un tiret cadratin
 # et des accents : c'est là qu'un découpage d'octets mal géré se verrait.
@@ -48,8 +48,7 @@ TEXTE_ATTENDU = "Bonjour, je serai en retard — désolée."
 class _FauxOllama:
     """Serveur HTTP qui imite /api/generate, sur un port libre choisi par l'OS."""
 
-    def __init__(self, flux=None, refuse_think=False, statut_erreur=None,
-                 erreur=None):
+    def __init__(self, flux=None, refuse_think=False, statut_erreur=None, erreur=None):
         self.flux = flux if flux is not None else FLUX_NOMINAL
         self.refuse_think = refuse_think
         self.statut_erreur = statut_erreur
@@ -64,9 +63,7 @@ class _FauxOllama:
             protocol_version = "HTTP/1.0"
 
             def do_POST(self):
-                corps = json.loads(
-                    self.rfile.read(int(self.headers["Content-Length"]))
-                )
+                corps = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                 faux.corps_recus.append(corps)
 
                 if faux.statut_erreur is not None:
@@ -75,13 +72,9 @@ class _FauxOllama:
                 if faux.refuse_think and "think" in corps:
                     # Message d'Ollama mot pour mot pour un modèle sans mode
                     # raisonnement.
-                    return self._erreur(
-                        400, f'"{corps["model"]}" does not support thinking'
-                    )
+                    return self._erreur(400, f'"{corps["model"]}" does not support thinking')
 
-                charge = b"".join(
-                    json.dumps(bloc).encode("utf-8") + b"\n" for bloc in faux.flux
-                )
+                charge = b"".join(json.dumps(bloc).encode("utf-8") + b"\n" for bloc in faux.flux)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/x-ndjson")
                 self.send_header("Content-Length", str(len(charge)))
@@ -122,10 +115,12 @@ class _FauxOllama:
 @pytest.fixture
 def ollama(app):
     """Branche l'application sur un faux Ollama le temps d'un test."""
+
     def _brancher(**kwargs):
         faux = _FauxOllama(**kwargs)
         app.config["OLLAMA_URL"] = faux.url
         return faux
+
     return _brancher
 
 
@@ -203,9 +198,7 @@ def test_le_diagnostic_d_ollama_survit_a_la_lecture_en_flux(app, ollama):
 
     message = str(capture.value)
     assert "ollama pull" in message, "l'erreur doit donner la commande à lancer"
-    assert "not found" in message, (
-        "le diagnostic d'Ollama doit survivre à la lecture en flux"
-    )
+    assert "not found" in message, "le diagnostic d'Ollama doit survivre à la lecture en flux"
 
 
 def test_un_ollama_ancien_qui_ignore_think_ne_pollue_pas_le_resultat(app, ollama):
@@ -226,8 +219,7 @@ def test_un_ollama_ancien_qui_ignore_think_ne_pollue_pas_le_resultat(app, ollama
         {"response": " is an abbreviation for bonjour.", "done": False},
         {"response": " Let me check the typos.\n</think>", "done": False},
         {"response": "\n\nBonjour, je serai en retard. Désolée.", "done": False},
-        {"response": "", "done": True,
-         "prompt_eval_count": 50, "eval_count": 900},
+        {"response": "", "done": True, "prompt_eval_count": 50, "eval_count": 900},
     ]
     with ollama(flux=flux) as faux:
         with app.app_context():

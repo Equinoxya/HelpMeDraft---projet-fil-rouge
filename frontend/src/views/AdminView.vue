@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import adminService from "../services/adminService";
 import type { AdminUser, AdminStats, UserRole } from "../types/admin";
 import { useAuthStore } from "../stores/auth";
+import { messageErreur } from "../utils/erreurs";
 
 const authStore = useAuthStore();
 
@@ -53,9 +54,8 @@ async function toggleRole(user: AdminUser) {
   try {
     const updated = await adminService.updateUser(user.id, { role: newRole });
     user.role = updated.role;
-  } catch (err: any) {
-    errorMessage.value =
-      err.response?.data?.error ?? "La mise à jour du rôle a échoué.";
+  } catch (err) {
+    errorMessage.value = messageErreur(err, "La mise à jour du rôle a échoué.");
   } finally {
     savingUserId.value = null;
   }
@@ -73,9 +73,11 @@ async function updateQuota(user: AdminUser, value: number) {
       quota_daily_limit: value,
     });
     user.quota_daily_limit = updated.quota_daily_limit;
-  } catch (err: any) {
-    errorMessage.value =
-      err.response?.data?.error ?? "La mise à jour du quota a échoué.";
+  } catch (err) {
+    errorMessage.value = messageErreur(
+      err,
+      "La mise à jour du quota a échoué.",
+    );
   } finally {
     savingUserId.value = null;
   }
@@ -92,9 +94,8 @@ async function handleDelete(user: AdminUser) {
   try {
     await adminService.removeUser(user.id);
     await fetchAll();
-  } catch (err: any) {
-    errorMessage.value =
-      err.response?.data?.error ?? "La suppression a échoué.";
+  } catch (err) {
+    errorMessage.value = messageErreur(err, "La suppression a échoué.");
   } finally {
     deletingUserId.value = null;
   }

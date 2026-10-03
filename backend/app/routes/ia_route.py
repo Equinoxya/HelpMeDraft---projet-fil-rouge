@@ -1,10 +1,12 @@
+from datetime import timedelta
+
 from flask import Blueprint, current_app, jsonify, request
-from database.db import SessionLocal, Document, IA, User
-from sqlalchemy import select, func
+from sqlalchemy import func, select
+
 from app.routes.auth_routes import token_required
 from app.services.ia_service import build_prompt, call_ollama, temperature_pour
+from database.db import IA, Document, SessionLocal, User
 from utilitaires import utc_now_naive
-from datetime import timedelta
 
 ia_bp = Blueprint("ia", __name__, url_prefix="/documents")
 
@@ -50,22 +52,34 @@ def generer_ia(id_document):
     instructions = data.get("instructions")
 
     if type_action not in ALLOWED_TYPE_ACTIONS:
-        return jsonify({"error": f"type_action doit être l'un de : {', '.join(sorted(ALLOWED_TYPE_ACTIONS))}"}), 400
+        return jsonify(
+            {"error": f"type_action doit être l'un de : {', '.join(sorted(ALLOWED_TYPE_ACTIONS))}"}
+        ), 400
 
     if scope not in ALLOWED_SCOPES:
-        return jsonify({"error": f"scope doit être l'un de : {', '.join(sorted(ALLOWED_SCOPES))}"}), 400
+        return jsonify(
+            {"error": f"scope doit être l'un de : {', '.join(sorted(ALLOWED_SCOPES))}"}
+        ), 400
 
     if not contenu or not isinstance(contenu, str) or not contenu.strip():
         return jsonify({"error": "Le champ contenu est requis"}), 400
 
     if len(contenu) > _max_contenu():
-        return jsonify({"error": f"Le contenu ne peut pas dépasser {_max_contenu()} caractères"}), 400
+        return jsonify(
+            {"error": f"Le contenu ne peut pas dépasser {_max_contenu()} caractères"}
+        ), 400
 
     if instructions is not None:
         if not isinstance(instructions, str):
-            return jsonify({"error": "Le champ instructions doit être une chaîne de caractères"}), 400
+            return jsonify(
+                {"error": "Le champ instructions doit être une chaîne de caractères"}
+            ), 400
         if len(instructions) > MAX_INSTRUCTIONS_LENGTH:
-            return jsonify({"error": f"Les instructions ne peuvent pas dépasser {MAX_INSTRUCTIONS_LENGTH} caractères"}), 400
+            return jsonify(
+                {
+                    "error": f"Les instructions ne peuvent pas dépasser {MAX_INSTRUCTIONS_LENGTH} caractères"
+                }
+            ), 400
 
     with SessionLocal() as db_session:
         document = _get_owned_document(db_session, id_document)
@@ -79,16 +93,20 @@ def generer_ia(id_document):
 
         window_start = utc_now_naive() - timedelta(hours=24)
         calls_last_24h = db_session.execute(
-            select(func.count()).select_from(IA).where(
+            select(func.count())
+            .select_from(IA)
+            .where(
                 IA.user_id == request.user_id,
                 IA.created_at >= window_start,
             )
         ).scalar_one()
 
         if calls_last_24h >= current_user.quota_daily_limit:
-            return jsonify({
-                "error": f"Quota IA quotidien atteint ({current_user.quota_daily_limit} requêtes / 24h)."
-            }), 429
+            return jsonify(
+                {
+                    "error": f"Quota IA quotidien atteint ({current_user.quota_daily_limit} requêtes / 24h)."
+                }
+            ), 429
         prompt = build_prompt(type_action, contenu, instructions)
 
         try:
@@ -110,11 +128,13 @@ def generer_ia(id_document):
         db_session.commit()
         db_session.refresh(new_ia)
 
-        return jsonify({
-            "id_ia": new_ia.id_ia,
-            "content_after": content_after,
-            "tokens_used": tokens_used,
-        }), 201
+        return jsonify(
+            {
+                "id_ia": new_ia.id_ia,
+                "content_after": content_after,
+                "tokens_used": tokens_used,
+            }
+        ), 201
 
 
 @ia_bp.route("/<id_document>/ia/historique", methods=["GET"])
@@ -131,14 +151,16 @@ def historique_ia(id_document):
         )
         entries = db_session.execute(stmt).scalars().all()
 
-        return jsonify([
-            {
-                "id_ia": entry.id_ia,
-                "type_action": entry.type_action,
-                "content_before": entry.content_before,
-                "content_after": entry.content_after,
-                "tokens_used": entry.tokens_used,
-                "created_at": entry.created_at.isoformat(),
-            }
-            for entry in entries
-        ]), 200
+        return jsonify(
+            [
+                {
+                    "id_ia": entry.id_ia,
+                    "type_action": entry.type_action,
+                    "content_before": entry.content_before,
+                    "content_after": entry.content_after,
+                    "tokens_used": entry.tokens_used,
+                    "created_at": entry.created_at.isoformat(),
+                }
+                for entry in entries
+            ]
+        ), 200

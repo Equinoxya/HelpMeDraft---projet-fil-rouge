@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
-from database.db import SessionLocal, Document, Dossier
-from sqlalchemy import select, func
+from sqlalchemy import func, select
+
 from app.routes.auth_routes import token_required
+from database.db import Document, Dossier, SessionLocal
 
 dossier_bp = Blueprint("dossiers", __name__, url_prefix="/dossiers")
 

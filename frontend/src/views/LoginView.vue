@@ -23,7 +23,7 @@ async function handleSubmit() {
     });
 
     router.push("/dashboard");
-  } catch (err: unknown) {
+  } catch {
     errorMessage.value =
       "Identifiants invalides. Vérifiez votre email et mot de passe.";
   } finally {

@@ -99,15 +99,21 @@ Hygiène du Jira, relevée au passage :
 - [ ] Rattacher ou supprimer les 10 tickets hors epic (`KAN-1` à `KAN-6`, `KAN-89` à `KAN-92`)
 - [ ] Reporter les échéances des epics (toutes dépassées, de 76 à 129 jours)
 
-### 4 · Conteneurisation CP 1, 11
-- [ ] `docker-compose.yml` est **vide (0 octet)** — CP1 exige que « les conteneurs implémentent les services requis »
-- [ ] `backend/Dockerfile` et `frontend/Dockerfile`
-- [ ] Stack composée : backend + frontend + BDD (+ Ollama)
+### 4 · Conteneurisation CP 1, 11 — ✅ fait
+- [x] `docker-compose.yml` : MySQL 8.4, backend, frontend. Sonde de santé sur la base, secrets déclarés avec `${VAR:?message}` pour échouer tout de suite plutôt que d'inventer une valeur
+- [x] `backend/Dockerfile` : gunicorn, utilisateur non privilégié, `--timeout 600` parce que l'inférence n'impose aucun délai de lecture
+- [x] `frontend/Dockerfile` : construction en deux étapes, image finale nginx (~50 Mo), repli monopage
+- [x] Stack composée : backend + frontend + BDD. **Ollama reste sur l'hôte**, atteint par `host.docker.internal` — son image pèse plusieurs Go et le modèle se télécharge à part
+- [ ] **Valider `docker compose up --build` sur une machine avec un démon Docker.** La syntaxe de la composition, le fonctionnement sous gunicorn et l'injection de `VITE_API_URL` ont été vérifiés, mais la **construction et l'exécution des images ne l'ont pas été** : le conteneur de développement n'a pas de démon Docker
+- [ ] Remplacer le stockage mémoire de Flask-Limiter par Redis. Les seuils comptent **par worker** : avec 2 workers, ceux de `/auth/login` sont doublés
 
-### 5 · CI/CD et qualité de code CP 11
-- [ ] Aucun `.github/workflows/` → pipeline GitHub Actions : lint, `vue-tsc`, `pytest`, `npm test`, build — **les deux suites de tests sont prêtes à y être branchées**
-- [ ] **Outil de qualité de code** : Ruff côté Python, ESLint côté Vue
-- [ ] Savoir **interpréter les rapports de CI** (critère de performance)
+### 5 · CI/CD et qualité de code CP 11 — ✅ en place
+- [x] **Pipeline GitHub Actions** (`.github/workflows/ci.yml`) : trois travaux en parallèle — backend (Ruff + pytest), frontend (ESLint, Prettier, types, tests, build), Docker (validation de la composition + construction des deux images). Un échec du frontend ne masque plus l'état du backend
+- [x] **Ruff** configuré dans `backend/pyproject.toml` : 20 constats corrigés, dont 10 exceptions levées sans `from` et un `== False` que la suggestion de l'outil aurait rendu FAUX en SQLAlchemy
+- [x] **ESLint 9** configuré : 19 constats corrigés, dont les 7 `catch (err: any)`, remplacés par un module typé `utils/erreurs.ts` et ses tests
+- [ ] Savoir **interpréter les rapports de CI** (critère de performance) — à exercer sur les premières exécutions réelles
+- [ ] Ajouter un seuil de couverture au travail backend (`pytest --cov`, déjà installé)
+- [ ] **4 vulnérabilités `high` signalées par `npm audit`**, toutes issues de la même chaîne : `@vue/eslint-config-typescript` → `fast-glob` → `micromatch` → `braces@3.0.3`. L'avis [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) couvre `braces <= 3.0.3` et aucune version corrigée n'existe dans cette branche. **Dépendance de développement uniquement** : elle n'entre pas dans le bundle livré, et le déni de service décrit suppose qu'un attaquant contrôle les motifs de glob passés à ESLint. À revoir quand l'amont publiera un correctif
 - [x] **`npm run build` réparé** : les deux imports inutilisés retirés. Plus rien ne bloque la mise en CI
 - [x] Prettier passé sur les 6 fichiers non formatés — `prettier --check src/` est propre
 

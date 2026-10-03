@@ -8,7 +8,7 @@ gestion (quota), service externe et écriture d'une trace.
 Le service d'inférence est systématiquement remplacé par un double : la
 qualité du texte produit n'est pas testable, la mécanique autour l'est.
 """
-import requests
+
 from sqlalchemy import select
 
 from database.db import IA, SessionLocal
@@ -28,6 +28,7 @@ def _nombre_appels_ia():
 
 
 # ── Scénario nominal ─────────────────────────────────────────────────────────
+
 
 def test_ti40_generation_nominale_rend_la_suggestion_et_trace_l_appel(
     client, auth, utilisateur, creer_document, ollama_double
@@ -72,6 +73,7 @@ def test_la_suggestion_n_est_pas_ecrite_dans_le_document(
 
 # ── Validation des entrées ───────────────────────────────────────────────────
 
+
 def test_ti41_action_hors_liste_blanche_refusee(
     client, auth, utilisateur, creer_document, ollama_double
 ):
@@ -80,7 +82,8 @@ def test_ti41_action_hors_liste_blanche_refusee(
     document = creer_document(utilisateur)
     reponse = client.post(
         f"/documents/{document}/ia/generer",
-        json=_charge(type_action="traduire"), headers=auth,
+        json=_charge(type_action="traduire"),
+        headers=auth,
     )
     assert reponse.status_code == 400
     assert _nombre_appels_ia() == 0
@@ -120,7 +123,8 @@ def test_ti44_contenu_au_dela_de_la_borne_refuse(
     document = creer_document(utilisateur)
     reponse = client.post(
         f"/documents/{document}/ia/generer",
-        json=_charge(contenu="x" * (borne + 1)), headers=auth,
+        json=_charge(contenu="x" * (borne + 1)),
+        headers=auth,
     )
     assert reponse.status_code == 400
     assert str(borne) in reponse.get_json()["error"]
@@ -138,7 +142,8 @@ def test_ti45_contenu_exactement_a_la_borne_accepte(
     document = creer_document(utilisateur)
     reponse = client.post(
         f"/documents/{document}/ia/generer",
-        json=_charge(contenu="x" * borne), headers=auth,
+        json=_charge(contenu="x" * borne),
+        headers=auth,
     )
     assert reponse.status_code == 201
 
@@ -150,7 +155,8 @@ def test_ti46_instructions_trop_longues_refusees(
     document = creer_document(utilisateur)
     reponse = client.post(
         f"/documents/{document}/ia/generer",
-        json=_charge(instructions="x" * 501), headers=auth,
+        json=_charge(instructions="x" * 501),
+        headers=auth,
     )
     assert reponse.status_code == 400
 
@@ -162,12 +168,14 @@ def test_instructions_a_la_borne_acceptees(
     document = creer_document(utilisateur)
     reponse = client.post(
         f"/documents/{document}/ia/generer",
-        json=_charge(instructions="x" * 500), headers=auth,
+        json=_charge(instructions="x" * 500),
+        headers=auth,
     )
     assert reponse.status_code == 201
 
 
 # ── Autorisation ─────────────────────────────────────────────────────────────
+
 
 def test_ti47_generer_sur_le_document_d_autrui_rend_404(
     client, auth, autre_utilisateur, creer_document, ollama_double
@@ -175,9 +183,7 @@ def test_ti47_generer_sur_le_document_d_autrui_rend_404(
     ollama_double()
     document_tiers = creer_document(autre_utilisateur)
 
-    reponse = client.post(
-        f"/documents/{document_tiers}/ia/generer", json=_charge(), headers=auth
-    )
+    reponse = client.post(f"/documents/{document_tiers}/ia/generer", json=_charge(), headers=auth)
     assert reponse.status_code == 404
     assert _nombre_appels_ia() == 0
 
@@ -188,6 +194,7 @@ def test_ti51_generer_sans_authentification_rend_401(client, utilisateur, creer_
 
 
 # ── Quota (RG-07) ────────────────────────────────────────────────────────────
+
 
 def test_ti48_quota_atteint_rend_429(
     client, auth, utilisateur, creer_document, creer_appels_ia, ollama_double
@@ -228,9 +235,7 @@ def test_le_quota_est_propre_a_chaque_utilisateur(
     creer_appels_ia(autre_utilisateur, document_tiers, nombre=20, heures_avant=1)
 
     mon_document = creer_document(utilisateur)
-    reponse = client.post(
-        f"/documents/{mon_document}/ia/generer", json=_charge(), headers=auth
-    )
+    reponse = client.post(f"/documents/{mon_document}/ia/generer", json=_charge(), headers=auth)
     assert reponse.status_code == 201, "le quota d'un tiers ne doit pas bloquer le mien"
 
 
@@ -244,13 +249,15 @@ def test_le_quota_suit_la_limite_propre_au_compte(
     creer_appels_ia(bride, document, nombre=2, heures_avant=1)
 
     reponse = client.post(
-        f"/documents/{document}/ia/generer", json=_charge(),
+        f"/documents/{document}/ia/generer",
+        json=_charge(),
         headers=entetes("bride@exemple.fr"),
     )
     assert reponse.status_code == 429
 
 
 # ── Panne du service d'inférence ─────────────────────────────────────────────
+
 
 def test_ti50_ollama_injoignable_rend_502_sans_consommer_de_quota(
     client, auth, utilisateur, creer_document, ollama_double
@@ -269,9 +276,7 @@ def test_ti50_ollama_injoignable_rend_502_sans_consommer_de_quota(
     assert _nombre_appels_ia() == 0, "aucune trace ne doit être écrite pour un appel échoué"
 
 
-def test_un_delai_depasse_rend_aussi_502(
-    client, auth, utilisateur, creer_document, ollama_double
-):
+def test_un_delai_depasse_rend_aussi_502(client, auth, utilisateur, creer_document, ollama_double):
     ollama_double(exception=RuntimeError("Ollama a mis trop de temps à répondre"))
     document = creer_document(utilisateur)
     reponse = client.post(f"/documents/{document}/ia/generer", json=_charge(), headers=auth)
@@ -279,6 +284,7 @@ def test_un_delai_depasse_rend_aussi_502(
 
 
 # ── Historique ───────────────────────────────────────────────────────────────
+
 
 def test_ti52_l_historique_est_antichronologique(
     client, auth, utilisateur, creer_document, ollama_double
@@ -288,7 +294,8 @@ def test_ti52_l_historique_est_antichronologique(
     for action in ("reformuler", "corriger", "completer"):
         client.post(
             f"/documents/{document}/ia/generer",
-            json=_charge(type_action=action), headers=auth,
+            json=_charge(type_action=action),
+            headers=auth,
         )
 
     entrees = client.get(f"/documents/{document}/ia/historique", headers=auth).get_json()
@@ -306,8 +313,6 @@ def test_ti53_l_historique_du_document_d_autrui_rend_404(
     assert reponse.status_code == 404
 
 
-def test_l_historique_d_un_document_sans_appel_est_vide(
-    client, auth, utilisateur, creer_document
-):
+def test_l_historique_d_un_document_sans_appel_est_vide(client, auth, utilisateur, creer_document):
     document = creer_document(utilisateur)
     assert client.get(f"/documents/{document}/ia/historique", headers=auth).get_json() == []

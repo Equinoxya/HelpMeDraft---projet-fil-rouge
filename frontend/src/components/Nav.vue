@@ -1,4 +1,9 @@
 <script setup lang="ts">
+// Nom explicite : « Nav » et « Footer » entrent en collision avec les
+// éléments HTML <nav> et <footer>. La convention Vue impose un nom composé,
+// ce que defineOptions permet sans renommer le fichier ni ses références.
+defineOptions({ name: "AppNav" });
+
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { RouterLink, useRouter, useRoute } from "vue-router";
@@ -139,8 +144,8 @@ watch(() => route.fullPath, fermerMenu);
             Mes documents
           </RouterLink>
           <button
-            @click="handleLogout"
             class="!text-[#111111] border border-[#111111] px-4 py-2 hover:bg-[#C4341C] hover:border-[#C4341C] hover:!text-[#F4F1EA] transition-colors focus-visible:outline-2 focus-visible:outline-black cursor-pointer"
+            @click="handleLogout"
           >
             Déconnexion
           </button>
@@ -227,8 +232,8 @@ watch(() => route.fullPath, fermerMenu);
             </li>
             <li class="pt-2 border-t border-[#111111]/20">
               <button
-                @click="handleLogout"
                 class="w-full text-left py-2 text-[#C4341C] font-bold cursor-pointer"
+                @click="handleLogout"
               >
                 [ Déconnexion ]
               </button>

@@ -1,6 +1,7 @@
+from flask_mail import Message
+
 from app import create_app
 from app.extension import mail
-from flask_mail import Message
 
 app = create_app()
 

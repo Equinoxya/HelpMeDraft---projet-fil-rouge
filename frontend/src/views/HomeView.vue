@@ -108,8 +108,8 @@ const steps = [
 
             <div class="flex flex-col sm:flex-row gap-4 pt-2">
               <button
-                @click="onRegister"
                 class="inline-flex items-center justify-center select-none font-semibold cursor-pointer bg-[#111111] hover:bg-[#C4341C] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-8 border-none transition-colors"
+                @click="onRegister"
               >
                 Générer un document
               </button>
@@ -250,8 +250,8 @@ const steps = [
         </p>
         <div class="pt-4">
           <button
-            @click="onRegister"
             class="inline-flex items-center justify-center select-none font-semibold cursor-pointer bg-[#C4341C] hover:bg-[#A72C18] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-10 border-none transition-colors"
+            @click="onRegister"
           >
             Créer mon premier document
           </button>

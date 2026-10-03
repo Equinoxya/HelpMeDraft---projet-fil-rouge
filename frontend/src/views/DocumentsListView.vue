@@ -6,6 +6,7 @@ import dossierService from "../services/dossierService";
 import type { DocumentItem } from "../types/document";
 import type { DossierItem } from "../types/dossier";
 import { statusLabels, getStatusStyle } from "../utils/documentStatus";
+import { messageErreur } from "../utils/erreurs";
 
 const PER_PAGE = 10;
 
@@ -104,9 +105,8 @@ async function handleCreateDossier() {
     dossiers.value.push(created);
     newDossierName.value = "";
     showNewDossierInput.value = false;
-  } catch (err: any) {
-    dossierError.value =
-      err.response?.data?.error ?? "La création a échoué. Réessayez.";
+  } catch (err) {
+    dossierError.value = messageErreur(err, "La création a échoué. Réessayez.");
   } finally {
     isCreatingDossier.value = false;
   }
