@@ -2,8 +2,11 @@ import axios from "axios";
 import { useAuthStore } from "../stores/auth";
 import router from "../index.ts";
 
+// L'URL du backend était en dur. En conteneur, ou dès qu'on sort du poste de
+// développement, elle change — et une URL figée dans le bundle ne se corrige
+// qu'en reconstruisant le frontend. Le défaut reproduit l'ancienne valeur.
 const api = axios.create({
-  baseURL: "http://localhost:5000/", // adapte à ton URL backend
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:5000/",
   withCredentials: true, // essentiel pour envoyer le cookie httpOnly
 });
 

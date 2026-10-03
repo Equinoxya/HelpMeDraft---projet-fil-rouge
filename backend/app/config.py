@@ -45,6 +45,23 @@ class Config:
     MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True") == "True"
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
     MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "False") == "True"
+    # Origines autorisées à appeler l'API depuis un navigateur.
+    #
+    # La valeur était en dur dans create_app : « http://localhost:5173 », le
+    # serveur de développement de Vite. En conteneur, le frontend est servi par
+    # nginx sur un autre port, et toute requête du navigateur était alors
+    # refusée par la politique d'origine croisée — l'application semblait morte
+    # sans qu'aucune erreur serveur ne l'explique.
+    #
+    # Plusieurs origines se séparent par des virgules. Le défaut reproduit
+    # l'ancien comportement, pour qu'un poste de développement existant ne voie
+    # aucun changement.
+    CORS_ORIGINS = [
+        origine.strip()
+        for origine in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+        if origine.strip()
+    ]
+
     OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 
     # qwen2.5:3b — et le critère de choix n'est PAS la taille, c'est l'absence

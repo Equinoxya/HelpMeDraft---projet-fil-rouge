@@ -236,6 +236,41 @@ Pour promouvoir le premier compte en administrateur, passer son champ `role` à 
 
 ---
 
+## 🐳 Avec Docker
+
+La pile complète — MySQL, API, interface — en une commande :
+
+```bash
+cp .env.example .env     # puis renseigner les mots de passe et les deux clés
+docker compose up --build
+```
+
+| Service | Adresse |
+|---|---|
+| Interface | http://localhost:8080 |
+| API | http://localhost:5000 |
+| MySQL | interne à la pile, données dans le volume `db-data` |
+
+### Ce que la pile ne contient pas, et pourquoi
+
+**Ollama reste sur la machine hôte.** Son image pèse plusieurs gigaoctets et le modèle se télécharge séparément : l'embarquer rendrait `docker compose up` inutilisable sur une connexion ordinaire. Le backend l'atteint via `host.docker.internal`. Lancer `ollama serve` sur l'hôte avant la pile.
+
+### Deux points à connaître
+
+> [!IMPORTANT]
+> **`VITE_API_URL` est figée à la construction.** Vite remplace `import.meta.env.VITE_*` par des littéraux dans le bundle : changer cette valeur impose de **reconstruire** l'image du frontend, pas seulement de redémarrer le conteneur.
+>
+> **`CORS_ORIGINS` doit désigner le port du frontend conteneurisé** (8080 par défaut, et non 5173). Si les deux ne concordent pas, le navigateur refuse chaque requête sans qu'aucune erreur n'apparaisse côté serveur — la panne est silencieuse et difficile à diagnostiquer.
+
+### Choix d'implémentation
+
+- **Gunicorn** remplace le serveur de développement de Flask, avec `--timeout 600`. Ce n'est pas du confort : l'appel à Ollama n'impose aucun délai de lecture, et le défaut de gunicorn (30 s) tuerait le worker en pleine inférence.
+- **Deux workers**, pas davantage : la limitation de débit de Flask-Limiter compte en mémoire, donc **par worker**. Avec N workers, les seuils de `/auth/login` sont multipliés par N. Un stockage Redis partagé est la vraie correction — elle figure dans la TODO.
+- **Image frontend en deux étapes** : Node ne sert qu'à produire les fichiers statiques, l'image finale ne contient que nginx et le résultat du build (~50 Mo).
+- **Repli monopage dans nginx** (`try_files`) : sans lui, recharger `/documents/42` renvoie une 404, l'application ne fonctionnant qu'en navigation interne.
+
+---
+
 ## 🔧 Variables d'environnement
 
 Copier `.env.example` en `backend/.env`, puis renseigner :

@@ -28,3 +28,14 @@ requests==2.34.2             # appels HTTP vers l'API locale Ollama
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 python-dotenv==1.2.3         # chargement du fichier .env (app/config.py)
+
+# ── Exécution en conteneur ────────────────────────────────────────────────────
+# Le serveur de développement de Flask (run.py) est mono-processus et affiche un
+# avertissement explicite : il n'est pas destiné à la production. Gunicorn le
+# remplace dans l'image Docker.
+gunicorn==23.0.0
+
+# Pilote MySQL. database/db.py prévoit déjà l'URL mysql+pymysql:// pour le
+# conteneur, mais aucun pilote n'était installé : l'application échouait au
+# démarrage dès qu'on la branchait ailleurs que sur SQLite.
+PyMySQL==1.1.2

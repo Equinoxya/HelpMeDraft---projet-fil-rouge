@@ -1,0 +1,101 @@
+# ==============================================================================
+# HelpMeDraft — pile complète
+#
+#   docker compose up --build
+#   frontend  http://localhost:8080
+#   backend   http://localhost:5000
+#
+# Les secrets sont lus dans le fichier .env à la racine (exclu par .gitignore).
+# Partir de .env.example, et générer deux clés DISTINCTES :
+#   python -c "import secrets; print(secrets.token_urlsafe(64))"
+# ==============================================================================
+
+services:
+  # ── Base de données ─────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-helpmedraft}
+      MYSQL_USER: ${MYSQL_USER:-helpmedraft}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD est requis — voir .env.example}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD est requis — voir .env.example}
+    volumes:
+      - db-data:/var/lib/mysql
+    # La sonde n'est pas un ornement : MySQL accepte les connexions réseau
+    # plusieurs secondes AVANT d'être prêt à servir des requêtes. Sans elle, le
+    # backend démarre trop tôt, échoue à créer ses tables, et la pile paraît
+    # cassée alors qu'il suffisait d'attendre.
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root",
+             "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  # ── API ─────────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Obligatoires : config.py refuse de démarrer sans elles, et aucune valeur
+      # de repli n'est fournie ici — une clé par défaut dans un fichier versionné
+      # ne serait plus un secret.
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY est requis — voir .env.example}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY est requis, et DISTINCTE de JWT_SECRET_KEY}
+
+      HELPMEDRAFT_DB_URL: mysql+pymysql://${MYSQL_USER:-helpmedraft}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE:-helpmedraft}
+
+      APP_ENV: ${APP_ENV:-development}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+
+      # Ollama tourne sur la MACHINE HÔTE, pas dans la pile. Son image pèse
+      # plusieurs gigaoctets et le modèle se télécharge à part : l'imposer
+      # rendrait « docker compose up » inutilisable sur une connexion ordinaire.
+      # host.docker.internal désigne l'hôte depuis un conteneur.
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b}
+      OLLAMA_NUM_CTX: ${OLLAMA_NUM_CTX:-4096}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
+      OLLAMA_THINK: ${OLLAMA_THINK:-false}
+      OLLAMA_CONNECT_TIMEOUT: ${OLLAMA_CONNECT_TIMEOUT:-10}
+      IA_MAX_CONTENU_LENGTH: ${IA_MAX_CONTENU_LENGTH:-3000}
+
+      MAIL_SERVER: ${MAIL_SERVER:-sandbox.smtp.mailtrap.io}
+      MAIL_PORT: ${MAIL_PORT:-2525}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_USE_TLS: ${MAIL_USE_TLS:-True}
+      MAIL_USE_SSL: ${MAIL_USE_SSL:-False}
+      MAIL_DEFAULT_SENDER: ${MAIL_DEFAULT_SENDER:-contact@helpmedraft.fr}
+    ports:
+      - "${BACKEND_PORT:-5000}:5000"
+    # Nécessaire pour que host.docker.internal soit résolu sous Linux ; sans
+    # effet sous Docker Desktop (Windows, macOS), qui le fournit déjà.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ── Interface ───────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Figée à la construction : Vite remplace import.meta.env.VITE_* par des
+        # littéraux dans le bundle. Changer cette valeur impose de reconstruire
+        # l'image, pas seulement de redémarrer le conteneur.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000/}
+        VITE_IA_JETONS_PAR_SECONDE: ${VITE_IA_JETONS_PAR_SECONDE:-30}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  db-data:

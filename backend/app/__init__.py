@@ -11,7 +11,9 @@ from app.extension import mail, limiter
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+    # Les origines viennent de la configuration : en conteneur, le frontend
+    # n'est pas servi par Vite sur le port 5173. Voir CORS_ORIGINS dans config.py.
+    CORS(app, supports_credentials=True, origins=app.config["CORS_ORIGINS"])
     mail.init_app(app)
     limiter.init_app(app)
     app.register_blueprint(auth_bp)
