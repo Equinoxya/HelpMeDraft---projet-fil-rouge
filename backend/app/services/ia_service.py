@@ -52,6 +52,56 @@ def build_prompt(type_action: str, contenu: str, instructions: str | None = None
         prompt += f"\n\nConsigne particulière à respecter: {instructions}"
     return prompt
 
+# Consigne de prompt qui désactive le raisonnement sur les modèles qwen3.
+#
+# POURQUOI DEUX MÉCANISMES PLUTÔT QU'UN
+#
+# Le champ `think` de l'API ne fonctionne qu'à partir d'Ollama 0.9. Avant,
+# c'est un champ inconnu : Ollama l'ignore SANS RIEN DIRE, le modèle raisonne
+# quand même, et le bloc <think>...</think> arrive mélangé au texte de la
+# réponse — c'est seulement depuis la 0.9 qu'il est renvoyé à part.
+#
+# Cette consigne, elle, voyage dans le prompt : elle marche sur toutes les
+# versions. Les deux sont donc envoyées ensemble, et _nettoyer_raisonnement
+# rattrape ce qui passerait malgré tout.
+DIRECTIVE_SANS_RAISONNEMENT = "/no_think"
+
+
+def _modele_qwen(model: str) -> bool:
+    """
+    La consigne /no_think est propre à qwen. Sur llama3.1 ou mistral, ce
+    serait du texte parasite au milieu du prompt, que le modèle pourrait
+    recopier dans sa réponse.
+    """
+    return "qwen" in model.lower()
+
+
+def _nettoyer_raisonnement(texte: str) -> str:
+    """
+    Retire le bloc de raisonnement que certains modèles placent devant leur
+    réponse.
+
+    FILET DE SÉCURITÉ, ET IL A SERVI. Sur une version d'Ollama antérieure à
+    la 0.9, ni le champ `think` ni la consigne de prompt ne garantissent
+    l'absence du bloc, et celui-ci arrive alors collé au texte utile. Sans ce
+    nettoyage, l'application proposait à l'utilisateur d'insérer dans son
+    document plusieurs pages de monologue du modèle.
+
+    On coupe après le DERNIER </think> : un modèle peut en émettre plusieurs,
+    et c'est toujours ce qui suit le dernier qui constitue la réponse.
+    """
+    if "</think>" in texte:
+        return texte.rsplit("</think>", 1)[1].strip()
+
+    # Bloc ouvert mais jamais refermé : la génération s'est arrêtée au milieu
+    # du raisonnement. Tout ce qu'on a est du raisonnement, il n'y a pas de
+    # réponse à en tirer.
+    if "<think>" in texte:
+        return ""
+
+    return texte.strip()
+
+
 def temperature_pour(type_action: str) -> float:
     """Température d'inférence adaptée à l'action demandée."""
     return TEMPERATURES.get(type_action, TEMPERATURE_PAR_DEFAUT)
@@ -196,7 +246,7 @@ def _lire_flux(response) -> tuple[str, int]:
         if bloc.get("done"):
             jetons = bloc.get("prompt_eval_count", 0) + bloc.get("eval_count", 0)
 
-    return "".join(morceaux).strip(), jetons
+    return _nettoyer_raisonnement("".join(morceaux)), jetons
 
 
 def _appel(base_url: str, charge: dict, connect_timeout: int) -> tuple[str, int]:
@@ -295,6 +345,11 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
     think = current_app.config["OLLAMA_THINK"]
     if temperature is None:
         temperature = TEMPERATURE_PAR_DEFAUT
+
+    # La consigne de prompt double le champ `think` de l'API, qui ne marche
+    # qu'à partir d'Ollama 0.9 et est ignoré en silence avant.
+    if not think and _modele_qwen(model):
+        prompt = f"{prompt}\n\n{DIRECTIVE_SANS_RAISONNEMENT}"
 
     charge = _charge_utile(model, prompt, temperature, num_ctx, think)
     try:
