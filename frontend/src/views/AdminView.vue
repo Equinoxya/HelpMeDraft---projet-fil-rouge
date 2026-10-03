@@ -245,10 +245,19 @@ onMounted(fetchAll);
                   </button>
                 </td>
                 <td class="p-4">
+                  <!--
+                    Le libellé est porté par aria-label plutôt que par une
+                    <label> visible : la colonne du tableau annonce déjà
+                    « Quota » pour qui voit l'écran, mais le champ reste sans
+                    nom pour un lecteur d'écran, qui le rencontre hors de ce
+                    contexte. Le nom cite l'utilisateur concerné, car la page
+                    en affiche autant que de lignes.
+                  -->
                   <input
                     type="number"
                     min="1"
                     max="1000"
+                    :aria-label="`Quota IA quotidien de ${user.email}`"
                     :value="user.quota_daily_limit"
                     :disabled="savingUserId === user.id"
                     class="w-20 h-9 px-2 bg-[#F4F1EA] border border-[#111111] font-mono text-xs disabled:opacity-50"

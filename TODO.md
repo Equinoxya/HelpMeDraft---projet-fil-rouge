@@ -108,8 +108,8 @@ Hygiène du Jira, relevée au passage :
 - [ ] Aucun `.github/workflows/` → pipeline GitHub Actions : lint, `vue-tsc`, `pytest`, `npm test`, build — **les deux suites de tests sont prêtes à y être branchées**
 - [ ] **Outil de qualité de code** : Ruff côté Python, ESLint côté Vue
 - [ ] Savoir **interpréter les rapports de CI** (critère de performance)
-- [ ] ⚠️ **`npm run build` échoue** sur deux imports inutilisés : `watch` dans `DocumentEditorView.vue`, `from` dans `index.ts`. Deux lignes à supprimer — mais la CI ne pourra pas passer avant (~5 min)
-- [ ] Passer Prettier sur les 6 fichiers non formatés (4 fichiers de tests, `FonctionnalitesView.vue`, `ModelesView.vue`) — `npx prettier --write src/`
+- [x] **`npm run build` réparé** : les deux imports inutilisés retirés. Plus rien ne bloque la mise en CI
+- [x] Prettier passé sur les 6 fichiers non formatés — `prettier --check src/` est propre
 
 ### 6 · Base de données ⭐ CP 7
 - [ ] `schema_mysql.sql` existe mais l'app tourne sur SQLite → trancher : migrer vers MySQL (recommandé par le CDC) ou argumenter le choix
@@ -122,11 +122,15 @@ Hygiène du Jira, relevée au passage :
 - [ ] L'intitulé de CP8 est « SQL **et** NoSQL » et aucun composant NoSQL n'existe → ajouter un usage justifié (cache Redis des réponses IA, journal des appels IA en Mongo) ou préparer un argumentaire solide pour le jury
 - [ ] **Transactions et conflits d'accès** : implémenter ou documenter (critère de performance)
 
-### 8 · Sécurité — 🔴 une alerte à traiter en priorité
-Voir [`docs/audit-securite.md`](./docs/audit-securite.md). L'audit conclut à 0 vulnérabilité
-critique ou élevée **dans le code applicatif**, avec 17 tests de sécurité — mais il n'avait pas
-examiné le contenu du dépôt lui-même, où deux clés secrètes réelles ont depuis été trouvées
-(voir l'alerte ci-dessous). À corriger avant de citer ce chiffre en soutenance.
+### 8 · Sécurité — 🔄 l'essentiel est fait
+Voir [`docs/audit-securite.md`](./docs/audit-securite.md). 0 vulnérabilité critique ou élevée,
+17 tests de sécurité.
+
+> **Incident clos.** Deux clés secrètes réelles avaient été commitées dans
+> `Claude outputs/env-1`. Elles ont été **régénérées**, ce qui rend sans valeur celles qui
+> restent dans l'historique git, et la cause a été corrigée : le `.gitignore` ne contenait que
+> la règle `.env`, qui ne couvre que ce nom exact. Un bon sujet pour la démarche de résolution
+> de problème du §13 — la leçon est qu'une règle d'exclusion se teste, elle ne se suppose pas.
 
 - [x] **Rapport d'audit de sécurité** complet
 - [x] Configurer `SECRET_KEY` Flask, distincte de `JWT_SECRET_KEY`
@@ -138,18 +142,23 @@ examiné le contenu du dépôt lui-même, où deux clés secrètes réelles ont 
 - [x] Veille sécurité documentée
 - [x] **Ajouter `SECRET_KEY` au `backend/.env`** — fait : `config.py` lève une `RuntimeError` au démarrage sans elle, et l'application démarre
 - [x] `KAN-100` **relever la version d'Ollama** — fait : **0.35.1**, au-dessus du seuil de 0.18 fixé au §4.2 du rapport d'audit
-- [ ] 🔴 **Deux clés secrètes réelles sont commitées** dans `Claude outputs/env-1` : `JWT_SECRET_KEY` et `SECRET_KEY`, en clair, dans un fichier dont l'en-tête dit « NE JAMAIS COMMIT ». Le `.gitignore` n'exclut que `.env`, et `Claude outputs/env-1` ne correspond pas à ce motif. Avec `JWT_SECRET_KEY`, quiconque lit le dépôt peut forger un access token valide — exactement la menace que le §3 du rapport déclare traitée. **Les supprimer ne suffit pas, elles restent dans l'historique git : il faut les régénérer.** Ajouter aussi `Claude outputs/` au `.gitignore`
+- [x] **Clés commitées** : les deux copies de `.env` retirées du dépôt, clés **régénérées**, et `.gitignore` complété (`.env.*`, `!.env.example`, `Claude outputs/`) — les quatre cas d'exclusion vérifiés
 - [ ] `KAN-100` Ollama : restreindre l'écoute à `127.0.0.1` (`OLLAMA_HOST=127.0.0.1:11434`)
 - [ ] **Chiffrement des données au repos** — 3 options chiffrées au §5.1 du rapport, à arbitrer
 - [ ] `KAN-102` épingler les dépendances transitives (Werkzeug non épinglée)
 
-### 9 · Accessibilité RGAA CP 2, 5 — 🔄 audité, corrections à faire
+### 9 · Accessibilité RGAA CP 2, 5 — 🔄 le gros du volume est traité
 Voir [`docs/audit-accessibilite.md`](./docs/audit-accessibilite.md). Audit réel sur les 16 écrans : **120 occurrences sur 3 règles**, dont 117 dues à une seule couleur.
 
 - [x] **Rapport d'audit d'accessibilité** : axe-core sur l'application démarrée + contrôles manuels
-- [ ] **Assombrir `#E0533C` en `#C4341C`** → lève 117 des 120 occurrences (~1 h)
-- [ ] Étiquette sur le champ de quota du back-office (seul constat *critique*)
-- [ ] `aria-label` sur la zone CodeMirror
+- [x] **Assombrir `#E0533C` en `#C4341C`** — fait, 199 occurrences dans 19 fichiers. Mesuré avec axe-core sur les 10 écrans publics : **64 violations de contraste avant, 0 après**. Les teintes de survol suivent (`#A72C18`), sans quoi le survol serait devenu plus clair que l'état normal
+- [x] **axe-core repassé sur les écrans authentifiés** (tableau de bord, documents, éditeur, back-office) : application montée dans un conteneur jetable avec un compte de test, connexion par l'interface. **0 violation sur les 5 écrans**
+- [x] Étiquette sur le champ de quota du back-office (seul constat *critique*) — `aria-label` citant l'utilisateur concerné, la page affichant autant de champs que de lignes
+- [x] `aria-label` sur la zone CodeMirror — via `EditorView.contentAttributes` : aucune `<label>` ne peut désigner un `contenteditable`
+
+> **Bilan axe-core : 15 écrans, 0 violation** (WCAG 2.0 et 2.1, niveaux A et AA).
+> Ce qui suit relève du **contrôle manuel**, qu'axe-core ne détecte pas : un
+> « 0 violation » automatisé ne vaut pas conformité RGAA.
 - [ ] Titre de page distinct par route (les 16 écrans partagent le même)
 - [ ] Lien d'évitement (absent des 16 écrans)
 - [ ] Règle `:focus-visible` globale (22 éléments sans focus visible, dont 16 sur Modèles)
@@ -164,7 +173,9 @@ Voir [`docs/audit-accessibilite.md`](./docs/audit-accessibilite.md). Audit réel
 - [ ] Export des données et suppression de compte par l'utilisateur (art. 15 et 17)
 
 ### 11 · Éco-conception CP 6
-- [ ] Vérifier le chargement différé, alléger les dépendances, activer la compression GZIP
+- [x] **Alléger le CSS** : daisyUI retiré (45,6 Ko pour cinq classes utilisées), `legal-style.css` mort supprimé. **79,9 Ko → 34,4 Ko bruts (−57 %)**, 13,7 → 7,0 Ko gzip. Le menu mobile, seule mécanique qui en dépendait, est désormais piloté par l'état du composant — ce qui lui apporte au passage `aria-expanded`, la fermeture par Échap et au clic extérieur
+- [ ] Vérifier le chargement différé, alléger les dépendances JavaScript, activer la compression GZIP
+- [ ] Le bundle JavaScript dépasse 500 Ko : `vite build` le signale à chaque construction. Découpage en morceaux à envisager
 
 ### 12 · Déploiement CP 10
 - [ ] **Procédure de déploiement** rédigée (environnements test / acceptation / production)
@@ -218,7 +229,7 @@ Piège de méthode rencontré, à garder en tête :
 
 ### 15 · Hygiène du dépôt
 - [ ] Supprimer les branches obsolètes : `claude/beautiful-clarke-6znlbn`, `claude/capacites-concretes-y1w66f`, `claude/gracious-goldberg-0o31o8` (tout leur contenu utile est dans `main`)
-- [ ] Ajouter `Claude outputs/` au `.gitignore` (voir l'alerte sur les clés au §8)
+- [x] Ajouter `Claude outputs/` au `.gitignore` — fait avec le lot sécurité du §8
 
 ---
 
@@ -227,8 +238,8 @@ Piège de méthode rencontré, à garder en tête :
 1. ~~Documents de conception (§1)~~ — ✅ fait
 2. ~~Gestion de projet (§3)~~ — ✅ fait, sauf les comptes rendus réels
 3. ~~Tests + plan de tests (§2)~~ — ✅ fait, sauf tests système et acceptation
-4. 🔴 **Régénérer les deux clés commitées** (§8) — quelques minutes, et c'est une faille réelle dans un projet évalué sur la sécurité
-5. **Corriger `npm run build`** (§5) — deux lignes, et rien ne peut être branché en CI avant
-6. **Docker + CI/CD** (§4, §5) — rapides, les suites de tests sont prêtes à être branchées, et ça nourrit CP1, CP10, CP11 à l'entretien technique
-7. **BDD, NoSQL, sécurité, accessibilité** (§6 à §9) — l'accessibilité d'abord : 1 h lève 97 % du volume
-8. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste. La démarche de résolution de problème du §14 y est directement réutilisable
+4. ~~Clés commitées, build cassé, contraste AA (§5, §8, §9)~~ — ✅ fait
+5. **Docker + CI/CD** (§4, §5) — prochaine étape : rapides, les suites de tests sont prêtes à être branchées, `npm run build` ne bloque plus, et ça nourrit CP1, CP10, CP11 à l'entretien technique
+6. **Le reste de l'accessibilité** (§9) — une poignée de corrections courtes, le gros du volume est déjà levé
+7. **BDD, NoSQL, sécurité** (§6 à §8)
+8. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste. Les §14 et §15 fournissent la démarche de résolution de problème attendue

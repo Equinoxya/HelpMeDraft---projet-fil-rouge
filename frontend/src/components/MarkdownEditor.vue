@@ -104,6 +104,14 @@ function initEditor() {
   const extensions = [
     markdown({ base: markdownLanguage }),
     customTheme,
+    // CodeMirror rend une zone d'édition en `contenteditable`, que les
+    // technologies d'assistance annoncent comme un champ de saisie sans nom :
+    // axe-core la signale en « aria-input-field-name », gravité « serious ».
+    // Aucune <label> ne peut la désigner, puisque ce n'est pas un <input> —
+    // le nom accessible doit donc être porté par la zone elle-même.
+    EditorView.contentAttributes.of({
+      "aria-label": "Éditeur de document, format Markdown",
+    }),
     keymap.of([...defaultKeymap, ...historyKeymap]),
     history(),
     EditorView.updateListener.of((update) => {
