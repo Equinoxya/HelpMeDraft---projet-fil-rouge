@@ -14,8 +14,12 @@ MAIL_DEFAULT_SENDER=contact@helpmedraft.fr
 
 # ── IA locale (Ollama) ────────────────────────────────────────────────────────
 OLLAMA_URL=http://localhost:11434
-OLLAMA_MODEL=llama3.1
+OLLAMA_MODEL=qwen3:4b
 OLLAMA_NUM_CTX=8192
+# Mode raisonnement DÉSACTIVÉ. qwen3 génère sinon un bloc <think>...</think>
+# avant sa réponse, de taille à peu près constante : plusieurs minutes
+# d'attente pour corriger une phrase de quarante caractères.
+OLLAMA_THINK=false
 OLLAMA_CONNECT_TIMEOUT=10
 IA_MAX_CONTENU_LENGTH=3000
 
