@@ -260,3 +260,93 @@ def test_la_borne_de_contenu_est_generable_avant_le_delai_maximum(app):
         f"~{secondes:.0f} s de génération à {JETONS_PAR_SECONDE_PLANCHER} jetons/s, "
         f"pour un OLLAMA_TIMEOUT de {app.config['OLLAMA_TIMEOUT']} s"
     )
+
+
+# ── Messages d'erreur exploitables ───────────────────────────────────────────
+
+class _ReponseEnErreur:
+    """Double d'une réponse HTTP en erreur, telle que requests l'attache."""
+
+    def __init__(self, statut, charge=None, texte=""):
+        self.status_code = statut
+        self._charge = charge
+        self.text = texte
+
+    def json(self):
+        if self._charge is None:
+            raise ValueError("pas de JSON")
+        return self._charge
+
+
+def _lever_http(statut, charge=None, texte=""):
+    erreur = requests.exceptions.HTTPError(f"{statut} Client Error")
+    erreur.response = _ReponseEnErreur(statut, charge, texte)
+
+    def _post(*a, **k):
+        raise erreur
+
+    return _post
+
+
+def test_un_404_nomme_le_modele_manquant_et_la_commande(app, monkeypatch):
+    """
+    Régression. Un 404 sur /api/generate ne signifie pas « endpoint absent »
+    mais « modèle absent » : l'URL est bonne, c'est le modèle demandé qui n'est
+    pas téléchargé sur cette machine.
+
+    Avant correction, le message se réduisait à « Erreur Ollama: 404 Client
+    Error: Not Found for url: ... » : la réponse d'Ollama, qui dit exactement
+    quel modèle manque et quoi faire, était jetée.
+    """
+    monkeypatch.setattr(
+        "app.services.ia_service.requests.post",
+        _lever_http(404, {"error": "model 'qwen3:4b' not found, try pulling it first"}),
+    )
+    with app.app_context():
+        with pytest.raises(RuntimeError) as capture:
+            call_ollama("un prompt")
+
+    message = str(capture.value)
+    assert app.config["OLLAMA_MODEL"] in message, "le modèle manquant doit être nommé"
+    assert "ollama pull" in message, "la commande à lancer doit être donnée"
+    assert "not found" in message, "le message d'Ollama doit être conservé"
+
+
+def test_une_erreur_serveur_conserve_le_detail_d_ollama(app, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.ia_service.requests.post",
+        _lever_http(500, {"error": "unexpected server error"}),
+    )
+    with app.app_context():
+        with pytest.raises(RuntimeError, match="unexpected server error"):
+            call_ollama("un prompt")
+
+
+def test_une_reponse_d_erreur_sans_json_ne_fait_pas_echouer_le_traitement(app, monkeypatch):
+    """Un service tiers n'est pas tenu de renvoyer du JSON, même en erreur."""
+    monkeypatch.setattr(
+        "app.services.ia_service.requests.post",
+        _lever_http(503, charge=None, texte="<html>Service Unavailable</html>"),
+    )
+    with app.app_context():
+        with pytest.raises(RuntimeError, match="503"):
+            call_ollama("un prompt")
+
+
+def test_le_detail_renvoye_est_borne_et_sur_une_seule_ligne(app, monkeypatch):
+    """
+    Le détail finit dans une réponse HTTP destinée à l'utilisateur : rien ne
+    garantit la forme de ce que renvoie un service tiers, donc on le borne et
+    on le remet sur une ligne plutôt que de le recopier tel quel.
+    """
+    monkeypatch.setattr(
+        "app.services.ia_service.requests.post",
+        _lever_http(500, {"error": "ligne un\nligne deux\n" + "x" * 500}),
+    )
+    with app.app_context():
+        with pytest.raises(RuntimeError) as capture:
+            call_ollama("un prompt")
+
+    message = str(capture.value)
+    assert "\n" not in message
+    assert len(message) < 300
