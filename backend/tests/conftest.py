@@ -24,7 +24,11 @@ sys.path.insert(0, str(BACKEND_ROOT))
 os.environ["HELPMEDRAFT_DB_URL"] = "sqlite://"   # base en mémoire, jamais sur disque
 os.environ["JWT_SECRET_KEY"] = "cle-jwt-de-test-sans-valeur-en-production"
 os.environ["SECRET_KEY"] = "cle-session-de-test-distincte-de-la-precedente"
-os.environ["APP_ENV"] = "testing"
+# APP_ENV pilote l'attribut Secure du cookie de refresh : hors développement,
+# le cookie est marqué Secure et ne part pas sur http://localhost. Les tests
+# reproduisent donc le comportement de développement, et le cas Secure est
+# vérifié à part en forçant COOKIE_SECURE (voir tests/security).
+os.environ["APP_ENV"] = "development"
 os.environ.setdefault("MAIL_SERVER", "localhost")
 os.environ.setdefault("MAIL_DEFAULT_SENDER", "tests@helpmedraft.local")
 
@@ -42,6 +46,7 @@ from database.db import (  # noqa: E402
     IA,
     SessionLocal,
     User,
+    UserSession,
     engine,
 )
 from utilitaires import utc_now_naive  # noqa: E402
@@ -86,7 +91,16 @@ def app():
     # init_app() : renseigner MAIL_SUPPRESS_SEND dans app.config après coup
     # n'a aucun effet, et /auth/forgot-password tenterait une vraie connexion
     # SMTP. On agit donc sur l'état de l'extension, pas sur la configuration.
-    application.extensions["mail"].suppress = True
+    #
+    # L'expéditeur est fixé ici plutôt que lu dans .env : un test ne doit pas
+    # dépendre de la configuration locale de la machine qui l'exécute, sinon
+    # il passe chez l'un et échoue chez l'autre, ou en intégration continue où
+    # aucun .env n'existe.
+    application.config.update(MAIL_DEFAULT_SENDER="tests@example.test")
+    etat_mail = application.extensions.get("mail")
+    if etat_mail is not None:
+        etat_mail.suppress = True
+        etat_mail.default_sender = "tests@example.test"
     return application
 
 
@@ -233,3 +247,74 @@ def ollama_double(monkeypatch):
             return retour
         monkeypatch.setattr("app.routes.ia_route.call_ollama", _faux_appel)
     return _poser
+
+
+# ── Fixtures issues de la suite initiale (branche main) ──────────────────────
+# Reprises telles quelles pour que tests/test_auth_routes.py,
+# tests/test_auth_service.py et tests/test_document_routes.py continuent de
+# fonctionner sans modification après la fusion des deux suites.
+
+@pytest.fixture
+def ctx(app):
+    """
+    Contexte d'application, nécessaire aux services qui lisent la configuration.
+
+    auth_service et ia_service importent `current_app` pour lire JWT_SECRET_KEY
+    et les paramètres Ollama. Leurs fonctions doivent donc tourner dans un
+    contexte d'application, y compris en test unitaire. C'est un écart
+    d'architecture rendu visible ici plutôt que masqué — voir KAN-97.
+    """
+    with app.app_context():
+        yield app
+
+
+COMPTE = {
+    "lastname": "Test",
+    "firstname": "Utilisatrice",
+    "email": "test@example.test",
+    "mdp": "MotDePasse1",
+    "rgpd_consent": True,
+}
+
+
+@pytest.fixture
+def compte(client):
+    """Crée un compte et renvoie ses identifiants de connexion."""
+    reponse = client.post("/auth/register", json=COMPTE)
+    assert reponse.status_code == 201, reponse.get_data(as_text=True)
+    return {"email": COMPTE["email"], "mdp": COMPTE["mdp"],
+            "user_id": reponse.get_json()["user_id"]}
+
+
+@pytest.fixture
+def connecte(client, compte):
+    """
+    Connecte le compte et renvoie de quoi exercer les routes protégées :
+    headers (Authorization), refresh (jeton en clair tel que le client le
+    détient) et user_id.
+    """
+    reponse = client.post("/auth/login",
+                          json={"email": compte["email"], "mdp": compte["mdp"]})
+    assert reponse.status_code == 200, reponse.get_data(as_text=True)
+    cookie = client.get_cookie("refresh_token", path="/auth")
+    return {
+        "headers": {"Authorization": f"Bearer {reponse.get_json()['access_token']}"},
+        "refresh": cookie.value if cookie else None,
+        "user_id": compte["user_id"],
+    }
+
+
+@pytest.fixture
+def sessions_en_base():
+    """
+    Renvoie une fonction qui lit l'état de la table user_session.
+
+    Les tests de rotation portent sur ce que le SERVEUR a enregistré, pas sur
+    ce que la réponse HTTP annonce : c'est la seule façon de vérifier qu'on
+    stocke une empreinte et non le jeton lui-même.
+    """
+    def lire():
+        with SessionLocal() as db:
+            return [(s.refresh_token_hash, s.revoke)
+                    for s in db.query(UserSession).all()]
+    return lire
