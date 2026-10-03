@@ -131,7 +131,7 @@ flowchart LR
 6. Le système vérifie que le document appartient bien à l'utilisateur.
 7. Le système compte les appels IA de l'utilisateur sur les 24 dernières heures et les compare à son quota.
 8. Le système construit le prompt à partir du gabarit de l'action, puis y ajoute la consigne.
-9. Le système appelle Ollama en local (délai maximum 60 s).
+9. Le système appelle Ollama en local. L'appel n'est pas chronométré : une inférence sur processeur seul peut dépasser la minute, et l'interrompre afficherait une erreur alors que la génération aboutit. L'éditeur affiche pendant ce temps le délai écoulé et une estimation calculée sur la taille du texte.
 10. Le système enregistre l'appel dans `ia` : action, contenu avant, contenu après, jetons consommés.
 11. Le système renvoie la suggestion à l'éditeur, qui l'affiche **de façon différenciée**, sans écraser le texte.
 

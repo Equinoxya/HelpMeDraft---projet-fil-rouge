@@ -105,9 +105,9 @@ sequenceDiagram
         note right of RT: Volontairement 404 et non 403 :<br/>un 403 confirmerait l'existence du document
     else Quota atteint
         RT-->>CL: 429 « Quota IA quotidien atteint (20 / 24h) »
-    else Ollama injoignable ou délai dépassé
+    else Ollama injoignable
         RT->>OL: POST /api/generate
-        OL--xRT: ConnectionError / Timeout
+        OL--xRT: ConnectionError / ConnectTimeout
         RT-->>CL: 502 (message explicite)
         note right of RT: Aucune ligne ia écrite :<br/>le quota n'est pas consommé<br/>pour un appel qui a échoué
     end
