@@ -349,7 +349,7 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
     # La consigne de prompt double le champ `think` de l'API, qui ne marche
     # qu'à partir d'Ollama 0.9 et est ignoré en silence avant.
     if not think and _modele_qwen(model):
-        prompt = f"{prompt}\n\n{DIRECTIVE_SANS_RAISONNEMENT}"
+        prompt = f"{DIRECTIVE_SANS_RAISONNEMENT}{prompt}\n\n"
 
     charge = _charge_utile(model, prompt, temperature, num_ctx, think)
     try:
