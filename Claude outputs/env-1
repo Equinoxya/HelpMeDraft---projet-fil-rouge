@@ -27,9 +27,9 @@ MAIL_DEFAULT_SENDER=contact@helpmedraft.fr
 # ── IA locale (Ollama) ────────────────────────────────────────────────────────
 # Aucune clé API : inférence on-device (exigence RGPD du CDC).
 OLLAMA_URL=http://localhost:11434
-OLLAMA_MODEL=qwen3:4bOLLAMA_MODEL=qwen3:4b
+OLLAMA_MODEL=llama3.1
 OLLAMA_NUM_CTX=8192
-OLLAMA_TIMEOUT=60
+OLLAMA_CONNECT_TIMEOUT=10
 IA_MAX_CONTENU_LENGTH=3000
 # ── Frontend ──────────────────────────────────────────────────────────────────
 FRONTEND_URL=http://localhost:5173
