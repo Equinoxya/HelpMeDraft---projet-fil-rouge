@@ -1,0 +1,22 @@
+{
+    "bg3ModHelper.rootModPath": "c:\\Users\\obell\\Desktop\\HelpMeDraft---projet-fil-rouge",
+    "bg3ModHelper.packingPriority": 0,
+
+    // Interpréteur Python unique du projet : backend/.venv
+    "python.defaultInterpreterPath": "${workspaceFolder}\\backend\\.venv\\Scripts\\python.exe",
+    // Active automatiquement le venv dans chaque terminal VS Code
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    // Tests : pytest lancé depuis backend/
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.cwd": "${workspaceFolder}\\backend",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    // Évite que la recherche VS Code indexe les venv
+    "files.exclude": {
+        "**/.venv": true,
+        "**/venv": true,
+        "**/__pycache__": true
+    }
+}
