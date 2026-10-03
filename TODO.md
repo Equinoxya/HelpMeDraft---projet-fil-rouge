@@ -35,16 +35,20 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 
 ## ⬜ À faire
 
-### 1 · Documents de conception ⭐ CP 5, 6, 7
-Le plus gros manque, et c'est ce que le jury lit avant tout.
+### 1 · Documents de conception ⭐ CP 5, 6, 7 — ✅ fait
+Voir [`docs/conception/`](./docs/conception/). 11 diagrammes, également exportés en PNG.
 
-- [ ] **Schéma d'enchaînement des écrans** (critère de performance explicite de CP5)
-- [ ] **Diagramme de cas d'utilisation**
-- [ ] **Diagramme(s) de séquence** — au minimum celui de la génération IA
-- [ ] **Modèle entités-associations (MCD)** et **modèle physique (MPD)**
-- [ ] **Dossier d'architecture logicielle** : rôle de chaque couche, stratégie de sécurité par couche (DICP), design patterns et security patterns retenus
-- [ ] **Besoins d'éco-conception** identifiés et documentés (critère de performance de CP6)
-- [ ] Formalisation des besoins : cas d'utilisation ou user stories tracés au cahier des charges
+- [x] **Expression des besoins** : acteurs, périmètre, 19 besoins fonctionnels et 10 non fonctionnels tracés au cahier des charges, 10 règles de gestion
+- [x] **Diagramme de cas d'utilisation** : 18 cas, 5 acteurs, matrice de traçabilité
+- [x] **Schéma d'enchaînement des écrans** (critère de performance explicite de CP5) + diagramme d'états de l'éditeur
+- [x] **Modèle entités-associations (MCD)** et **modèle physique (MPD)**, cardinalités Merise, règles de passage, conventions de nommage
+- [x] **Dossier d'architecture logicielle** : rôle de chaque couche, stratégie de sécurité par couche, analyse DICP, patrons de conception et de sécurité
+- [x] **Besoins d'éco-conception** identifiés (8 besoins, ECO-01 à ECO-08)
+- [x] **Diagrammes de séquence** : génération IA (nominal + 5 chemins d'erreur), connexion et rotation du refresh token, réinitialisation de mot de passe
+
+Reste à faire sur ce lot :
+- [ ] Faire relire le périmètre et les écarts assumés par le formateur
+- [ ] Vérifier avec lui si le plan « formation » ou le plan « entreprise » du dossier est attendu
 
 ### 2 · Tests automatisés et plan de tests ⭐ CP 2, 3, 8, 9
 - [ ] **pytest** côté backend (les tests actuels sont des scripts lancés à la main, pas une suite)
