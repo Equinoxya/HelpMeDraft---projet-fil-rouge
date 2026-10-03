@@ -30,7 +30,11 @@ import { useAuthStore } from "../../stores/auth";
 import api from "../api";
 import authService from "../authService";
 
-type ConfigAxios = { url?: string; headers: Record<string, string>; _retry?: boolean };
+type ConfigAxios = {
+  url?: string;
+  headers: Record<string, string>;
+  _retry?: boolean;
+};
 
 /** Journal des requêtes réellement parties, intercepteurs appliqués. */
 let requetes: ConfigAxios[] = [];
@@ -45,7 +49,13 @@ function adaptateurQuiExige(jetonAttendu: string) {
     requetes.push(config);
     const autorisation = config.headers?.Authorization;
     if (autorisation === `Bearer ${jetonAttendu}`) {
-      return { data: { ok: true }, status: 200, statusText: "OK", headers: {}, config };
+      return {
+        data: { ok: true },
+        status: 200,
+        statusText: "OK",
+        headers: {},
+        config,
+      };
     }
     return Promise.reject({ response: { status: 401 }, config });
   }) as never;
@@ -86,10 +96,15 @@ describe("intercepteur de réponse", () => {
     magasin.accessToken = "jeton-perime";
     adaptateurQuiExige("jeton-neuf");
 
-    vi.mocked(authService.refresh).mockResolvedValue({ access_token: "jeton-neuf" } as never);
+    vi.mocked(authService.refresh).mockResolvedValue({
+      access_token: "jeton-neuf",
+    } as never);
     vi.mocked(authService.me).mockResolvedValue({
-      id: "1", email: "camille@exemple.fr", firstname: "Camille",
-      lastname: "Dupont", role: "user",
+      id: "1",
+      email: "camille@exemple.fr",
+      firstname: "Camille",
+      lastname: "Dupont",
+      role: "user",
     } as never);
 
     const reponse = await api.get("/documents");
@@ -120,7 +135,10 @@ describe("intercepteur de réponse", () => {
       await new Promise((r) => setTimeout(r, 10)); // le renouvellement n'est pas instantané
       return { access_token: "jeton-neuf" } as never;
     });
-    vi.mocked(authService.me).mockResolvedValue({ id: "1", role: "user" } as never);
+    vi.mocked(authService.me).mockResolvedValue({
+      id: "1",
+      role: "user",
+    } as never);
 
     const reponses = await Promise.all([
       api.get("/documents"),
@@ -138,7 +156,9 @@ describe("intercepteur de réponse", () => {
     magasin.accessToken = "jeton-perime";
     adaptateurQuiExige("jeton-inatteignable");
 
-    vi.mocked(authService.refresh).mockRejectedValue(new Error("session expirée"));
+    vi.mocked(authService.refresh).mockRejectedValue(
+      new Error("session expirée"),
+    );
 
     await expect(api.get("/documents")).rejects.toBeTruthy();
 

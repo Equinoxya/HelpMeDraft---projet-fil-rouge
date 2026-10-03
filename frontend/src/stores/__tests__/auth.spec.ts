@@ -53,7 +53,10 @@ describe("connexion", () => {
     } as never);
 
     const magasin = useAuthStore();
-    await magasin.login({ email: UTILISATEUR.email, mdp: "MotDePasse1" } as never);
+    await magasin.login({
+      email: UTILISATEUR.email,
+      mdp: "MotDePasse1",
+    } as never);
 
     expect(magasin.accessToken).toBe("jeton-abc");
     expect(magasin.user).toEqual(UTILISATEUR);
@@ -73,7 +76,10 @@ describe("connexion", () => {
       user: UTILISATEUR,
     } as never);
 
-    await useAuthStore().login({ email: UTILISATEUR.email, mdp: "MotDePasse1" } as never);
+    await useAuthStore().login({
+      email: UTILISATEUR.email,
+      mdp: "MotDePasse1",
+    } as never);
 
     const stockage = JSON.stringify({
       local: { ...localStorage },
@@ -114,7 +120,9 @@ describe("déconnexion", () => {
   it("vide la session même si l'appel au serveur échoue", async () => {
     // Le `finally` du magasin : un serveur injoignable ne doit pas laisser
     // l'utilisateur avec une interface qui le croit encore connecté.
-    vi.mocked(authService.logout).mockRejectedValue(new Error("réseau indisponible"));
+    vi.mocked(authService.logout).mockRejectedValue(
+      new Error("réseau indisponible"),
+    );
 
     const magasin = useAuthStore();
     magasin.accessToken = "jeton-abc";
@@ -128,7 +136,9 @@ describe("déconnexion", () => {
 
 describe("renouvellement de session", () => {
   it("reconstruit la session à partir du cookie", async () => {
-    vi.mocked(authService.refresh).mockResolvedValue({ access_token: "jeton-neuf" } as never);
+    vi.mocked(authService.refresh).mockResolvedValue({
+      access_token: "jeton-neuf",
+    } as never);
     vi.mocked(authService.me).mockResolvedValue(UTILISATEUR as never);
 
     const magasin = useAuthStore();
@@ -156,7 +166,9 @@ describe("renouvellement de session", () => {
   it("laisse un état propre si l'identité ne peut pas être relue", async () => {
     // Cas intermédiaire : le jeton est renouvelé mais /auth/me échoue. Sans
     // le rattrapage, la session resterait avec un jeton et sans identité.
-    vi.mocked(authService.refresh).mockResolvedValue({ access_token: "jeton-neuf" } as never);
+    vi.mocked(authService.refresh).mockResolvedValue({
+      access_token: "jeton-neuf",
+    } as never);
     vi.mocked(authService.me).mockRejectedValue(new Error("500"));
 
     const magasin = useAuthStore();
