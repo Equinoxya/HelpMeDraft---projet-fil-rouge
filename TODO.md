@@ -152,9 +152,13 @@ Voir [`docs/audit-accessibilite.md`](./docs/audit-accessibilite.md). Audit réel
 
 - [x] **Rapport d'audit d'accessibilité** : axe-core sur l'application démarrée + contrôles manuels
 - [x] **Assombrir `#E0533C` en `#C4341C`** — fait, 199 occurrences dans 19 fichiers. Mesuré avec axe-core sur les 10 écrans publics : **64 violations de contraste avant, 0 après**. Les teintes de survol suivent (`#A72C18`), sans quoi le survol serait devenu plus clair que l'état normal
-- [ ] **Repasser axe-core sur les écrans authentifiés** (tableau de bord, documents, éditeur, back-office) : non couverts par la mesure ci-dessus, faute de session. C'est ce qui reste de l'écart entre les 64 violations mesurées et les 120 du rapport
-- [ ] Étiquette sur le champ de quota du back-office (seul constat *critique*)
-- [ ] `aria-label` sur la zone CodeMirror
+- [x] **axe-core repassé sur les écrans authentifiés** (tableau de bord, documents, éditeur, back-office) : application montée dans un conteneur jetable avec un compte de test, connexion par l'interface. **0 violation sur les 5 écrans**
+- [x] Étiquette sur le champ de quota du back-office (seul constat *critique*) — `aria-label` citant l'utilisateur concerné, la page affichant autant de champs que de lignes
+- [x] `aria-label` sur la zone CodeMirror — via `EditorView.contentAttributes` : aucune `<label>` ne peut désigner un `contenteditable`
+
+> **Bilan axe-core : 15 écrans, 0 violation** (WCAG 2.0 et 2.1, niveaux A et AA).
+> Ce qui suit relève du **contrôle manuel**, qu'axe-core ne détecte pas : un
+> « 0 violation » automatisé ne vaut pas conformité RGAA.
 - [ ] Titre de page distinct par route (les 16 écrans partagent le même)
 - [ ] Lien d'évitement (absent des 16 écrans)
 - [ ] Règle `:focus-visible` globale (22 éléments sans focus visible, dont 16 sur Modèles)
