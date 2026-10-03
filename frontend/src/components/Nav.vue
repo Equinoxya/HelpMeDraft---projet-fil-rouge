@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { useAuthStore } from "../stores/auth";
-import { RouterLink, useRouter } from "vue-router";
+import { RouterLink, useRouter, useRoute } from "vue-router";
 import { storeToRefs } from "pinia";
 
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 
 const { isAuthenticated } = storeToRefs(authStore);
 
@@ -12,6 +14,45 @@ const handleLogout = async () => {
   await authStore.logout();
   router.push("/");
 };
+
+// Menu mobile.
+//
+// Il s'ouvrait par le `dropdown` de daisyUI, c'est-à-dire par le `focus-within`
+// du conteneur. Le greffon coûtait 45,6 Ko de CSS pour cette seule mécanique et
+// quatre autres classes — voir src/style.css.
+//
+// Le piloter par l'état du composant coûte une quinzaine de lignes et permet ce
+// que le `focus-within` ne permettait pas : annoncer l'état au lecteur d'écran
+// (`aria-expanded`), fermer par Échap, et fermer au clic extérieur.
+const menuOuvert = ref(false);
+const conteneurMenu = ref<HTMLElement | null>(null);
+
+function fermerMenu() {
+  menuOuvert.value = false;
+}
+
+function auClicDocument(evenement: MouseEvent) {
+  const cible = evenement.target as Node | null;
+  if (cible && !conteneurMenu.value?.contains(cible)) fermerMenu();
+}
+
+function auClavier(evenement: KeyboardEvent) {
+  if (evenement.key === "Escape") fermerMenu();
+}
+
+onMounted(() => {
+  document.addEventListener("click", auClicDocument);
+  document.addEventListener("keydown", auClavier);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", auClicDocument);
+  document.removeEventListener("keydown", auClavier);
+});
+
+// Naviguer referme le menu : sans cela, il resterait ouvert par-dessus la
+// nouvelle page, la navigation d'une SPA ne rechargeant pas le composant.
+watch(() => route.fullPath, fermerMenu);
 </script>
 
 <template>
@@ -107,11 +148,14 @@ const handleLogout = async () => {
       </nav>
 
       <!-- MENU MOBILE -->
-      <div class="md:hidden dropdown dropdown-end">
+      <div ref="conteneurMenu" class="md:hidden relative">
         <button
-          tabindex="0"
+          type="button"
           aria-label="Menu de navigation"
-          class="w-10 h-10 border border-[#111111] bg-[#FAF8F5] text-[#111111] flex items-center justify-center hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors focus-visible:outline-2 focus-visible:outline-black"
+          aria-controls="menu-mobile"
+          :aria-expanded="menuOuvert"
+          class="w-10 h-10 border border-[#111111] bg-[#FAF8F5] text-[#111111] flex items-center justify-center hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors focus-visible:outline-2 focus-visible:outline-black cursor-pointer"
+          @click="menuOuvert = !menuOuvert"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -130,8 +174,9 @@ const handleLogout = async () => {
         </button>
 
         <ul
-          tabindex="0"
-          class="dropdown-content mt-2 w-64 border-2 border-[#111111] bg-[#FAF8F5] shadow-[6px_6px_0px_0px_rgba(17,17,17,1)] p-4 font-mono text-xs uppercase tracking-wider space-y-3 z-50 text-[#111111]"
+          v-if="menuOuvert"
+          id="menu-mobile"
+          class="absolute right-0 top-full mt-2 w-64 border-2 border-[#111111] bg-[#FAF8F5] shadow-[6px_6px_0px_0px_rgba(17,17,17,1)] p-4 font-mono text-xs uppercase tracking-wider space-y-3 z-50 text-[#111111]"
         >
           <li>
             <RouterLink

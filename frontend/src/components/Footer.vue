@@ -180,7 +180,3 @@ const contactEmail = "contact@helpmedraft.fr";
     </div>
   </footer>
 </template>
-
-<style scoped>
-/* Suppression de l'import CSS scoped qui causait des warnings */
-</style>

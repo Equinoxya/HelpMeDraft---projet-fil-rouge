@@ -109,13 +109,13 @@ const steps = [
             <div class="flex flex-col sm:flex-row gap-4 pt-2">
               <button
                 @click="onRegister"
-                class="btn rounded-none bg-[#111111] hover:bg-[#E0533C] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-8 border-none transition-colors"
+                class="inline-flex items-center justify-center select-none font-semibold cursor-pointer bg-[#111111] hover:bg-[#E0533C] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-8 border-none transition-colors"
               >
                 Générer un document
               </button>
               <a
                 href="#methode"
-                class="btn rounded-none btn-ghost text-[#111111] hover:bg-[#111111]/10 font-mono text-xs uppercase tracking-widest h-14 px-8 border border-[#111111]"
+                class="inline-flex items-center justify-center select-none font-semibold bg-transparent text-[#111111] hover:bg-[#111111]/10 font-mono text-xs uppercase tracking-widest h-14 px-8 border border-[#111111] transition-colors"
               >
                 La Méthode ↓
               </a>
@@ -251,7 +251,7 @@ const steps = [
         <div class="pt-4">
           <button
             @click="onRegister"
-            class="btn rounded-none bg-[#E0533C] hover:bg-[#c8442e] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-10 border-none transition-colors"
+            class="inline-flex items-center justify-center select-none font-semibold cursor-pointer bg-[#E0533C] hover:bg-[#c8442e] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest h-14 px-10 border-none transition-colors"
           >
             Créer mon premier document
           </button>
