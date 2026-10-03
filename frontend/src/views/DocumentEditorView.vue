@@ -80,6 +80,11 @@ const iaSecondesEcoulees = ref(0);
 const iaSecondesEstimees = ref(0);
 let iaCompteurInterval: ReturnType<typeof setInterval> | null = null;
 
+// Permet d'abandonner une génération en cours. Indispensable depuis que plus
+// aucun délai ne borne l'inférence : sans ce bouton, une génération lente
+// laisse l'utilisateur sans aucune porte de sortie.
+let iaAbort: AbortController | null = null;
+
 const iaAttenteDepassee = computed(
   () =>
     iaSecondesEstimees.value > 0 &&
@@ -125,6 +130,10 @@ function arreterCompteurIa() {
   }
 }
 
+function annulerGenerationIa() {
+  iaAbort?.abort();
+}
+
 function openIaPanel() {
   const selection = window.getSelection();
   if (selection && !selection.isCollapsed) {
@@ -144,6 +153,9 @@ function closeIaPanel() {
   showIaPanel.value = false;
   iaResult.value = null;
   iaError.value = "";
+  // Fermer le panneau vaut abandon : sans cela, la génération continuerait
+  // d'occuper le serveur pour un résultat que plus personne n'attend.
+  annulerGenerationIa();
 }
 
 function getIaSourceText(): string | null {
@@ -175,21 +187,34 @@ async function handleGenerateIa() {
   iaError.value = "";
   iaResult.value = null;
   demarrerCompteurIa(contenu);
+  iaAbort = new AbortController();
 
   try {
-    const result = await iaService.generer(documentId.value, {
-      type_action: iaTypeAction.value,
-      scope: iaScope.value,
-      contenu,
-      instructions: iaInstructions.value.trim() || undefined,
-    });
+    const result = await iaService.generer(
+      documentId.value,
+      {
+        type_action: iaTypeAction.value,
+        scope: iaScope.value,
+        contenu,
+        instructions: iaInstructions.value.trim() || undefined,
+      },
+      iaAbort.signal,
+    );
     iaResult.value = result.content_after;
   } catch (err: any) {
-    iaError.value =
-      err.response?.data?.error ?? "L'assistant IA n'a pas pu répondre.";
+    // Une annulation n'est pas une erreur : l'utilisateur sait ce qu'il a
+    // fait, et lui afficher « L'assistant IA n'a pas pu répondre » le
+    // laisserait croire à une panne.
+    if (err?.code === "ERR_CANCELED" || err?.name === "CanceledError") {
+      iaError.value = "";
+    } else {
+      iaError.value =
+        err.response?.data?.error ?? "L'assistant IA n'a pas pu répondre.";
+    }
   } finally {
     iaLoading.value = false;
     arreterCompteurIa();
+    iaAbort = null;
   }
 }
 
@@ -255,6 +280,7 @@ onBeforeUnmount(() => {
   if (savedNoticeTimeout) clearTimeout(savedNoticeTimeout);
   if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
   arreterCompteurIa();
+  annulerGenerationIa();
 });
 
 function buildPayload() {
@@ -639,11 +665,20 @@ function handleCancel() {
                   :style="{ width: `${iaAvancement * 100}%` }"
                 ></div>
               </div>
-              <p
-                class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/60"
-              >
-                {{ iaTexteProgression }}
-              </p>
+              <div class="flex items-center justify-between gap-3">
+                <p
+                  class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/60"
+                >
+                  {{ iaTexteProgression }}
+                </p>
+                <button
+                  type="button"
+                  class="shrink-0 font-mono text-[10px] uppercase tracking-wider underline hover:text-[#E0533C] transition-colors"
+                  @click="annulerGenerationIa"
+                >
+                  Annuler
+                </button>
+              </div>
             </div>
 
             <div

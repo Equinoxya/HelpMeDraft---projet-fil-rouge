@@ -64,6 +64,32 @@ class Config:
     # signale.
     OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", 8192))
 
+    # Mode « raisonnement » des modèles qui en ont un (qwen3, deepseek-r1...).
+    #
+    # DÉSACTIVÉ PAR DÉFAUT, et c'est le réglage qui change tout sur une machine
+    # sans carte graphique. Un modèle à raisonnement produit d'abord un bloc
+    # <think>...</think> avant sa réponse, et la taille de ce bloc est à peu
+    # près CONSTANTE : il « réfléchit » autant pour corriger « BJR » que pour
+    # reformuler trois pages. Mesuré sur qwen3:4b : plusieurs milliers de
+    # jetons de réflexion, soit plusieurs minutes d'attente à 15 jetons par
+    # seconde, pour corriger une phrase de quarante caractères.
+    #
+    # Ce mode n'apporte rien aux trois actions du projet — reformuler, corriger
+    # et compléter sont des tâches de réécriture, pas de résolution de
+    # problème. Le laisser actif, c'est payer un raisonnement dont la sortie
+    # est jetée.
+    #
+    # Mettre OLLAMA_THINK=true seulement pour comparer les deux modes. Sur un
+    # modèle sans mode raisonnement (llama3.1, mistral), Ollama rejette le
+    # champ avec un 400 : ia_service refait alors l'appel sans lui, pour que la
+    # même configuration marche sur les deux familles de modèles.
+    OLLAMA_THINK = os.getenv("OLLAMA_THINK", "false").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "oui",
+    }
+
     # Délai maximum pour ÉTABLIR la connexion à Ollama, en secondes.
     #
     # Il n'y a volontairement PAS de délai sur la lecture de la réponse : une
