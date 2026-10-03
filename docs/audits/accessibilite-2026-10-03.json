@@ -1,0 +1,1213 @@
+{
+ "outil": "axe-core (via Playwright) + controles manuels sur le DOM",
+ "date": "2026-10-03",
+ "referentiel": "RGAA 4.1.2, fonde sur WCAG 2.1 niveau AA",
+ "axe": [
+  {
+   "id": "E01",
+   "url": "/",
+   "nom": "Accueil",
+   "zone": "publique",
+   "urlAtteinte": "/",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 18,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 15,
+     "exemples": [
+      {
+       "cible": ".text-\\[\\#111111\\]\\/50.tracking-widest",
+       "extrait": "<span data-v-b4e148ca=\"\" class=\"font-mono text-xs uppercase tracking-widest text-[#111111]/50\">[ Brouillon Actif ]</span>"
+      },
+      {
+       "cible": ".pb-4 > .text-\\[\\#E0533C\\].font-bold",
+       "extrait": "<span data-v-b4e148ca=\"\" class=\"font-mono text-xs text-[#E0533C] font-bold\">MODE ÉDITION</span>"
+      },
+      {
+       "cible": ".mb-2.font-sans.tracking-wider",
+       "extrait": "<span data-v-b4e148ca=\"\" class=\"font-sans font-bold text-xs uppercase tracking-wider block mb-2 text-[#E0533C]\">Article 4 — Restitution</span>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E02",
+   "url": "/fonctionnalites",
+   "nom": "Fonctionnalités",
+   "zone": "publique",
+   "urlAtteinte": "/fonctionnalites",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 16,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 5,
+     "exemples": [
+      {
+       "cible": ".mb-3",
+       "extrait": "<p class=\"font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3\"> // FONCTIONNALITÉS </p>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(2) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Navigation ] </h3>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(3) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Informations légales ] </h3>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E03",
+   "url": "/tarifs",
+   "nom": "Tarifs",
+   "zone": "publique",
+   "urlAtteinte": "/tarifs",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 16,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 5,
+     "exemples": [
+      {
+       "cible": ".mb-3",
+       "extrait": "<p class=\"font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3\"> // TARIFS </p>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(2) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Navigation ] </h3>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(3) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Informations légales ] </h3>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E04",
+   "url": "/modeles",
+   "nom": "Modèles",
+   "zone": "publique",
+   "urlAtteinte": "/modeles",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 16,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 5,
+     "exemples": [
+      {
+       "cible": ".mb-3",
+       "extrait": "<p class=\"font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3\"> // MODÈLES DE DOCUMENTS </p>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(2) > .tracking-\\[0\\.2em\\].text-\\[\\#E0533C\\].uppercase",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Navigation ] </h3>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(3) > .tracking-\\[0\\.2em\\].text-\\[\\#E0533C\\].uppercase",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Informations légales ] </h3>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E05",
+   "url": "/mentions-legales",
+   "nom": "Mentions légales",
+   "zone": "publique",
+   "urlAtteinte": "/mentions-legales",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 16,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 9,
+     "exemples": [
+      {
+       "cible": ".mb-2.tracking-\\[0\\.2em\\].text-\\[\\#E0533C\\]",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2\"> [ Cadre Réglementaire ] </span>"
+      },
+      {
+       "cible": "section:nth-child(1) > h2 > .text-\\[\\#E0533C\\].text-sm",
+       "extrait": "<span class=\"font-mono text-sm text-[#E0533C]\">01.</span>"
+      },
+      {
+       "cible": ".px-1",
+       "extrait": "<a href=\"mailto:contact@helpmedraft.fr\" class=\"text-[#E0533C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1\">conta"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E06",
+   "url": "/cgu",
+   "nom": "CGU",
+   "zone": "publique",
+   "urlAtteinte": "/cgu",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 16,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 10,
+     "exemples": [
+      {
+       "cible": ".mb-2.tracking-\\[0\\.2em\\].font-bold",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2\"> [ Règlement Intérieur ] </span>"
+      },
+      {
+       "cible": "section:nth-child(1) > h2 > .text-\\[\\#E0533C\\].text-sm",
+       "extrait": "<span class=\"font-mono text-sm text-[#E0533C]\">01.</span>"
+      },
+      {
+       "cible": "section:nth-child(2) > h2 > .text-\\[\\#E0533C\\].text-sm",
+       "extrait": "<span class=\"font-mono text-sm text-[#E0533C]\">02.</span>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E07",
+   "url": "/confidentialite",
+   "nom": "Confidentialité",
+   "zone": "publique",
+   "urlAtteinte": "/confidentialite",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 17,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 14,
+     "exemples": [
+      {
+       "cible": ".mb-2.tracking-\\[0\\.2em\\].font-bold",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2\"> [ Protection des Données ] </span>"
+      },
+      {
+       "cible": "section:nth-child(1) > h2 > .text-\\[\\#E0533C\\].text-sm",
+       "extrait": "<span class=\"font-mono text-sm text-[#E0533C]\">01.</span>"
+      },
+      {
+       "cible": "a[href=\"mailto:rgpd@helpmedraft.fr\"]",
+       "extrait": "<a href=\"mailto:rgpd@helpmedraft.fr\" class=\"font-mono text-xs text-[#E0533C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-col"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E08",
+   "url": "/login",
+   "nom": "Connexion",
+   "zone": "invité",
+   "urlAtteinte": "/login",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 23,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 5,
+     "exemples": [
+      {
+       "cible": ".mb-2.tracking-\\[0\\.2em\\].text-\\[\\#E0533C\\]",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2\"> [ Authentification ] </span>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(2) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Navigation ] </h3>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(3) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Informations légales ] </h3>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E09",
+   "url": "/register",
+   "nom": "Inscription",
+   "zone": "invité",
+   "urlAtteinte": "/register",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 23,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 6,
+     "exemples": [
+      {
+       "cible": ".mb-2.tracking-\\[0\\.2em\\].text-\\[\\#E0533C\\]",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2\"> [ Inscription Studio ] </span>"
+      },
+      {
+       "cible": ".border-l-2 > .mb-2.font-bold.text-\\[\\#E0533C\\]",
+       "extrait": "<span class=\"font-bold text-[#E0533C] uppercase block mb-2\">Exigences de sécurité :</span>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(2) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Navigation ] </h3>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E10",
+   "url": "/forgot-password",
+   "nom": "Mot de passe oublié",
+   "zone": "invité",
+   "urlAtteinte": "/forgot-password",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 22,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 5,
+     "exemples": [
+      {
+       "cible": ".mb-2.tracking-\\[0\\.2em\\].font-bold",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2\"> [ Récupération ] </span>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(2) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Navigation ] </h3>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(3) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Informations légales ] </h3>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E11",
+   "url": "/reset-password?token=factice",
+   "nom": "Nouveau mot de passe",
+   "zone": "invité",
+   "urlAtteinte": "/reset-password",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 22,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 5,
+     "exemples": [
+      {
+       "cible": ".mb-2.tracking-\\[0\\.2em\\].font-bold",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2\"> [ Sécurité ] </span>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(2) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Navigation ] </h3>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(3) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Informations légales ] </h3>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E12",
+   "url": "/dashboard",
+   "nom": "Tableau de bord",
+   "zone": "authentifiée",
+   "auth": true,
+   "urlAtteinte": "/dashboard",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 20,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 9,
+     "exemples": [
+      {
+       "cible": ".mb-3.tracking-widest.text-\\[\\#E0533C\\]",
+       "extrait": "<p class=\"font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3\"> // ESPACE PERSONNEL </p>"
+      },
+      {
+       "cible": "article:nth-child(1) > .mt-3.text-\\[\\#E0533C\\]",
+       "extrait": "<p class=\"font-mono text-xs text-[#E0533C] font-bold mt-3\"> ↑ Total sur votre compte</p>"
+      },
+      {
+       "cible": "article:nth-child(2) > .mt-3.text-\\[\\#E0533C\\]",
+       "extrait": "<p class=\"font-mono text-xs text-[#E0533C] font-bold mt-3\"> ↑ À terminer</p>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E13",
+   "url": "/documents",
+   "nom": "Mes documents",
+   "zone": "authentifiée",
+   "auth": true,
+   "urlAtteinte": "/documents",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 20,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 8,
+     "exemples": [
+      {
+       "cible": ".mb-2.tracking-\\[0\\.2em\\].text-\\[\\#E0533C\\]",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2\"> [ Espace Personnel ] </span>"
+      },
+      {
+       "cible": ".gap-2\\.5.hover\\:bg-\\[\\#F4F1EA\\].sm\\:items-center:nth-child(1) > .border-\\[\\#E0533C\\].disabled\\:opacity-50.self-end",
+       "extrait": "<button type=\"button\" class=\"self-end sm:self-center font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[#E0533C] text-[#E0533C] hover:bg-[#E0"
+      },
+      {
+       "cible": ".bg-\\[\\#E0533C\\]",
+       "extrait": "<span class=\"font-mono text-[10px] uppercase font-bold px-3 py-1 tracking-wider bg-[#E0533C] text-[#F4F1EA]\">À relire</span>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E14",
+   "url": "/documents/nouveau",
+   "nom": "Nouveau document",
+   "zone": "authentifiée",
+   "auth": true,
+   "urlAtteinte": "/documents/nouveau",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 26,
+   "violationsRgaa": [
+    {
+     "regle": "aria-input-field-name",
+     "impact": "serious",
+     "description": "Ensure every ARIA input field has an accessible name",
+     "aide": "ARIA input fields must have an accessible name",
+     "criteres": [
+      "wcag2a",
+      "wcag412"
+     ],
+     "occurrences": 1,
+     "exemples": [
+      {
+       "cible": ".cm-content",
+       "extrait": "<div spellcheck=\"false\" autocorrect=\"off\" autocapitalize=\"off\" writingsuggestions=\"false\" translate=\"no\" contenteditable=\"true\" style=\"tab-size: 4;\" class=\"cm-c"
+      }
+     ]
+    },
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 5,
+     "exemples": [
+      {
+       "cible": ".mb-4",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-4\"> [ Nouveau Brouillon ] </span>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(2) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Navigation ] </h3>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(3) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Informations légales ] </h3>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E15",
+   "url": "/documents/c79e664c-e182-4298-b0c8-4be51c800261",
+   "nom": "Éditeur de document",
+   "zone": "authentifiée",
+   "auth": true,
+   "urlAtteinte": "/documents/c79e664c-e182-4298-b0c8-4be51c800261",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 26,
+   "violationsRgaa": [
+    {
+     "regle": "aria-input-field-name",
+     "impact": "serious",
+     "description": "Ensure every ARIA input field has an accessible name",
+     "aide": "ARIA input fields must have an accessible name",
+     "criteres": [
+      "wcag2a",
+      "wcag412"
+     ],
+     "occurrences": 1,
+     "exemples": [
+      {
+       "cible": ".cm-content",
+       "extrait": "<div spellcheck=\"false\" autocorrect=\"off\" autocapitalize=\"off\" writingsuggestions=\"false\" translate=\"no\" contenteditable=\"true\" style=\"tab-size: 4;\" class=\"cm-c"
+      }
+     ]
+    },
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 6,
+     "exemples": [
+      {
+       "cible": ".border-\\[\\#E0533C\\]",
+       "extrait": "<button type=\"button\" class=\"font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#E0533C] text-[#E0533C] hover:bg-[#E0533C] hover:text-[#F4F1EA]"
+      },
+      {
+       "cible": ".mb-4",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-4\"> [ Mode Édition ] </span>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(2) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Navigation ] </h3>"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  },
+  {
+   "id": "E16",
+   "url": "/admin",
+   "nom": "Back-office",
+   "zone": "administration",
+   "auth": true,
+   "admin": true,
+   "urlAtteinte": "/admin",
+   "redirige": false,
+   "titre": "Help Me Draft",
+   "passes": 21,
+   "violationsRgaa": [
+    {
+     "regle": "color-contrast",
+     "impact": "serious",
+     "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+     "aide": "Elements must meet minimum color contrast ratio thresholds",
+     "criteres": [
+      "wcag2aa",
+      "wcag143"
+     ],
+     "occurrences": 5,
+     "exemples": [
+      {
+       "cible": ".tracking-\\[0\\.2em\\].mb-2.text-\\[\\#E0533C\\]",
+       "extrait": "<span class=\"font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2\"> [ Back-office ] </span>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(2) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Navigation ] </h3>"
+      },
+      {
+       "cible": ".md\\:col-span-3:nth-child(3) > h3",
+       "extrait": "<h3 data-v-4896eafd=\"\" class=\"font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]\"> [ Informations légales ] </h3>"
+      }
+     ]
+    },
+    {
+     "regle": "label",
+     "impact": "critical",
+     "description": "Ensure every form element has a label",
+     "aide": "Form elements must have labels",
+     "criteres": [
+      "wcag2a",
+      "wcag412"
+     ],
+     "occurrences": 1,
+     "exemples": [
+      {
+       "cible": "input",
+       "extrait": "<input type=\"number\" min=\"1\" max=\"1000\" class=\"w-20 h-9 px-2 bg-[#F4F1EA] border border-[#111111] font-mono text-xs disabled:opacity-50\" value=\"20\">"
+      }
+     ]
+    }
+   ],
+   "violationsWcag22": []
+  }
+ ],
+ "controles_manuels": [
+  {
+   "id": "E01",
+   "nom": "Accueil",
+   "url": "/",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 12,
+   "sautsDeNiveau": [],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 0,
+    "nav": 4,
+    "header": 2,
+    "footer": 1
+   },
+   "interactifs": 16,
+   "ciblesTropPetites": [],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 24,
+    "sansFocusVisible": 0,
+    "exemplesSansFocus": []
+   }
+  },
+  {
+   "id": "E02",
+   "nom": "Fonctionnalités",
+   "url": "/fonctionnalites",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 8,
+   "sautsDeNiveau": [],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 2,
+    "footer": 1
+   },
+   "interactifs": 14,
+   "ciblesTropPetites": [],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 24,
+    "sansFocusVisible": 0,
+    "exemplesSansFocus": []
+   }
+  },
+  {
+   "id": "E03",
+   "nom": "Tarifs",
+   "url": "/tarifs",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 8,
+   "sautsDeNiveau": [],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 2,
+    "footer": 1
+   },
+   "interactifs": 17,
+   "ciblesTropPetites": [],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 24,
+    "sansFocusVisible": 0,
+    "exemplesSansFocus": []
+   }
+  },
+  {
+   "id": "E04",
+   "nom": "Modèles",
+   "url": "/modeles",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 21,
+   "sautsDeNiveau": [
+    "h1 → h3 (« Email professionnel »)"
+   ],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 2,
+    "footer": 1
+   },
+   "interactifs": 30,
+   "ciblesTropPetites": [],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 25,
+    "sansFocusVisible": 16,
+    "exemplesSansFocus": [
+     {
+      "balise": "a",
+      "texte": "Email professionnelRelance, ré",
+      "focusVisible": false
+     },
+     {
+      "balise": "a",
+      "texte": "Note de serviceCommunication i",
+      "focusVisible": false
+     },
+     {
+      "balise": "a",
+      "texte": "Rapport d'activitéSynthèse pér",
+      "focusVisible": false
+     },
+     {
+      "balise": "a",
+      "texte": "Note de synthèseRésumé d'un do",
+      "focusVisible": false
+     }
+    ]
+   }
+  },
+  {
+   "id": "E05",
+   "nom": "Mentions légales",
+   "url": "/mentions-legales",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 7,
+   "sautsDeNiveau": [],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 2,
+    "footer": 1
+   },
+   "interactifs": 14,
+   "ciblesTropPetites": [
+    {
+     "balise": "a",
+     "l": 166,
+     "h": 16,
+     "texte": "contact@helpmedraft.fr"
+    }
+   ],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 25,
+    "sansFocusVisible": 0,
+    "exemplesSansFocus": []
+   }
+  },
+  {
+   "id": "E06",
+   "nom": "CGU",
+   "url": "/cgu",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 8,
+   "sautsDeNiveau": [],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 2,
+    "footer": 1
+   },
+   "interactifs": 13,
+   "ciblesTropPetites": [],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 24,
+    "sansFocusVisible": 0,
+    "exemplesSansFocus": []
+   }
+  },
+  {
+   "id": "E07",
+   "nom": "Confidentialité",
+   "url": "/confidentialite",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 9,
+   "sautsDeNiveau": [],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 2,
+    "footer": 2
+   },
+   "interactifs": 16,
+   "ciblesTropPetites": [
+    {
+     "balise": "a",
+     "l": 145,
+     "h": 14,
+     "texte": "rgpd@helpmedraft.fr"
+    },
+    {
+     "balise": "a",
+     "l": 166,
+     "h": 14,
+     "texte": "contact@helpmedraft.fr"
+    },
+    {
+     "balise": "a",
+     "l": 166,
+     "h": 14,
+     "texte": "contact@helpmedraft.fr"
+    }
+   ],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 24,
+    "sansFocusVisible": 0,
+    "exemplesSansFocus": []
+   }
+  },
+  {
+   "id": "E08",
+   "nom": "Connexion",
+   "url": "/login",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 4,
+   "sautsDeNiveau": [
+    "h1 → h3 (« [ Navigation ] »)"
+   ],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 1,
+    "footer": 1
+   },
+   "interactifs": 19,
+   "ciblesTropPetites": [
+    {
+     "balise": "a",
+     "l": 58,
+     "h": 16,
+     "texte": "Oublié ?"
+    },
+    {
+     "balise": "a",
+     "l": 111,
+     "h": 16,
+     "texte": "Créer un compte"
+    }
+   ],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 24,
+    "sansFocusVisible": 1,
+    "exemplesSansFocus": [
+     {
+      "balise": "button",
+      "texte": "Afficher le mot de passe",
+      "focusVisible": false
+     }
+    ]
+   }
+  },
+  {
+   "id": "E09",
+   "nom": "Inscription",
+   "url": "/register",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 4,
+   "sautsDeNiveau": [
+    "h1 → h3 (« [ Navigation ] »)"
+   ],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 1,
+    "footer": 1
+   },
+   "interactifs": 23,
+   "ciblesTropPetites": [
+    {
+     "balise": "input",
+     "l": 14,
+     "h": 16,
+     "texte": ""
+    },
+    {
+     "balise": "a",
+     "l": 88,
+     "h": 16,
+     "texte": "Se connecter"
+    }
+   ],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 25,
+    "sansFocusVisible": 2,
+    "exemplesSansFocus": [
+     {
+      "balise": "button",
+      "texte": "Afficher le mot de passe",
+      "focusVisible": false
+     },
+     {
+      "balise": "button",
+      "texte": "Afficher la confirmation",
+      "focusVisible": false
+     }
+    ]
+   }
+  },
+  {
+   "id": "E10",
+   "nom": "Mot de passe oublié",
+   "url": "/forgot-password",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 4,
+   "sautsDeNiveau": [
+    "h1 → h3 (« [ Navigation ] »)"
+   ],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 1,
+    "footer": 1
+   },
+   "interactifs": 16,
+   "ciblesTropPetites": [
+    {
+     "balise": "a",
+     "l": 179,
+     "h": 14,
+     "texte": "← Retour à la connexion"
+    }
+   ],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 24,
+    "sansFocusVisible": 0,
+    "exemplesSansFocus": []
+   }
+  },
+  {
+   "id": "E11",
+   "nom": "Nouveau mot de passe",
+   "url": "/reset-password?token=factice",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 4,
+   "sautsDeNiveau": [
+    "h1 → h3 (« [ Navigation ] »)"
+   ],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 1,
+    "footer": 1
+   },
+   "interactifs": 19,
+   "ciblesTropPetites": [
+    {
+     "balise": "a",
+     "l": 179,
+     "h": 14,
+     "texte": "← Retour à la connexion"
+    }
+   ],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 24,
+    "sansFocusVisible": 2,
+    "exemplesSansFocus": [
+     {
+      "balise": "button",
+      "texte": "Afficher le mot de passe",
+      "focusVisible": false
+     },
+     {
+      "balise": "button",
+      "texte": "Afficher la confirmation",
+      "focusVisible": false
+     }
+    ]
+   }
+  },
+  {
+   "id": "E12",
+   "nom": "Tableau de bord",
+   "url": "/dashboard",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 10,
+   "sautsDeNiveau": [],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 2,
+    "footer": 1
+   },
+   "interactifs": 22,
+   "ciblesTropPetites": [],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 24,
+    "sansFocusVisible": 0,
+    "exemplesSansFocus": []
+   }
+  },
+  {
+   "id": "E13",
+   "nom": "Mes documents",
+   "url": "/documents",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 7,
+   "sautsDeNiveau": [],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 1,
+    "footer": 1
+   },
+   "interactifs": 25,
+   "ciblesTropPetites": [],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 25,
+    "sansFocusVisible": 0,
+    "exemplesSansFocus": []
+   }
+  },
+  {
+   "id": "E14",
+   "nom": "Nouveau document",
+   "url": "/documents/nouveau",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 0,
+   "titres": 3,
+   "sautsDeNiveau": [],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 1,
+    "footer": 1
+   },
+   "interactifs": 34,
+   "ciblesTropPetites": [
+    {
+     "balise": "a",
+     "l": 172,
+     "h": 16,
+     "texte": "← Retour aux documents"
+    }
+   ],
+   "champsSansEtiquette": [],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 25,
+    "sansFocusVisible": 1,
+    "exemplesSansFocus": [
+     {
+      "balise": "div",
+      "texte": "",
+      "focusVisible": false
+     }
+    ]
+   }
+  },
+  {
+   "id": "E16",
+   "nom": "Back-office",
+   "url": "/admin",
+   "langue": "fr",
+   "titre": "Help Me Draft",
+   "h1": 1,
+   "titres": 4,
+   "sautsDeNiveau": [
+    "h1 → h3 (« [ Navigation ] »)"
+   ],
+   "lienEvitement": false,
+   "reperes": {
+    "main": 1,
+    "nav": 4,
+    "header": 2,
+    "footer": 1
+   },
+   "interactifs": 18,
+   "ciblesTropPetites": [
+    {
+     "balise": "button",
+     "l": 57,
+     "h": 22,
+     "texte": "Admin"
+    }
+   ],
+   "champsSansEtiquette": [
+    "input[number]"
+   ],
+   "imagesSansAlt": 0,
+   "clavier": {
+    "atteints": 24,
+    "sansFocusVisible": 0,
+    "exemplesSansFocus": []
+   }
+  }
+ ]
+}

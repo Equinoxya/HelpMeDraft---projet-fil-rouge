@@ -275,6 +275,8 @@ frontend/
 | TSEC-11 | accès horizontal | parcours des identifiants d'autrui | `404` systématique |
 | TSEC-12 | escalade de privilèges | jeton d'un utilisateur standard sur `/admin` | `403` |
 | TSEC-13 | intégrité référentielle | suppression d'un utilisateur | aucune ligne orpheline (TI-29) |
+| TSEC-14 | limitation de débit | 35 appels sur `/auth/refresh` | `429` déclenché, mais pas avant le 26ᵉ appel |
+| TSEC-15 | échec sécurisé | démarrage sans `SECRET_KEY` | **refus de démarrer**, et clé distincte de `JWT_SECRET_KEY` |
 
 ### 7.7 · Tests unitaires — frontend
 
@@ -423,12 +425,15 @@ parce qu'ils n'allaient pas de soi :
 
 | Suite | Exécutés | Succès | Échecs | Durée |
 |---|---:|---:|---:|---:|
-| pytest — unitaires | 46 | 46 | 0 | — |
+| pytest — unitaires | 50 | 50 | 0 | — |
 | pytest — intégration | 79 | 79 | 0 | — |
-| pytest — sécurité | 14 | 14 | 0 | — |
-| **Total backend** | **139** | **139** | **0** | **55 s** |
+| pytest — sécurité | 17 | 17 | 0 | — |
+| **Total backend** | **146** | **146** | **0** | **57 s** |
 | Vitest — frontend | 42 | 42 | 0 | 2 s |
-| **Total** | **181** | **181** | **0** | **57 s** |
+| **Total** | **188** | **188** | **0** | **59 s** |
+
+*Mise à jour du 3 octobre, seconde campagne : +7 tests couvrant les correctifs de sécurité
+(purge des sessions, limitation de débit sur le rafraîchissement, clé de session Flask).*
 
 ### Couverture
 
@@ -451,7 +456,7 @@ parce qu'ils n'allaient pas de soi :
 | Critère | Seuil | Résultat | |
 |---|---|---|:---:|
 | Tests unitaires et d'intégration | 100 % au vert | 181 / 181 | ✅ |
-| Tests de sécurité (bloquant) | 100 % au vert | 14 / 14 + 13 côté frontend | ✅ |
+| Tests de sécurité (bloquant) | 100 % au vert | 17 / 17 + 13 côté frontend | ✅ |
 | Couverture des routes | ≥ 80 % | 89 – 96 % | ✅ |
 | Couverture de `services/` | ≥ 90 % | 100 % | ✅ |
 | Durée de la suite | < 60 s | 57 s | ✅ |
@@ -481,4 +486,5 @@ Vérification de l'hermétisme : après exécution complète de la suite, aucun 
 
 | Campagne | Date | Exécutés | Succès | Échecs | Observations |
 |---|---|---|---|---|---|
+| v2 — correctifs de sécurité | 03/10/2026 | 188 | 188 | 0 | +7 tests ; voir [rapport d'audit de sécurité](./audit-securite.md) |
 | | | | | | |

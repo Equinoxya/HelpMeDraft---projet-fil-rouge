@@ -6,7 +6,7 @@ import secrets
 import hashlib
 import re
 from flask import current_app
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from database.db import SessionLocal, User, UserSession
 from utilitaires import utc_now_naive
 
@@ -74,7 +74,39 @@ def hash_refresh_token(plain_token: str) -> str:
     return hashlib.sha256(plain_token.encode()).hexdigest()
 
 
+def purge_expired_sessions(user_id: str | None = None) -> int:
+    """
+    Supprime les sessions dont la date d'expiration est passée, et rend le
+    nombre de lignes supprimées.
+
+    Couvre les deux cas d'accumulation de la table `user_session` :
+      - les sessions jamais fermées, dont le jeton a expiré au bout de 7 jours ;
+      - les sessions révoquées par la rotation, qui restent volontairement en
+        base pour permettre la détection de rejeu.
+
+    Le critère est l'expiration et NON le drapeau `revoke` : une session
+    révoquée doit survivre jusqu'au terme de son jeton, sinon un jeton volé
+    puis rejoué ne serait plus reconnu comme un rejeu — il serait simplement
+    « inconnu », et la détection de vol tomberait.
+
+    Avec user_id, ne purge que ce compte ; sans, purge toute la table (usage
+    prévu : tâche planifiée).
+    """
+    with SessionLocal() as db_session:
+        stmt = delete(UserSession).where(UserSession.refresh_token_exp < utc_now_naive())
+        if user_id is not None:
+            stmt = stmt.where(UserSession.user_id == user_id)
+        supprimees = db_session.execute(stmt).rowcount
+        db_session.commit()
+        return supprimees or 0
+
+
 def create_session(user_id: str) -> str:
+    # Purge opportuniste : la connexion est le moment naturel pour nettoyer
+    # les sessions mortes de ce compte, sans tâche planifiée ni travail
+    # supplémentaire sur le chemin critique des autres requêtes.
+    purge_expired_sessions(user_id)
+
     refresh_token = generate_refresh_token()
     with SessionLocal() as db_session:
         user_session = UserSession(

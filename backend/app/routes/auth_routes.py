@@ -127,6 +127,13 @@ def login():
         return response, 200
         
 @auth_bp.route("/refresh", methods=["POST"])
+# Le jeton de rafraîchissement fait 64 octets tirés au hasard : le deviner par
+# force brute est hors de portée, cette limite ne protège donc pas le secret.
+# Elle borne l'usage de la route — épuisement de ressources côté serveur, et
+# martèlement automatisé si un cookie fuit. 30 par minute laisse largement
+# passer un usage normal : un rafraîchissement toutes les 15 minutes par
+# session, même avec plusieurs onglets ou appareils derrière une même IP.
+@limiter.limit("30 per minute")
 def refresh():
     token = request.cookies.get("refresh_token")
     if not token:

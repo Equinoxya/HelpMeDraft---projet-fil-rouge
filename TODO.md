@@ -110,16 +110,37 @@ Hygiène du Jira, relevée au passage :
 - [ ] L'intitulé de CP8 est « SQL **et** NoSQL » et aucun composant NoSQL n'existe → ajouter un usage justifié (cache Redis des réponses IA, journal des appels IA en Mongo) ou préparer un argumentaire solide pour le jury
 - [ ] **Transactions et conflits d'accès** : implémenter ou documenter (critère de performance)
 
-### 8 · Sécurité
-- [ ] **Chiffrement des données sensibles au repos** (exigé par le CDC)
-- [ ] Configurer `SECRET_KEY` Flask
-- [ ] **Rapport d'audit de sécurité**
-- [ ] Rejouer le test XSS de bout en bout dans le navigateur
-- [ ] Documenter la **veille sécurité** : vulnérabilités trouvées, failles corrigées (attendu explicite du dossier de projet)
+### 8 · Sécurité — 🔄 l'essentiel est fait
+Voir [`docs/audit-securite.md`](./docs/audit-securite.md). 0 vulnérabilité critique ou élevée, 17 tests de sécurité.
 
-### 9 · Accessibilité RGAA CP 2, 5
-- [ ] Passe complète : contrastes, navigation clavier, balises ARIA, focus visible
-- [ ] Audit **Lighthouse / WAVE** + **rapport d'audit d'accessibilité**
+- [x] **Rapport d'audit de sécurité** complet
+- [x] Configurer `SECRET_KEY` Flask, distincte de `JWT_SECRET_KEY`
+- [x] `KAN-95` limitation de débit sur `/auth/refresh`
+- [x] `KAN-96` purge des sessions expirées
+- [x] `KAN-98` contrainte SQL du quota alignée sur l'API + script de migration
+- [x] `KAN-94` énumération à l'inscription : **risque accepté**, argumenté au §4.1 du rapport
+- [x] Test XSS rejoué, et transformé en 13 tests automatisés
+- [x] Veille sécurité documentée
+- [ ] ⚠️ **Ajouter `SECRET_KEY` au `backend/.env`** avant de relancer l'application
+- [ ] `KAN-100` Ollama : relever la version, restreindre l'écoute à `127.0.0.1`
+- [ ] **Chiffrement des données au repos** — 3 options chiffrées au §5.1 du rapport, à arbitrer
+- [ ] `KAN-102` épingler les dépendances transitives (Werkzeug non épinglée)
+
+### 9 · Accessibilité RGAA CP 2, 5 — 🔄 audité, corrections à faire
+Voir [`docs/audit-accessibilite.md`](./docs/audit-accessibilite.md). Audit réel sur les 16 écrans : **120 occurrences sur 3 règles**, dont 117 dues à une seule couleur.
+
+- [x] **Rapport d'audit d'accessibilité** : axe-core sur l'application démarrée + contrôles manuels
+- [ ] **Assombrir `#E0533C` en `#C4341C`** → lève 117 des 120 occurrences (~1 h)
+- [ ] Étiquette sur le champ de quota du back-office (seul constat *critique*)
+- [ ] `aria-label` sur la zone CodeMirror
+- [ ] Titre de page distinct par route (les 16 écrans partagent le même)
+- [ ] Lien d'évitement (absent des 16 écrans)
+- [ ] Règle `:focus-visible` globale (22 éléments sans focus visible, dont 16 sur Modèles)
+- [ ] Corriger le `h3` du pied de page (saut de niveau sur 5 écrans)
+- [ ] `<main>` sur l'accueil, `h1` sur Nouveau document
+- [ ] Remplissage vertical des 13 cibles sous 24 px (WCAG 2.2, anticipation RGAA 5)
+
+**Total estimé : ~3 h 30**, dont 1 h pour 97 % du volume.
 
 ### 10 · RGPD
 - [ ] Consentement **distinct** dédié à l'usage de l'IA

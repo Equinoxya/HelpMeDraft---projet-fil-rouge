@@ -22,7 +22,8 @@ BACKEND_ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_ROOT))
 
 os.environ["HELPMEDRAFT_DB_URL"] = "sqlite://"   # base en mémoire, jamais sur disque
-os.environ["JWT_SECRET_KEY"] = "cle-de-test-sans-valeur-en-production"
+os.environ["JWT_SECRET_KEY"] = "cle-jwt-de-test-sans-valeur-en-production"
+os.environ["SECRET_KEY"] = "cle-session-de-test-distincte-de-la-precedente"
 os.environ["APP_ENV"] = "testing"
 os.environ.setdefault("MAIL_SERVER", "localhost")
 os.environ.setdefault("MAIL_DEFAULT_SENDER", "tests@helpmedraft.local")

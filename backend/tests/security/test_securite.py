@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select, text
 
+from app.extension import limiter
 from database.db import Base, Document, SessionLocal, UserSession, engine
 from tests.conftest import MDP_VALIDE
 
@@ -215,3 +216,61 @@ def test_tsec13_les_cles_etrangeres_sont_appliquees_par_le_sgbd():
     """
     with engine.connect() as connexion:
         assert connexion.execute(text("PRAGMA foreign_keys")).scalar_one() == 1
+
+
+# ── TSEC-14 · Limitation de débit (KAN-95) ───────────────────────────────────
+
+def test_tsec14_le_rafraichissement_est_limite_en_debit(app, client, utilisateur):
+    """
+    `/auth/refresh` n'avait aucune limite, contrairement à /register, /login et
+    /forgot-password. Le jeton faisant 64 octets aléatoires, la limite ne
+    protège pas le secret — elle borne l'usage de la route : épuisement de
+    ressources, et martèlement automatisé si un cookie fuit.
+
+    La limitation est désactivée par la fixture `app` pour tous les autres
+    tests ; elle est réactivée ici, puis remise dans son état initial.
+    """
+    client.post("/auth/login", json={"email": "camille@exemple.fr", "mdp": MDP_VALIDE})
+    limiter.enabled = True
+    try:
+        codes = [client.post("/auth/refresh").status_code for _ in range(35)]
+    finally:
+        limiter.enabled = False
+        limiter.reset()
+
+    assert 429 in codes, "aucune limite de débit n'est appliquée sur /auth/refresh"
+    assert codes.index(429) > 25, (
+        f"la limite se déclenche au {codes.index(429) + 1}ᵉ appel, trop tôt pour "
+        "un usage normal avec plusieurs onglets"
+    )
+
+
+# ── TSEC-15 · Clé de session Flask ───────────────────────────────────────────
+
+def test_tsec15_l_application_refuse_de_demarrer_sans_cle_de_session():
+    """
+    Pendant du test TSEC-09 pour SECRET_KEY. Flask s'en sert pour signer les
+    cookies de session et les messages flash ; une clé absente ferait échouer
+    silencieusement le premier usage ajouté.
+    """
+    resultat = subprocess.run(
+        [sys.executable, "-c", "import app.config"],
+        cwd=BACKEND_ROOT,
+        env={
+            "PATH": "/usr/bin:/bin",
+            "HELPMEDRAFT_DB_URL": "sqlite://",
+            "JWT_SECRET_KEY": "une-cle-jwt-presente",
+        },
+        capture_output=True,
+        text=True,
+    )
+    assert resultat.returncode != 0, "l'application a démarré sans clé de session"
+    assert "SECRET_KEY" in resultat.stderr
+
+
+def test_tsec15b_les_deux_cles_sont_distinctes(app):
+    """
+    Réutiliser une même clé pour signer les jetons d'accès et les cookies de
+    session ferait qu'une fuite sur l'un compromet l'autre.
+    """
+    assert app.config["SECRET_KEY"] != app.config["JWT_SECRET_KEY"]

@@ -21,6 +21,7 @@ from app.services.auth_service import (
     hash_refresh_token,
     hash_reset_token,
     is_reset_token_expired,
+    purge_expired_sessions,
     revoke_all_user_sessions,
     rotate_refresh_token,
     verify_refresh_token,
@@ -166,3 +167,63 @@ def test_generate_reset_token_ne_se_repete_pas():
 def test_is_reset_token_expired_distingue_passe_et_futur():
     assert is_reset_token_expired(utc_now_naive() - timedelta(seconds=1)) is True
     assert is_reset_token_expired(utc_now_naive() + timedelta(hours=1)) is False
+
+
+# ── Purge des sessions (KAN-96) ──────────────────────────────────────────────
+
+def test_purge_supprime_les_sessions_expirees(utilisateur):
+    vivante = create_session(utilisateur)
+    morte = create_session(utilisateur)
+    _perimer(morte)
+
+    assert purge_expired_sessions() == 1
+
+    with SessionLocal() as session:
+        restantes = session.execute(select(UserSession)).scalars().all()
+    assert [l.refresh_token_hash for l in restantes] == [hash_refresh_token(vivante)]
+
+
+def test_purge_conserve_une_session_revoquee_non_expiree(utilisateur):
+    """
+    Point délicat : le critère de purge est l'expiration, **pas** le drapeau
+    `revoke`. Une session révoquée par la rotation doit survivre jusqu'au terme
+    de son jeton, sinon un jeton volé puis rejoué ne serait plus reconnu comme
+    un rejeu — il serait simplement « inconnu », et la détection de vol
+    tomberait silencieusement.
+    """
+    ancien = create_session(utilisateur)
+    rotate_refresh_token(ancien)             # l'ancienne session passe à revoke=True
+
+    assert purge_expired_sessions() == 0
+
+    with pytest.raises(ValueError, match="Réutilisation détectée"):
+        rotate_refresh_token(ancien)
+
+
+def test_purge_ciblee_ne_touche_pas_les_autres_comptes(utilisateur, autre_utilisateur):
+    mienne = create_session(utilisateur)
+    sienne = create_session(autre_utilisateur)
+    _perimer(mienne)
+    _perimer(sienne)
+
+    assert purge_expired_sessions(utilisateur) == 1
+
+    with SessionLocal() as session:
+        restantes = session.execute(select(UserSession)).scalars().all()
+    assert [l.user_id for l in restantes] == [autre_utilisateur]
+
+
+def test_la_connexion_purge_les_sessions_mortes_du_compte(client, utilisateur):
+    """
+    La table `user_session` s'accumulait indéfiniment : aucune session n'était
+    jamais supprimée, ni à expiration ni après révocation. La connexion est le
+    moment naturel pour nettoyer, sans tâche planifiée.
+    """
+    for _ in range(3):
+        _perimer(create_session(utilisateur))
+
+    client.post("/auth/login", json={"email": "camille@exemple.fr", "mdp": "MotDePasse1"})
+
+    with SessionLocal() as session:
+        restantes = session.execute(select(UserSession)).scalars().all()
+    assert len(restantes) == 1, "seule la session de la connexion en cours doit subsister"
