@@ -24,7 +24,9 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 | Modèle de données (7 entités) + script MySQL | `database/db.py`, `schema_mysql.sql` | 7 |
 | ORM SQLAlchemy, requêtes paramétrées, validation des entrées | `db.py`, routes | 8 |
 | Protection XSS (DOMPurify) + 13 tests | `MarkdownEditor.vue`, `markdown-sanitization.spec.ts` | 2 |
-| Suite de tests automatisés (181 tests) | `backend/tests/`, `frontend/src/**/__tests__/` | 2, 3, 8, 9 |
+| Suite de tests automatisés (282 tests) | `backend/tests/`, `frontend/src/**/__tests__/` | 2, 3, 8, 9 |
+| Performance de la génération IA : modèle, fenêtre de contexte et maintien en mémoire dimensionnés sur mesures | `config.py`, `ia_service.py` | 3, 11 |
+| Annulation d'une génération en cours + temps estimé affiché | `DocumentEditorView.vue`, `utils/iaEstimation.ts` | 2 |
 | Tokens hashés, rotation, anti-rejeu, cookie HttpOnly/SameSite | `auth_routes.py`, `test_securite.py` | 3 |
 | Consentement RGPD tracé en base | table `consentement` | 5, 7 |
 | Maquettes et captures | `docs/maquettes/`, `docs/captures/` | 5 |
@@ -53,7 +55,7 @@ Reste à faire sur ce lot :
 - [ ] Vérifier avec lui si le plan « formation » ou le plan « entreprise » du dossier est attendu
 
 ### 2 · Tests automatisés et plan de tests ⭐ CP 2, 3, 8, 9 — 🔄 l'essentiel est fait
-**181 tests, tous au vert** (139 pytest, 42 Vitest), 95 % de couverture backend.
+**282 tests, tous au vert** (228 pytest, 54 Vitest), 95 % de couverture backend.
 Voir [`docs/plan-de-tests.md`](./docs/plan-de-tests.md), [`backend/tests/README.md`](./backend/tests/README.md), [`frontend/TESTS.md`](./frontend/TESTS.md).
 
 - [x] **pytest** côté backend : unitaires, intégration, sécurité
@@ -71,6 +73,14 @@ Voir [`docs/plan-de-tests.md`](./docs/plan-de-tests.md), [`backend/tests/README.
 Trouvé et corrigé pendant la campagne :
 - [x] `KAN-93` — `DELETE /documents/<id>` renvoyait un tuple à un élément : erreur 500 au lieu de 204
 - [x] Testabilité : `db.py` liait le moteur à un chemin en dur dès l'import. L'URL est désormais lue dans `HELPMEDRAFT_DB_URL` (débloque aussi `KAN-86` et `KAN-15`)
+
+Leçon de méthode, à raconter en soutenance : **les doubles de test mentent.**
+Trois bugs de la chaîne IA sont passés sous un faux `requests.post` qui
+acceptait `json()` à tout moment et ne libérait jamais de connexion. Il a fallu
+un vrai serveur HTTP — `tests/integration/test_ia_flux_ollama.py`, un
+`http.server` qui imite `/api/generate` — pour les voir. Les nouveaux tests ont
+été vérifiés **par mutation** : on casse volontairement le code pour s'assurer
+qu'ils échouent.
 
 ### 3 · Gestion de projet ⭐ CP 4 — 🔄 en grande partie fait
 Voir [`docs/gestion-de-projet.md`](./docs/gestion-de-projet.md), établi sur les données réelles du Jira `KAN`.
@@ -98,6 +108,8 @@ Hygiène du Jira, relevée au passage :
 - [ ] Aucun `.github/workflows/` → pipeline GitHub Actions : lint, `vue-tsc`, `pytest`, `npm test`, build — **les deux suites de tests sont prêtes à y être branchées**
 - [ ] **Outil de qualité de code** : Ruff côté Python, ESLint côté Vue
 - [ ] Savoir **interpréter les rapports de CI** (critère de performance)
+- [ ] ⚠️ **`npm run build` échoue** sur deux imports inutilisés : `watch` dans `DocumentEditorView.vue`, `from` dans `index.ts`. Deux lignes à supprimer — mais la CI ne pourra pas passer avant (~5 min)
+- [ ] Passer Prettier sur les 6 fichiers non formatés (4 fichiers de tests, `FonctionnalitesView.vue`, `ModelesView.vue`) — `npx prettier --write src/`
 
 ### 6 · Base de données ⭐ CP 7
 - [ ] `schema_mysql.sql` existe mais l'app tourne sur SQLite → trancher : migrer vers MySQL (recommandé par le CDC) ou argumenter le choix
@@ -110,8 +122,11 @@ Hygiène du Jira, relevée au passage :
 - [ ] L'intitulé de CP8 est « SQL **et** NoSQL » et aucun composant NoSQL n'existe → ajouter un usage justifié (cache Redis des réponses IA, journal des appels IA en Mongo) ou préparer un argumentaire solide pour le jury
 - [ ] **Transactions et conflits d'accès** : implémenter ou documenter (critère de performance)
 
-### 8 · Sécurité — 🔄 l'essentiel est fait
-Voir [`docs/audit-securite.md`](./docs/audit-securite.md). 0 vulnérabilité critique ou élevée, 17 tests de sécurité.
+### 8 · Sécurité — 🔴 une alerte à traiter en priorité
+Voir [`docs/audit-securite.md`](./docs/audit-securite.md). L'audit conclut à 0 vulnérabilité
+critique ou élevée **dans le code applicatif**, avec 17 tests de sécurité — mais il n'avait pas
+examiné le contenu du dépôt lui-même, où deux clés secrètes réelles ont depuis été trouvées
+(voir l'alerte ci-dessous). À corriger avant de citer ce chiffre en soutenance.
 
 - [x] **Rapport d'audit de sécurité** complet
 - [x] Configurer `SECRET_KEY` Flask, distincte de `JWT_SECRET_KEY`
@@ -121,8 +136,10 @@ Voir [`docs/audit-securite.md`](./docs/audit-securite.md). 0 vulnérabilité cri
 - [x] `KAN-94` énumération à l'inscription : **risque accepté**, argumenté au §4.1 du rapport
 - [x] Test XSS rejoué, et transformé en 13 tests automatisés
 - [x] Veille sécurité documentée
-- [ ] ⚠️ **Ajouter `SECRET_KEY` au `backend/.env`** avant de relancer l'application
-- [ ] `KAN-100` Ollama : relever la version, restreindre l'écoute à `127.0.0.1`
+- [x] **Ajouter `SECRET_KEY` au `backend/.env`** — fait : `config.py` lève une `RuntimeError` au démarrage sans elle, et l'application démarre
+- [x] `KAN-100` **relever la version d'Ollama** — fait : **0.35.1**, au-dessus du seuil de 0.18 fixé au §4.2 du rapport d'audit
+- [ ] 🔴 **Deux clés secrètes réelles sont commitées** dans `Claude outputs/env-1` : `JWT_SECRET_KEY` et `SECRET_KEY`, en clair, dans un fichier dont l'en-tête dit « NE JAMAIS COMMIT ». Le `.gitignore` n'exclut que `.env`, et `Claude outputs/env-1` ne correspond pas à ce motif. Avec `JWT_SECRET_KEY`, quiconque lit le dépôt peut forger un access token valide — exactement la menace que le §3 du rapport déclare traitée. **Les supprimer ne suffit pas, elles restent dans l'historique git : il faut les régénérer.** Ajouter aussi `Claude outputs/` au `.gitignore`
+- [ ] `KAN-100` Ollama : restreindre l'écoute à `127.0.0.1` (`OLLAMA_HOST=127.0.0.1:11434`)
 - [ ] **Chiffrement des données au repos** — 3 options chiffrées au §5.1 du rapport, à arbitrer
 - [ ] `KAN-102` épingler les dépendances transitives (Werkzeug non épinglée)
 
@@ -152,6 +169,7 @@ Voir [`docs/audit-accessibilite.md`](./docs/audit-accessibilite.md). Audit réel
 ### 12 · Déploiement CP 10
 - [ ] **Procédure de déploiement** rédigée (environnements test / acceptation / production)
 - [ ] **Scripts de déploiement** écrits et documentés
+- [ ] ⚠️ **Délai côté serveur WSGI** : `ia_service.py` n'impose plus aucun délai de lecture à l'inférence, volontairement — un délai coupait des générations qui aboutissaient. Acceptable en local mono-utilisateur, mais en production un Ollama qui se bloque après avoir accepté la connexion occuperait un worker indéfiniment. Prévoir `gunicorn --timeout`
 
 ### 13 · Livrables d'examen
 - [ ] **Dossier de projet** : 40–60 pages + 40 pages d'annexes max ([plan](./docs/plan-dossier-projet.md))
@@ -159,6 +177,48 @@ Voir [`docs/audit-accessibilite.md`](./docs/audit-accessibilite.md). Audit réel
 - [ ] **Documentation utilisateur** (PDF ou web)
 - [ ] Préparer le **questionnaire professionnel** : documentation technique en anglais, 2 QCM en français + 2 questions ouvertes en anglais (niveau B1)
 - [ ] Préparer une **démarche de résolution de problème** à raconter : un bug réel, le diagnostic, les tests, la correction (critère de performance de CP2, CP3, CP8, CP11)
+  → **le matériau existe maintenant** : la campagne de performance IA du §14 est exactement ce format. Un symptôme (« la génération prend 5 minutes »), six hypothèses dont **deux fausses que la mesure a écartées**, et la vraie cause trouvée en dernier. Il y a de quoi montrer qu'on sait mesurer avant de corriger — ce que le jury cherche.
+
+### 14 · Performance de la génération IA — ✅ résolu, documenté
+
+Campagne de diagnostic, PR #5 à #10. Symptôme de départ : une correction de
+vingt caractères prenait **plus de cinq minutes**, ou se terminait en `502`.
+
+Les hypothèses, dans l'ordre où elles ont été testées :
+
+| Hypothèse | Verdict |
+|---|---|
+| Un délai de 60 s coupait des générations valides | ✅ vrai — retiré, compteur de temps estimé affiché à la place |
+| `stream: true` envoyé sans lire le flux NDJSON | ✅ vrai — `response.json()` échouait **après** le bloc de gestion d'erreurs, donc `500` opaque au bout de toute l'attente |
+| Le mode raisonnement de `qwen3:4b` | ✅ vrai — **1 443 jetons générés** pour corriger 21 caractères |
+| `OLLAMA_THINK=false` suffit à le désactiver | ❌ **faux** — sans effet sur Ollama 0.35.1 |
+| La consigne `/no_think` suffit | ❌ **faux** — lue comme du texte, puis recopiée dans la réponse |
+| La machine de développement est trop lente | ❌ **faux** — 53 à 62 jetons/s, tout à fait normal |
+| Le chargement du modèle | ✅ **la vraie cause finale** — 426,9 s sur 427,66 s, soit 99,8 % du temps |
+
+Corrections retenues : `qwen2.5:3b` (sans mode raisonnement), `OLLAMA_NUM_CTX`
+ramené de 8192 à **4096** (une fenêtre surdimensionnée alourdit le chargement :
+20,5 s contre 426,9 s), et `OLLAMA_KEEP_ALIVE=30m` pour ne pas repayer ce
+chargement toutes les cinq minutes.
+
+Deux leçons écrites dans `config.py`, `.env.example` et le `README` pour que
+l'erreur ne soit pas refaite : **un modèle à raisonnement est le mauvais outil
+pour de la réécriture, quelle que soit sa taille**, et **une fenêtre de contexte
+généreuse n'est pas une précaution gratuite** — `OLLAMA_NUM_CTX` et
+`IA_MAX_CONTENU_LENGTH` se règlent ensemble.
+
+Reste à faire sur ce lot :
+- [ ] **Vérifier le préfixe « Corrigé : »** — en ligne de commande, le modèle préfixe sa réponse. Le gabarit de prompt dit « Réponds uniquement avec le texte corrigé, sans commentaire ni introduction », donc ça devrait aller dans l'application, mais ce n'est pas vérifié. Si le préfixe apparaît, c'est le gabarit qu'il faut durcir (~15 min)
+- [ ] **Le temps estimé ne compte pas le chargement du modèle**, seulement l'inférence. Le premier appel après une longue pause dépasse donc l'estimation et bascule sur « plus long que prévu » : correct, mais peu informatif. Distinguer les deux phases demanderait de diffuser la progression réelle au navigateur (SSE), ce qui change le contrat d'API
+- [ ] **Journaliser les mesures qu'Ollama renvoie** (durée de chargement, de lecture, de génération, débit, modèle et fenêtre réellement actifs). Le diagnostic ci-dessus a demandé quatre allers-retours de commandes PowerShell alors qu'Ollama donne ces chiffres à chaque appel. Un prototype a été écrit puis abandonné ; il manquait la configuration de journalisation dans `create_app`, Flask n'émettant pas les messages `INFO` hors mode debug. Rejoint « supervision » listé comme reste à faire dans `05-architecture-logicielle.md`
+
+Piège de méthode rencontré, à garder en tête :
+- `Claude outputs/env` et `env-1` sont des **copies figées dans le dépôt**, pas le `.env` vivant. Il faut les recopier dans `backend/.env` après chaque modification de configuration, sinon les réglages du poste restent en arrière — c'est ce qui a fait croire à une régression. Et `Claude outputs/env` n'a **pas** de `SECRET_KEY` : l'application ne démarre pas avec celui-là
+- La **première** exécution après un `ollama pull` lit les poids depuis le disque *pendant* la génération et donne un débit trompeur : 1,96 jetons/s à froid contre 38,47 à chaud, même machine et même modèle. Toujours mesurer deux fois
+
+### 15 · Hygiène du dépôt
+- [ ] Supprimer les branches obsolètes : `claude/beautiful-clarke-6znlbn`, `claude/capacites-concretes-y1w66f`, `claude/gracious-goldberg-0o31o8` (tout leur contenu utile est dans `main`)
+- [ ] Ajouter `Claude outputs/` au `.gitignore` (voir l'alerte sur les clés au §8)
 
 ---
 
@@ -167,6 +227,8 @@ Voir [`docs/audit-accessibilite.md`](./docs/audit-accessibilite.md). Audit réel
 1. ~~Documents de conception (§1)~~ — ✅ fait
 2. ~~Gestion de projet (§3)~~ — ✅ fait, sauf les comptes rendus réels
 3. ~~Tests + plan de tests (§2)~~ — ✅ fait, sauf tests système et acceptation
-4. **Docker + CI/CD** (§4, §5) — prochaine étape : rapides, les suites de tests sont prêtes à être branchées, et ça nourrit CP1, CP10, CP11 à l'entretien technique
-5. **BDD, NoSQL, sécurité, accessibilité** (§6 à §9)
-6. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste
+4. 🔴 **Régénérer les deux clés commitées** (§8) — quelques minutes, et c'est une faille réelle dans un projet évalué sur la sécurité
+5. **Corriger `npm run build`** (§5) — deux lignes, et rien ne peut être branché en CI avant
+6. **Docker + CI/CD** (§4, §5) — rapides, les suites de tests sont prêtes à être branchées, et ça nourrit CP1, CP10, CP11 à l'entretien technique
+7. **BDD, NoSQL, sécurité, accessibilité** (§6 à §9) — l'accessibilité d'abord : 1 h lève 97 % du volume
+8. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste. La démarche de résolution de problème du §14 y est directement réutilisable
