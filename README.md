@@ -250,6 +250,10 @@ Copier `.env.example` en `backend/.env`, puis renseigner :
 | `MAIL_USE_TLS`, `MAIL_USE_SSL` | Chiffrement SMTP | ➖ (défauts fournis) |
 | `OLLAMA_URL` | URL du serveur Ollama | ➖ (`http://localhost:11434`) |
 | `OLLAMA_MODEL` | Modèle utilisé | ➖ (`qwen3:4b`) |
+| `OLLAMA_THINK` | Mode raisonnement du modèle. **À laisser à `false`** — voir l'avertissement ci-dessous | ➖ (`false`) |
+| `OLLAMA_NUM_CTX` | Fenêtre de contexte, en jetons | ➖ (`8192`) |
+| `OLLAMA_CONNECT_TIMEOUT` | Délai pour établir la connexion à Ollama, en secondes. Aucun délai ne borne la génération elle-même | ➖ (`10`) |
+| `IA_MAX_CONTENU_LENGTH` | Taille maximale du texte soumis à l'IA, en caractères | ➖ (`3000`) |
 | `FRONTEND_URL` | Base du lien de réinitialisation | ➖ (`http://localhost:5173`) |
 
 Générer une clé JWT robuste :
@@ -260,6 +264,9 @@ python -c "import secrets; print(secrets.token_urlsafe(64))"
 
 > [!WARNING]
 > `config.py` ne définit **aucune valeur de repli** pour `JWT_SECRET_KEY` : l'application refuse de démarrer sans elle. Le fichier `.env` est exclu par `.gitignore` et ne doit jamais être commité.
+
+> [!IMPORTANT]
+> **`OLLAMA_THINK` doit rester à `false`.** `qwen3` est un modèle à raisonnement : avec ce mode actif, il génère un bloc `<think>…</think>` avant sa réponse, de taille à peu près **constante**. Il « réfléchit » autant pour corriger `BJR` que pour reformuler trois pages — soit plusieurs minutes d'attente pour une phrase de quarante caractères sur une machine sans carte graphique. Ce mode n'apporte rien à des tâches de réécriture.
 
 ---
 
