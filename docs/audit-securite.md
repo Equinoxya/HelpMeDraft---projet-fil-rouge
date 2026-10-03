@@ -335,7 +335,7 @@ L'édition 2026, publiée le 4 août, place l'**agentivité excessive** en 3ᵉ 
 | 1 · Injection de prompt | 🟡 **réelle, impact borné** | le contenu du document est concaténé au gabarit ; mais le modèle n'a aucun outil, et l'utilisateur valide chaque suggestion |
 | 2 · Divulgation d'informations sensibles | 🟢 faible | inférence locale, aucun apprentissage sur les données |
 | 3 · Agentivité excessive | 🟢 **nulle par conception** | le modèle renvoie du texte, rien d'autre ; aucun appel d'outil, aucune écriture déclenchée par sa sortie |
-| 7 · Consommation non bornée | 🟢 traitée | quota glissant 20/24 h, contenu plafonné à 20 000 caractères, délai maximum de 60 s |
+| 7 · Consommation non bornée | 🟢 traitée | quota glissant 20/24 h, contenu plafonné par une borne configurable, délai maximum de 60 s |
 | 10 · Traitement inadéquat des sorties | 🟢 traitée | la sortie passe par DOMPurify et n'est jamais écrite sans action de l'utilisateur |
 
 > **L'argument à porter en soutenance.** Les deux risques qui montent dans l'édition 2026 sont

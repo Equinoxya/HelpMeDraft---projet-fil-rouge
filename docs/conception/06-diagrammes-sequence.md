@@ -38,7 +38,7 @@ sequenceDiagram
         note over RT: Validation des entrées — liste blanche
         RT->>RT: type_action ∈ {reformuler, corriger, completer} ?
         RT->>RT: scope ∈ {selection, document} ?
-        RT->>RT: contenu non vide, ≤ 20 000 caractères ?
+        RT->>RT: contenu non vide, ≤ la borne configurée ?
         RT->>RT: instructions ≤ 500 caractères ?
     end
 

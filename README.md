@@ -113,7 +113,7 @@ Côté vitrine : pages publiques **Accueil**, **Fonctionnalités**, **Modèles**
 | 📝 Éditeur | CodeMirror 6 (`@codemirror/lang-markdown`) + `marked` + `DOMPurify` |
 | 🐍 Back-end | Python 3.11+ · Flask 3 · SQLAlchemy 2 |
 | 🗄️ Base de données | SQLite en développement (cible MySQL en production) |
-| 🤖 IA | **Ollama en local** (`llama3.1`) — aucune donnée envoyée à un service tiers |
+| 🤖 IA | **Ollama en local** (`qwen3:4b`) — aucune donnée envoyée à un service tiers |
 | 🔑 Authentification | JWT HS256 (access 15 min) + refresh token `httpOnly` haché, avec rotation |
 | ✉️ Emailing | Flask-Mail, sandbox Mailtrap en développement |
 
@@ -211,7 +211,7 @@ pnpm install
 ### 4 · Modèle IA
 
 ```bash
-ollama pull llama3.1
+ollama pull qwen3:4b
 ollama serve                   # écoute sur http://localhost:11434
 ```
 
@@ -249,7 +249,7 @@ Copier `.env.example` en `backend/.env`, puis renseigner :
 | `MAIL_DEFAULT_SENDER` | Expéditeur des emails | ✅ |
 | `MAIL_USE_TLS`, `MAIL_USE_SSL` | Chiffrement SMTP | ➖ (défauts fournis) |
 | `OLLAMA_URL` | URL du serveur Ollama | ➖ (`http://localhost:11434`) |
-| `OLLAMA_MODEL` | Modèle utilisé | ➖ (`llama3.1`) |
+| `OLLAMA_MODEL` | Modèle utilisé | ➖ (`qwen3:4b`) |
 | `FRONTEND_URL` | Base du lien de réinitialisation | ➖ (`http://localhost:5173`) |
 
 Générer une clé JWT robuste :

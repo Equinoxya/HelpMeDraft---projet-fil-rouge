@@ -241,7 +241,7 @@ def ollama_double(monkeypatch):
     n'aurait aucun effet sur la référence déjà importée par la route.
     """
     def _poser(retour=("Texte reformulé.", 42), exception=None):
-        def _faux_appel(prompt, model="llama3.1"):
+        def _faux_appel(prompt, *args, **kwargs):
             if exception is not None:
                 raise exception
             return retour

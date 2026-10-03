@@ -1,7 +1,20 @@
 import requests
 from flask import current_app
 
-OLLAMA_TIMEOUT = 60
+# Température par action, et non une valeur unique.
+#
+# Les trois actions n'appellent pas la même liberté. Corriger l'orthographe
+# demande au modèle de ne RIEN changer d'autre : une température élevée l'incite
+# à reformuler au passage, c'est-à-dire exactement ce qu'on lui a interdit.
+# Compléter, à l'inverse, est une tâche de rédaction où un peu de variété est
+# souhaitable. Une valeur unique de 0,7 pour les trois, comme c'était le cas,
+# servait bien la dernière et desservait la première.
+TEMPERATURES = {
+    "corriger": 0.1,
+    "reformuler": 0.3,
+    "completer": 0.7,
+}
+TEMPERATURE_PAR_DEFAUT = 0.3
 
 PROMPT_TEMPLATES = {
     "reformuler": (
@@ -37,16 +50,25 @@ def build_prompt(type_action: str, contenu: str, instructions: str | None = None
         prompt += f"\n\nConsigne particulière à respecter: {instructions}"
     return prompt
 
-def call_ollama(prompt: str, model: str = "llama3.1") -> tuple[str, int]:
+def temperature_pour(type_action: str) -> float:
+    """Température d'inférence adaptée à l'action demandée."""
+    return TEMPERATURES.get(type_action, TEMPERATURE_PAR_DEFAUT)
+
+
+def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int]:
     """
     Appelle l'API locale Ollama et retourne (texte_genere, tokens_utilises).
     Lève RuntimeError si Ollama est injoignable ou renvoie une erreur,
     pour que la route puisse la transformer proprement en réponse HTTP.
+
+    Le modèle, la fenêtre de contexte et le délai maximum viennent de la
+    configuration : ils dépendent de la machine d'exécution, pas du code.
     """
-    
     base_url = current_app.config["OLLAMA_URL"]
     model = current_app.config["OLLAMA_MODEL"]
-    
+    if temperature is None:
+        temperature = TEMPERATURE_PAR_DEFAUT
+
     try:
         response = requests.post(
             f"{base_url}/api/generate",
@@ -54,12 +76,14 @@ def call_ollama(prompt: str, model: str = "llama3.1") -> tuple[str, int]:
                 "model": model,
                 "prompt": prompt,
                 "stream": False,
-                "options":{
-                    "temperature": 0.7
-                }
-                
+                "options": {
+                    "temperature": temperature,
+                    # Transmise explicitement : voir OLLAMA_NUM_CTX dans
+                    # config.py — sans elle, Ollama tronque sans rien dire.
+                    "num_ctx": current_app.config["OLLAMA_NUM_CTX"],
+                },
             },
-            timeout=OLLAMA_TIMEOUT
+            timeout=current_app.config["OLLAMA_TIMEOUT"],
         )
         response.raise_for_status()
     except requests.exceptions.ConnectionError:
