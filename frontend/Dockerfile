@@ -32,12 +32,21 @@ ENV VITE_API_URL=$VITE_API_URL \
 RUN npm run build
 
 # ── Étape 2 : service ─────────────────────────────────────────────────────────
-FROM nginx:1.29-alpine AS serve
+#
+# Image NON PRIVILÉGIÉE. L'image nginx officielle lance son processus maître en
+# root — il lui faut ce droit pour se lier au port 80, réservé. Un conteneur
+# compromis hériterait alors de tous les droits sur son système de fichiers.
+#
+# La variante « unprivileged » écoute sur 8080, port non réservé, et tourne sous
+# l'uid 101. C'est le même nginx, sans le compromis.
+FROM nginxinc/nginx-unprivileged:1.29-alpine AS serve
 
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+# 8080 et non 80 : un processus non privilégié ne peut pas se lier à un port
+# inférieur à 1024.
+EXPOSE 8080
 
 # nginx tourne en premier plan : un conteneur dont le processus principal passe
 # en arrière-plan s'arrête aussitôt.

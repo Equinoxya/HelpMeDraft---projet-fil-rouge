@@ -95,7 +95,8 @@ services:
     depends_on:
       - backend
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      # Cible 8080 et non 80 : l'image nginx est non privilégiée.
+      - "${FRONTEND_PORT:-8080}:8080"
 
 volumes:
   db-data:

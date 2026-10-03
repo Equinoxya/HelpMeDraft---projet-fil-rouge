@@ -54,13 +54,24 @@ jobs:
       - name: Ruff — format
         run: ruff format --check .
 
+      # Les clés sont TIRÉES AU HASARD à chaque exécution, et non écrites dans
+      # ce fichier. Deux raisons : une chaîne qui ressemble à un secret dans un
+      # dépôt en est signalée comme un — SonarCloud l'a d'ailleurs fait — et
+      # une valeur figée finit toujours par être recopiée ailleurs « parce
+      # qu'elle marchait ». config.py exige seulement que les deux existent et
+      # diffèrent.
+      - name: Générer des clés éphémères
+        run: |
+          {
+            echo "JWT_SECRET_KEY=$(openssl rand -base64 48)"
+            echo "SECRET_KEY=$(openssl rand -base64 48)"
+          } >> "$GITHUB_ENV"
+
       - name: pytest
         env:
           # La base de test vit en mémoire : aucun service externe à démarrer,
           # et aucune chance d'écrire dans une vraie base.
           HELPMEDRAFT_DB_URL: "sqlite://"
-          JWT_SECRET_KEY: cle-de-test-ci-sans-valeur-en-production
-          SECRET_KEY: seconde-cle-de-test-ci-distincte-de-la-premiere
           APP_ENV: development
         run: pytest --tb=short
 
@@ -114,13 +125,16 @@ jobs:
 
       # La composition est validée AVANT les images : une erreur de syntaxe s'y
       # détecte en quelques secondes, là où une construction prend des minutes.
+      # Mêmes raisons qu'au travail backend : des valeurs tirées au hasard
+      # plutôt qu'écrites dans le dépôt. La composition ne vérifie ici que leur
+      # PRÉSENCE, grâce aux déclarations ${VAR:?message}.
       - name: Valider docker-compose.yml
-        env:
-          JWT_SECRET_KEY: valeur-factice-pour-la-validation
-          SECRET_KEY: autre-valeur-factice
-          MYSQL_PASSWORD: factice
-          MYSQL_ROOT_PASSWORD: factice
-        run: docker compose config --quiet
+        run: |
+          export JWT_SECRET_KEY="$(openssl rand -base64 32)"
+          export SECRET_KEY="$(openssl rand -base64 32)"
+          export MYSQL_PASSWORD="$(openssl rand -base64 24)"
+          export MYSQL_ROOT_PASSWORD="$(openssl rand -base64 24)"
+          docker compose config --quiet
 
       - name: Construire l'image du backend
         uses: docker/build-push-action@v6

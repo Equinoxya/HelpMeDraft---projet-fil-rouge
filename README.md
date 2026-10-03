@@ -266,7 +266,7 @@ docker compose up --build
 
 - **Gunicorn** remplace le serveur de développement de Flask, avec `--timeout 600`. Ce n'est pas du confort : l'appel à Ollama n'impose aucun délai de lecture, et le défaut de gunicorn (30 s) tuerait le worker en pleine inférence.
 - **Deux workers**, pas davantage : la limitation de débit de Flask-Limiter compte en mémoire, donc **par worker**. Avec N workers, les seuils de `/auth/login` sont multipliés par N. Un stockage Redis partagé est la vraie correction — elle figure dans la TODO.
-- **Image frontend en deux étapes** : Node ne sert qu'à produire les fichiers statiques, l'image finale ne contient que nginx et le résultat du build (~50 Mo).
+- **Image frontend en deux étapes** et **non privilégiée** : Node ne sert qu'à produire les fichiers statiques ; l'image finale (~83 Mo) ne contient que nginx et le résultat du build, et tourne sous l'uid 101. L'image nginx officielle lance son maître en root pour se lier au port 80 — la variante *unprivileged* écoute sur 8080 et s'en passe.
 - **Repli monopage dans nginx** (`try_files`) : sans lui, recharger `/documents/42` renvoie une 404, l'application ne fonctionnant qu'en navigation interne.
 
 ---
