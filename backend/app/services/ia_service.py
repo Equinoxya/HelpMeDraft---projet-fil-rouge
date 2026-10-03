@@ -55,6 +55,50 @@ def temperature_pour(type_action: str) -> float:
     return TEMPERATURES.get(type_action, TEMPERATURE_PAR_DEFAUT)
 
 
+def _detail_ollama(response) -> str:
+    """
+    Extrait le message d'erreur qu'Ollama place dans le corps de sa réponse.
+
+    `raise_for_status()` ne lève qu'avec la ligne de statut : « 404 Client
+    Error: Not Found for url: ... ». La raison réelle — « model 'qwen3:4b' not
+    found, try pulling it first » — est dans le CORPS, qui était jusqu'ici
+    jeté. Ollama donnait le diagnostic, le code l'effaçait.
+
+    Le texte est borné et remis sur une ligne : il finit dans une réponse HTTP
+    destinée à l'utilisateur, et rien ne garantit la forme de ce que renvoie un
+    service tiers.
+    """
+    if response is None:
+        return ""
+    try:
+        detail = (response.json() or {}).get("error", "")
+    except ValueError:
+        detail = response.text or ""
+    return " ".join(str(detail).split())[:200]
+
+
+def _erreur_http(exception, model: str) -> str:
+    """Construit un message exploitable à partir d'une réponse HTTP en erreur."""
+    response = getattr(exception, "response", None)
+    detail = _detail_ollama(response)
+    statut = getattr(response, "status_code", None)
+
+    # 404 sur /api/generate ne veut pas dire « endpoint absent » mais « modèle
+    # absent » : l'URL est bonne, c'est le modèle demandé qui n'est pas
+    # téléchargé sur cette machine. Le cas est fréquent dès qu'on change de
+    # poste, puisque le modèle vient de la configuration et non du dépôt.
+    if statut == 404:
+        message = (
+            f"Le modèle « {model} » est introuvable sur le serveur Ollama. "
+            f"Téléchargez-le avec : ollama pull {model}"
+        )
+        return f"{message} (Ollama : {detail})" if detail else message
+
+    if detail:
+        return f"Erreur Ollama ({statut}) : {detail}"
+    return f"Erreur Ollama: {exception}"
+
+
 def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int]:
     """
     Appelle l'API locale Ollama et retourne (texte_genere, tokens_utilises).
@@ -88,12 +132,14 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
         response.raise_for_status()
     except requests.exceptions.ConnectionError:
         raise RuntimeError(
-            f"Impossible de joindre Ollama sur {base_url}. Vérifié qu'il est lancé sur votre machine."
+            f"Impossible de joindre Ollama sur {base_url}. "
+            "Vérifiez qu'il est lancé sur votre machine."
         )
     except requests.exceptions.Timeout:
         raise RuntimeError("Ollama a mis trop de temps à répondre")
     except requests.exceptions.HTTPError as e:
-        raise RuntimeError(f"Erreur Ollama: {e}")
+        raise RuntimeError(_erreur_http(e, model))
+
     
     data = response.json()
     generated_text = data.get("response", "").strip()
