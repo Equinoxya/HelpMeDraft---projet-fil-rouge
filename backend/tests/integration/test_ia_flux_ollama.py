@@ -200,6 +200,47 @@ def test_le_diagnostic_d_ollama_survit_a_la_lecture_en_flux(app, ollama):
     )
 
 
+def test_un_ollama_ancien_qui_ignore_think_ne_pollue_pas_le_resultat(app, ollama):
+    """
+    Cas réel observé sur qwen3:4b avec un Ollama antérieur à la 0.9.
+
+    Dans ces versions, `think` est un champ inconnu : Ollama l'ignore SANS
+    RIEN DIRE, le modèle raisonne quand même, et son monologue arrive COLLÉ au
+    texte utile — ce n'est que depuis la 0.9 qu'il est renvoyé à part. Sans
+    nettoyage, l'application proposait d'insérer plusieurs pages de monologue
+    dans le document de l'utilisateur.
+
+    Ce faux serveur reproduit ce comportement : il accepte `think` sans
+    broncher et renvoie le bloc malgré tout.
+    """
+    flux = [
+        {"response": "<think>\nOkay, let's tackle this. BJR", "done": False},
+        {"response": " is an abbreviation for bonjour.", "done": False},
+        {"response": " Let me check the typos.\n</think>", "done": False},
+        {"response": "\n\nBonjour, je serai en retard. Désolée.", "done": False},
+        {"response": "", "done": True,
+         "prompt_eval_count": 50, "eval_count": 900},
+    ]
+    with ollama(flux=flux) as faux:
+        with app.app_context():
+            app.config["OLLAMA_MODEL"] = "qwen3:4b"
+            texte, jetons = call_ollama("corrige : BJR")
+
+    assert texte == "Bonjour, je serai en retard. Désolée."
+    assert "<think>" not in texte and "</think>" not in texte
+
+    # La double protection doit bien être partie sur le réseau : le champ pour
+    # les Ollama récents, la consigne de prompt pour les anciens.
+    corps = faux.corps_recus[0]
+    assert corps["think"] is False
+    assert corps["prompt"].endswith("/no_think")
+
+    assert jetons == 950, (
+        "les jetons de raisonnement restent comptés au quota : ils ont bien "
+        "été générés, et c'est ce qui explique l'attente"
+    )
+
+
 def test_une_erreur_en_cours_de_flux_n_est_pas_prise_pour_du_texte(app, ollama):
     """
     Une erreur peut arriver après un statut 200, au milieu du flux :

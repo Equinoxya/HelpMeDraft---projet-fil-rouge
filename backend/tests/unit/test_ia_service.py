@@ -15,8 +15,10 @@ import pytest
 import requests
 
 from app.services.ia_service import (
+    DIRECTIVE_SANS_RAISONNEMENT,
     PROMPT_TEMPLATES,
     TEMPERATURE_PAR_DEFAUT,
+    _nettoyer_raisonnement,
     build_prompt,
     call_ollama,
     temperature_pour,
@@ -409,6 +411,137 @@ def test_call_ollama_ne_masque_pas_les_autres_erreurs_400(app, monkeypatch):
             call_ollama("un prompt")
 
     assert len(appels) == 1, "un 400 sans rapport avec think ne doit pas être rejoué"
+
+
+# ── Nettoyage du bloc de raisonnement ────────────────────────────────────────
+#
+# Cas réel observé : qwen3:4b sur une version d'Ollama antérieure à la 0.9.
+# Le champ `think` de l'API y est un champ inconnu, donc ignoré en silence ; le
+# modèle a raisonné quand même, et son monologue — plusieurs pages, en anglais,
+# pour corriger une phrase de quarante caractères — est arrivé COLLÉ au texte
+# utile, dans le champ que l'application propose d'insérer dans le document.
+
+def test_nettoyer_raisonnement_garde_ce_qui_suit_la_balise():
+    brut = (
+        "<think>\nOkay, the user wants me to reformulate. Let me break it down.\n"
+        "BJR is an abbreviation for bonjour...\n</think>\n\n"
+        "Bonjour, je serai en retard. Désolée."
+    )
+    assert _nettoyer_raisonnement(brut) == "Bonjour, je serai en retard. Désolée."
+
+
+def test_nettoyer_raisonnement_coupe_apres_le_dernier_bloc():
+    """Un modèle peut émettre plusieurs blocs : seul le dernier compte."""
+    brut = "<think>premier</think>brouillon<think>second</think>La réponse."
+    assert _nettoyer_raisonnement(brut) == "La réponse."
+
+
+def test_nettoyer_raisonnement_sur_un_bloc_jamais_referme():
+    """
+    Génération interrompue au milieu du raisonnement : il n'y a aucune réponse
+    à en tirer, et surtout rien qui doive être proposé pour insertion.
+    """
+    assert _nettoyer_raisonnement("<think>je réfléchis encore et enc") == ""
+
+
+def test_nettoyer_raisonnement_ne_touche_pas_un_texte_normal():
+    """Le cas de loin le plus fréquent ne doit rien subir."""
+    assert _nettoyer_raisonnement("  Bonjour, je serai en retard.  ") == (
+        "Bonjour, je serai en retard."
+    )
+
+
+def test_call_ollama_ne_renvoie_jamais_le_raisonnement(app, monkeypatch):
+    """
+    Le bout en bout du cas observé : le bloc arrive découpé à travers le flux,
+    exactement comme Ollama le livre, et ne doit pas ressortir.
+    """
+    flux = [
+        {"response": "<think>\nOkay, let's tackle", "done": False},
+        {"response": " this. BJR means bonjour.", "done": False},
+        {"response": "\n</think>\n\nBonjour, je serai", "done": False},
+        {"response": " en retard. Désolée.", "done": False},
+        {"response": "", "done": True, "prompt_eval_count": 50, "eval_count": 900},
+    ]
+    monkeypatch.setattr(
+        "app.services.ia_service.requests.post",
+        lambda *a, **k: _ReponseFactice(flux),
+    )
+    with app.app_context():
+        texte, jetons = call_ollama("un prompt")
+
+    assert texte == "Bonjour, je serai en retard. Désolée."
+    assert "<think>" not in texte and "</think>" not in texte
+    assert jetons == 950, (
+        "les jetons de raisonnement restent comptés : ils ont bien été "
+        "générés, et c'est ce qui explique l'attente facturée au quota"
+    )
+
+
+# ── Consigne de prompt /no_think ─────────────────────────────────────────────
+
+def test_la_consigne_sans_raisonnement_est_ajoutee_pour_qwen(app, monkeypatch):
+    """
+    Le champ `think` de l'API ne marche qu'à partir d'Ollama 0.9, et avant il
+    est ignoré en silence. La consigne de prompt, elle, voyage dans le prompt
+    et marche sur toutes les versions : c'est la seule protection pour
+    quelqu'un qui n'a pas mis Ollama à jour.
+    """
+    envoye = {}
+
+    def _capture(*a, **k):
+        envoye.update(k.get("json", {}))
+        return _ReponseFactice({"response": "Texte."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        app.config["OLLAMA_MODEL"] = "qwen3:4b"
+        call_ollama("Reformule : bonjour")
+
+    assert envoye["prompt"].endswith(DIRECTIVE_SANS_RAISONNEMENT), (
+        "la consigne doit être en fin de prompt : qwen suit la plus récente"
+    )
+    assert "Reformule : bonjour" in envoye["prompt"], "le prompt reste intact"
+
+
+def test_la_consigne_n_est_pas_ajoutee_a_un_modele_non_qwen(app, monkeypatch):
+    """
+    /no_think est propre à qwen. Sur llama3.1 ou mistral, ce serait du texte
+    parasite dans le prompt, que le modèle pourrait recopier dans sa réponse.
+    """
+    envoye = {}
+
+    def _capture(*a, **k):
+        envoye.update(k.get("json", {}))
+        return _ReponseFactice({"response": "Texte."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        app.config["OLLAMA_MODEL"] = "llama3.1"
+        call_ollama("Reformule : bonjour")
+
+    assert DIRECTIVE_SANS_RAISONNEMENT not in envoye["prompt"]
+
+
+def test_la_consigne_disparait_si_le_raisonnement_est_demande(app, monkeypatch):
+    """
+    Cohérence : quelqu'un qui met OLLAMA_THINK=true pour comparer les deux
+    modes ne doit pas recevoir une consigne qui annule son réglage.
+    """
+    envoye = {}
+
+    def _capture(*a, **k):
+        envoye.update(k.get("json", {}))
+        return _ReponseFactice({"response": "Texte."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        app.config["OLLAMA_MODEL"] = "qwen3:4b"
+        app.config["OLLAMA_THINK"] = True
+        call_ollama("Reformule : bonjour")
+
+    assert DIRECTIVE_SANS_RAISONNEMENT not in envoye["prompt"]
+    assert envoye["think"] is True
 
 
 # ── Température par action ───────────────────────────────────────────────────

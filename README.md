@@ -267,6 +267,8 @@ python -c "import secrets; print(secrets.token_urlsafe(64))"
 
 > [!IMPORTANT]
 > **`OLLAMA_THINK` doit rester à `false`.** `qwen3` est un modèle à raisonnement : avec ce mode actif, il génère un bloc `<think>…</think>` avant sa réponse, de taille à peu près **constante**. Il « réfléchit » autant pour corriger `BJR` que pour reformuler trois pages — soit plusieurs minutes d'attente pour une phrase de quarante caractères sur une machine sans carte graphique. Ce mode n'apporte rien à des tâches de réécriture.
+>
+> **Ollama 0.9 minimum est requis** pour que ce réglage soit respecté. Vérifier avec `ollama --version` et mettre à jour si besoin. Avant la 0.9, le champ `think` de l'API n'existe pas : Ollama l'ignore **sans rien dire** et le modèle raisonne quand même. Le service envoie donc aussi la consigne `/no_think` dans le prompt, qui fonctionne sur toutes les versions, et retire le bloc de la réponse s'il arrive malgré tout — mais le temps de génération, lui, aura bien été payé.
 
 ---
 
