@@ -1,78 +1,125 @@
 # Reste à faire — HelpMeDraft
 
-Croisement entre le [cahier des charges](./docs/cahier-des-charges.md) et l'état du dépôt.
-`*` = livrable **obligatoire pour le passage du titre**.
+Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md), les
+[compétences du titre CDA](./docs/competences-cda.md) et l'état du dépôt.
+
+- `CP n` renvoie à la compétence professionnelle du REAC.
+- ⭐ = compétence **obligatoirement** mise en œuvre par le projet (REV §3.1).
+- Le [plan du dossier de projet](./docs/plan-dossier-projet.md) liste les productions attendues à l'examen.
 
 ---
 
 ## ✅ Déjà couvert
 
-| Exigence du CDC | Où |
-|---|---|
-| Inscription / connexion / déconnexion / reset mot de passe | `backend/app/routes/auth_routes.py`, vues `LoginView` · `RegisterView` · `ForgotPasswordView` · `ResetPasswordView` |
-| Rôles utilisateur / administrateur | `admin_route.py` (`require_admin`), `AdminView.vue` |
-| Éditeur Markdown + commandes IA | `MarkdownEditor.vue`, `DocumentEditorView.vue` |
-| CRUD documents, dossiers, historique IA | `document_route.py`, `dossier_route.py`, `ia_route.py` |
-| IA locale (Ollama) + prompt engineering | `services/ia_service.py` |
-| Quota IA journalier | `ia_route.py` (`quota_daily_limit`, fenêtre 24 h) |
-| Stats d'usage admin | `admin_route.py` (`/stats`) |
-| Protection XSS (DOMPurify) + tests | `MarkdownEditor.vue`, `frontend/test_xss.mjs` |
-| Tokens : hash SHA-256 en base, rotation, anti-rejeu, cookie HttpOnly/SameSite | `auth_routes.py`, `backend/test_securite.py` |
-| Consentement RGPD tracé en base | table `consentement` |
-| `.env.example` | racine du dépôt |
-| Maquettes + captures | `docs/maquettes/`, `docs/captures/` |
-| Journal de veille `*` | `docs/veille-helpmedraft.html` |
+| Exigence | Où | CP |
+|---|---|---|
+| Inscription / connexion / déconnexion / reset mot de passe | `auth_routes.py`, 4 vues dédiées | 2, 3 |
+| Rôles utilisateur / administrateur | `admin_route.py`, `AdminView.vue` | 3 |
+| Éditeur Markdown + commandes IA | `MarkdownEditor.vue`, `DocumentEditorView.vue` | 2 |
+| CRUD documents, dossiers, historique IA | `document_route.py`, `dossier_route.py`, `ia_route.py` | 3, 8 |
+| IA locale (Ollama) + prompt engineering | `services/ia_service.py` | 3 |
+| Quota IA journalier | `ia_route.py` (fenêtre 24 h) | 3 |
+| Stats d'usage admin | `admin_route.py` (`/stats`) | 3 |
+| Architecture en couches effective | `routes/` → `services/` → `database/` + SPA découplée | 6 |
+| Modèle de données (7 entités) + script MySQL | `database/db.py`, `schema_mysql.sql` | 7 |
+| ORM SQLAlchemy, requêtes paramétrées, validation des entrées | `db.py`, routes | 8 |
+| Protection XSS (DOMPurify) + test | `MarkdownEditor.vue`, `test_xss.mjs` | 2 |
+| Tokens hashés, rotation, anti-rejeu, cookie HttpOnly/SameSite | `auth_routes.py`, `test_securite.py` | 3 |
+| Consentement RGPD tracé en base | table `consentement` | 5, 7 |
+| Maquettes et captures | `docs/maquettes/`, `docs/captures/` | 5 |
+| Journal de veille | `docs/veille-helpmedraft.html` | transversale |
+| Git / GitHub, branches, PR | — | 1, 4 |
+| `.env.example` | racine | 10 |
 
 ---
 
 ## ⬜ À faire
 
-### 1 · Tests automatisés `*`
-- [ ] Mettre en place **pytest** côté backend (les tests actuels sont des scripts `python test_*.py`, pas une suite).
-- [ ] Mettre en place **Vitest** côté frontend (absent de `frontend/package.json`).
-- [ ] Couvrir : auth, CRUD documents/dossiers, quota IA, garde-fous admin.
-- [ ] Rédiger le **plan de test manuel** (scénarios, résultats attendus, traçabilité).
+### 1 · Documents de conception ⭐ CP 5, 6, 7
+Le plus gros manque, et c'est ce que le jury lit avant tout.
 
-### 2 · Conteneurisation
-- [ ] `docker-compose.yml` est **vide (0 octet)**.
-- [ ] Écrire `backend/Dockerfile` et `frontend/Dockerfile`.
-- [ ] Composer : backend + frontend + BDD (+ Ollama).
+- [ ] **Schéma d'enchaînement des écrans** (critère de performance explicite de CP5)
+- [ ] **Diagramme de cas d'utilisation**
+- [ ] **Diagramme(s) de séquence** — au minimum celui de la génération IA
+- [ ] **Modèle entités-associations (MCD)** et **modèle physique (MPD)**
+- [ ] **Dossier d'architecture logicielle** : rôle de chaque couche, stratégie de sécurité par couche (DICP), design patterns et security patterns retenus
+- [ ] **Besoins d'éco-conception** identifiés et documentés (critère de performance de CP6)
+- [ ] Formalisation des besoins : cas d'utilisation ou user stories tracés au cahier des charges
 
-### 3 · CI/CD
-- [ ] Aucun `.github/workflows/`. Ajouter un pipeline GitHub Actions : lint, `vue-tsc`, tests back, tests front, build.
+### 2 · Tests automatisés et plan de tests ⭐ CP 2, 3, 8, 9
+- [ ] **pytest** côté backend (les tests actuels sont des scripts lancés à la main, pas une suite)
+- [ ] **Vitest** côté frontend (absent de `package.json`)
+- [ ] Tests unitaires par couche : composants métier (CP3), composants d'accès aux données (CP8), composants d'interface (CP2)
+- [ ] **Plan de tests** : intégration, non-régression, système, sécurité, charge
+- [ ] **Environnement de tests** dédié (critère de performance de CP9)
+- [ ] **Jeu d'essai de la fonctionnalité la plus représentative** : entrée / attendu / obtenu + analyse des écarts
+- [ ] **Dossier de compte rendu de tests**
 
-### 4 · Base de données
-- [ ] `schema_mysql.sql` existe mais l'app tourne sur SQLite. Trancher : migrer vers MySQL (recommandé par le CDC) ou documenter le choix SQLite.
-- [ ] Aligner l'ORM et le SQL : `ia.id_document` sans `ondelete` côté ORM alors que le SQL porte `ON DELETE CASCADE`.
+### 3 · Gestion de projet ⭐ CP 4
+Intégralement documentaire, donc rapide — et aujourd'hui la compétence obligatoire la moins couverte.
 
-### 5 · Accessibilité (RGAA)
-- [ ] Passe complète : contrastes, navigation clavier, balises ARIA, focus visible.
-- [ ] Audit **Lighthouse / WAVE** + **rapport d'audit d'accessibilité**.
+- [ ] **Planning** (Gantt ou backlog agile découpé en itérations)
+- [ ] **Suivi des tâches** rapproché du planning, avec écarts identifiés
+- [ ] **Comptes rendus de réunion** (points d'étape avec le formateur comptent)
+- [ ] **Objectifs et procédures qualité** : conventions de code, définition de « terminé », revue
 
-### 6 · Sécurité
-- [ ] Chiffrement des données sensibles au repos (exigence explicite du CDC).
-- [ ] Configurer `SECRET_KEY` Flask.
-- [ ] **Rapport d'audit de sécurité** (le CDC le demande comme livrable).
-- [ ] Rejouer le test XSS de bout en bout dans le navigateur.
+### 4 · Conteneurisation CP 1, 11
+- [ ] `docker-compose.yml` est **vide (0 octet)** — CP1 exige que « les conteneurs implémentent les services requis »
+- [ ] `backend/Dockerfile` et `frontend/Dockerfile`
+- [ ] Stack composée : backend + frontend + BDD (+ Ollama)
 
-### 7 · RGPD
-- [ ] Consentement **distinct** dédié à l'usage de l'IA.
-- [ ] Export des données et suppression de compte à l'initiative de l'utilisateur (art. 15 et 17).
+### 5 · CI/CD et qualité de code CP 11
+- [ ] Aucun `.github/workflows/` → pipeline GitHub Actions : lint, `vue-tsc`, tests back, tests front, build
+- [ ] **Outil de qualité de code** : Ruff côté Python, ESLint côté Vue
+- [ ] Savoir **interpréter les rapports de CI** (critère de performance)
 
-### 8 · Éco-conception
-- [ ] Vérifier le chargement différé des routes, alléger les dépendances, activer la compression GZIP.
+### 6 · Base de données ⭐ CP 7
+- [ ] `schema_mysql.sql` existe mais l'app tourne sur SQLite → trancher : migrer vers MySQL (recommandé par le CDC) ou argumenter le choix
+- [ ] **Jeu d'essai complet** dans une base de test
+- [ ] **Procédure de sauvegarde / restauration**
+- [ ] **Utilisateurs SGBD et droits d'accès** (critère de performance : sécurité et confidentialité)
+- [ ] Aligner ORM et SQL : `ia.id_document` sans `ondelete` côté ORM alors que le SQL porte `ON DELETE CASCADE`
 
-### 9 · Documentation & soutenance
-- [ ] **Dossier projet** `*` : architecture, modèle de données, diagrammes (cas d'usage, séquence, MCD).
-- [ ] **Documentation utilisateur** (PDF ou web).
-- [ ] **Diaporama de soutenance** `*`.
+### 7 · NoSQL ⭐ CP 8
+- [ ] L'intitulé de CP8 est « SQL **et** NoSQL » et aucun composant NoSQL n'existe → ajouter un usage justifié (cache Redis des réponses IA, journal des appels IA en Mongo) ou préparer un argumentaire solide pour le jury
+- [ ] **Transactions et conflits d'accès** : implémenter ou documenter (critère de performance)
+
+### 8 · Sécurité
+- [ ] **Chiffrement des données sensibles au repos** (exigé par le CDC)
+- [ ] Configurer `SECRET_KEY` Flask
+- [ ] **Rapport d'audit de sécurité**
+- [ ] Rejouer le test XSS de bout en bout dans le navigateur
+- [ ] Documenter la **veille sécurité** : vulnérabilités trouvées, failles corrigées (attendu explicite du dossier de projet)
+
+### 9 · Accessibilité RGAA CP 2, 5
+- [ ] Passe complète : contrastes, navigation clavier, balises ARIA, focus visible
+- [ ] Audit **Lighthouse / WAVE** + **rapport d'audit d'accessibilité**
+
+### 10 · RGPD
+- [ ] Consentement **distinct** dédié à l'usage de l'IA
+- [ ] Export des données et suppression de compte par l'utilisateur (art. 15 et 17)
+
+### 11 · Éco-conception CP 6
+- [ ] Vérifier le chargement différé, alléger les dépendances, activer la compression GZIP
+
+### 12 · Déploiement CP 10
+- [ ] **Procédure de déploiement** rédigée (environnements test / acceptation / production)
+- [ ] **Scripts de déploiement** écrits et documentés
+
+### 13 · Livrables d'examen
+- [ ] **Dossier de projet** : 40–60 pages + 40 pages d'annexes max ([plan](./docs/plan-dossier-projet.md))
+- [ ] **Diaporama de soutenance**
+- [ ] **Documentation utilisateur** (PDF ou web)
+- [ ] Préparer le **questionnaire professionnel** : documentation technique en anglais, 2 QCM en français + 2 questions ouvertes en anglais (niveau B1)
+- [ ] Préparer une **démarche de résolution de problème** à raconter : un bug réel, le diagnostic, les tests, la correction (critère de performance de CP2, CP3, CP8, CP11)
 
 ---
 
 ## Priorité suggérée
 
-1. Tests automatisés + plan de test `*` — livrable titre, et bloque le reste.
-2. Dossier projet + diaporama `*` — livrables titre.
-3. Docker + CI/CD — rapides, débloquent le déploiement.
-4. Audits accessibilité et sécurité.
-5. RGPD (export/suppression), chiffrement au repos, éco-conception.
+1. **Documents de conception** (§1) — le jury les lit avant tout, et ils couvrent trois compétences obligatoires.
+2. **Tests + plan de tests** (§2) — compétence obligatoire, et verrou pour la CI.
+3. **Gestion de projet** (§3) — peu de travail, compétence obligatoire quasi vide aujourd'hui.
+4. **Docker + CI/CD** (§4, §5) — rapides, nourrissent l'entretien technique sur CP1, 10, 11.
+5. **BDD, NoSQL, sécurité, accessibilité** (§6 à §9).
+6. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste.
