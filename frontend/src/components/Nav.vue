@@ -69,14 +69,14 @@ watch(() => route.fullPath, fermerMenu);
           class="flex items-center gap-3 group focus-visible:outline-2 focus-visible:outline-black"
         >
           <div
-            class="w-8 h-8 bg-[#111111] text-[#F4F1EA] flex items-center justify-center font-mono font-black text-sm group-hover:bg-[#E0533C] transition-colors"
+            class="w-8 h-8 bg-[#111111] text-[#F4F1EA] flex items-center justify-center font-mono font-black text-sm group-hover:bg-[#C4341C] transition-colors"
           >
             H
           </div>
           <span
             class="font-mono text-sm uppercase tracking-widest font-black text-[#111111]"
           >
-            HelpMeDraft <span class="text-[#E0533C]">/</span> LexiCorp
+            HelpMeDraft <span class="text-[#C4341C]">/</span> LexiCorp
           </span>
         </RouterLink>
 
@@ -96,7 +96,7 @@ watch(() => route.fullPath, fermerMenu);
       >
         <RouterLink
           to="/"
-          class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+          class="!text-[#111111] hover:!text-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
         >
           Accueil
         </RouterLink>
@@ -105,13 +105,13 @@ watch(() => route.fullPath, fermerMenu);
         <template v-if="!isAuthenticated">
           <RouterLink
             to="/login"
-            class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+            class="!text-[#111111] hover:!text-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
           >
             Connexion
           </RouterLink>
           <RouterLink
             to="/register"
-            class="bg-[#111111] !text-[#F4F1EA] px-5 py-2.5 hover:bg-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black"
+            class="bg-[#111111] !text-[#F4F1EA] px-5 py-2.5 hover:bg-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black"
           >
             Espace Rédaction
           </RouterLink>
@@ -121,26 +121,26 @@ watch(() => route.fullPath, fermerMenu);
         <template v-else>
           <RouterLink
             to="/dashboard"
-            class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+            class="!text-[#111111] hover:!text-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
           >
             Tableau de bord
           </RouterLink>
           <RouterLink
             v-if="authStore.user?.role === 'admin'"
             to="/admin"
-            class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+            class="!text-[#111111] hover:!text-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
           >
             Administration
           </RouterLink>
           <RouterLink
             to="/documents"
-            class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+            class="!text-[#111111] hover:!text-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
           >
             Mes documents
           </RouterLink>
           <button
             @click="handleLogout"
-            class="!text-[#111111] border border-[#111111] px-4 py-2 hover:bg-[#E0533C] hover:border-[#E0533C] hover:!text-[#F4F1EA] transition-colors focus-visible:outline-2 focus-visible:outline-black cursor-pointer"
+            class="!text-[#111111] border border-[#111111] px-4 py-2 hover:bg-[#C4341C] hover:border-[#C4341C] hover:!text-[#F4F1EA] transition-colors focus-visible:outline-2 focus-visible:outline-black cursor-pointer"
           >
             Déconnexion
           </button>
@@ -181,7 +181,7 @@ watch(() => route.fullPath, fermerMenu);
           <li>
             <RouterLink
               to="/"
-              class="block py-2 !text-[#111111] hover:!text-[#E0533C]"
+              class="block py-2 !text-[#111111] hover:!text-[#C4341C]"
             >
               → Accueil
             </RouterLink>
@@ -192,7 +192,7 @@ watch(() => route.fullPath, fermerMenu);
             <li class="pt-2 border-t border-[#111111]/20">
               <RouterLink
                 to="/login"
-                class="block py-2 !text-[#111111] hover:!text-[#E0533C]"
+                class="block py-2 !text-[#111111] hover:!text-[#C4341C]"
               >
                 Connexion
               </RouterLink>
@@ -200,7 +200,7 @@ watch(() => route.fullPath, fermerMenu);
             <li>
               <RouterLink
                 to="/register"
-                class="block text-center bg-[#111111] !text-[#F4F1EA] py-2.5 mt-2 hover:bg-[#E0533C]"
+                class="block text-center bg-[#111111] !text-[#F4F1EA] py-2.5 mt-2 hover:bg-[#C4341C]"
               >
                 S'inscrire
               </RouterLink>
@@ -212,7 +212,7 @@ watch(() => route.fullPath, fermerMenu);
             <li>
               <RouterLink
                 to="/dashboard"
-                class="block py-2 !text-[#111111] hover:!text-[#E0533C]"
+                class="block py-2 !text-[#111111] hover:!text-[#C4341C]"
               >
                 → Tableau de bord
               </RouterLink>
@@ -220,7 +220,7 @@ watch(() => route.fullPath, fermerMenu);
             <li>
               <RouterLink
                 to="/documents"
-                class="block py-2 !text-[#111111] hover:!text-[#E0533C]"
+                class="block py-2 !text-[#111111] hover:!text-[#C4341C]"
               >
                 → Mes documents
               </RouterLink>
@@ -228,7 +228,7 @@ watch(() => route.fullPath, fermerMenu);
             <li class="pt-2 border-t border-[#111111]/20">
               <button
                 @click="handleLogout"
-                class="w-full text-left py-2 text-[#E0533C] font-bold cursor-pointer"
+                class="w-full text-left py-2 text-[#C4341C] font-bold cursor-pointer"
               >
                 [ Déconnexion ]
               </button>

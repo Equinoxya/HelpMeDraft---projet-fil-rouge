@@ -44,7 +44,7 @@ const customTheme = EditorView.theme({
     lineHeight: "1.6",
   },
   ".cm-content": {
-    caretColor: "#E0533C",
+    caretColor: "#C4341C",
     fontFamily: "inherit",
     fontSize: "inherit",
     lineHeight: "inherit",
@@ -56,14 +56,14 @@ const customTheme = EditorView.theme({
     borderRight: "1px solid #111111",
   },
   ".cm-selectionBackground": {
-    backgroundColor: "#E0533C",
+    backgroundColor: "#C4341C",
     color: "#F4F1EA",
   },
   ".cm-cursor": {
-    borderLeftColor: "#E0533C",
+    borderLeftColor: "#C4341C",
   },
   "&.cm-focused": {
-    outline: "2px solid #E0533C",
+    outline: "2px solid #C4341C",
   },
 });
 
@@ -423,11 +423,11 @@ defineExpose({ focus });
   margin: 0.25em 0;
 }
 .prose :deep(a) {
-  color: #e0533c;
+  color: #c4341c;
   text-decoration: underline;
 }
 .prose :deep(a:hover) {
-  color: #c0452c;
+  color: #a72c18;
 }
 .prose :deep(strong) {
   font-weight: bold;
@@ -460,7 +460,7 @@ defineExpose({ focus });
   padding: 0;
 }
 .prose :deep(blockquote) {
-  border-left: 3px solid #e0533c;
+  border-left: 3px solid #c4341c;
   padding-left: 1em;
   margin-left: 0;
   color: #11111180;

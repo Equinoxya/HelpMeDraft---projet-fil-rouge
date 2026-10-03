@@ -66,7 +66,7 @@ async function handleSubmit() {
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA] flex flex-col"
   >
     <!-- MAIN CARD SECTION -->
     <main class="flex-1 flex items-center justify-center px-4 py-12 lg:py-20">
@@ -76,7 +76,7 @@ async function handleSubmit() {
         <!-- HEADER DE LA CARTE -->
         <div class="border-b border-[#111111]/20 pb-6 mb-8">
           <span
-            class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+            class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-2"
           >
             [ Sécurité ]
           </span>
@@ -93,7 +93,7 @@ async function handleSubmit() {
         <!-- ERREUR TOKEN MANQUANT -->
         <div
           v-if="tokenMissing"
-          class="p-4 border border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold flex items-center gap-3"
+          class="p-4 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold flex items-center gap-3"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -121,7 +121,7 @@ async function handleSubmit() {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5 text-[#E0533C] shrink-0 mt-0.5"
+              class="w-5 h-5 text-[#C4341C] shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -160,7 +160,7 @@ async function handleSubmit() {
                 autocomplete="new-password"
                 :disabled="isLoading"
                 required
-                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C] disabled:opacity-50"
+                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C] disabled:opacity-50"
               />
               <button
                 type="button"
@@ -225,10 +225,10 @@ async function handleSubmit() {
                 autocomplete="new-password"
                 :disabled="isLoading"
                 required
-                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C] disabled:opacity-50"
+                class="w-full h-12 pl-4 pr-12 bg-[#F4F1EA] border text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C] disabled:opacity-50"
                 :class="
                   confirmPassword && !passwordsMatch
-                    ? 'border-[#E0533C]'
+                    ? 'border-[#C4341C]'
                     : 'border-[#111111]'
                 "
               />
@@ -278,7 +278,7 @@ async function handleSubmit() {
             </div>
             <p
               v-if="confirmPassword && !passwordsMatch"
-              class="font-mono text-xs text-[#E0533C] mt-1"
+              class="font-mono text-xs text-[#C4341C] mt-1"
             >
               Les mots de passe ne correspondent pas.
             </p>
@@ -287,7 +287,7 @@ async function handleSubmit() {
           <!-- ALERTE ERREUR -->
           <div
             v-if="errorMessage"
-            class="p-4 border border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold flex items-center gap-2"
+            class="p-4 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold flex items-center gap-2"
             role="alert"
           >
             <svg
@@ -311,7 +311,7 @@ async function handleSubmit() {
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full h-14 bg-[#111111] hover:bg-[#E0533C] disabled:bg-[#111111]/30 disabled:cursor-not-allowed text-[#F4F1EA] font-mono text-xs uppercase tracking-widest transition-colors border-none flex items-center justify-center gap-2 mt-4"
+            class="w-full h-14 bg-[#111111] hover:bg-[#C4341C] disabled:bg-[#111111]/30 disabled:cursor-not-allowed text-[#F4F1EA] font-mono text-xs uppercase tracking-widest transition-colors border-none flex items-center justify-center gap-2 mt-4"
           >
             <span
               v-if="isLoading"
@@ -325,7 +325,7 @@ async function handleSubmit() {
         <div class="mt-8 pt-6 border-t border-[#111111]/20 text-center">
           <RouterLink
             to="/login"
-            class="font-mono text-xs uppercase tracking-wider text-[#111111] hover:text-[#E0533C] transition-colors underline decoration-1 underline-offset-4"
+            class="font-mono text-xs uppercase tracking-wider text-[#111111] hover:text-[#C4341C] transition-colors underline decoration-1 underline-offset-4"
           >
             ← Retour à la connexion
           </RouterLink>

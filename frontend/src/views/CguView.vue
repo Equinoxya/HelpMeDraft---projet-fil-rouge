@@ -4,7 +4,7 @@ const lastUpdate = "Aujourd'hui";
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA] flex flex-col"
   >
     <!-- MAIN CONTENT -->
     <main
@@ -13,7 +13,7 @@ const lastUpdate = "Aujourd'hui";
       <!-- EN-TÊTE PAGE -->
       <header class="mb-10 pb-6 border-b border-[#111111]/20">
         <span
-          class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+          class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-2"
         >
           [ Règlement Intérieur ]
         </span>
@@ -39,7 +39,7 @@ const lastUpdate = "Aujourd'hui";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">01.</span> Objet
+            <span class="font-mono text-sm text-[#C4341C]">01.</span> Objet
           </h2>
           <p class="text-sm sm:text-base leading-relaxed text-[#111111]/90">
             Les présentes CGU ont pour objet de définir les modalités de mise à
@@ -55,7 +55,7 @@ const lastUpdate = "Aujourd'hui";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">02.</span> Services
+            <span class="font-mono text-sm text-[#C4341C]">02.</span> Services
             d'Assistance IA
           </h2>
           <p
@@ -67,7 +67,7 @@ const lastUpdate = "Aujourd'hui";
           <div
             class="p-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs leading-relaxed text-[#111111]"
           >
-            <strong class="text-[#E0533C] uppercase block mb-1"
+            <strong class="text-[#C4341C] uppercase block mb-1"
               >[ Responsabilité Éditoriale ]</strong
             >
             L'utilisateur demeure le seul responsable du contenu rédigé et de
@@ -82,7 +82,7 @@ const lastUpdate = "Aujourd'hui";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">03.</span> Quotas et
+            <span class="font-mono text-sm text-[#C4341C]">03.</span> Quotas et
             Utilisation Réseau
           </h2>
           <p
@@ -107,7 +107,7 @@ const lastUpdate = "Aujourd'hui";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">04.</span>
+            <span class="font-mono text-sm text-[#C4341C]">04.</span>
             Responsabilité
           </h2>
           <p class="text-sm sm:text-base leading-relaxed text-[#111111]/90">

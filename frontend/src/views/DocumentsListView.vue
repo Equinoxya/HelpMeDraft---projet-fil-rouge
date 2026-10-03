@@ -179,7 +179,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA] flex flex-col"
   >
     <!-- MAIN CONTENT -->
     <main
@@ -191,7 +191,7 @@ onMounted(() => {
       >
         <div>
           <span
-            class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+            class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-2"
           >
             [ Espace Personnel ]
           </span>
@@ -204,7 +204,7 @@ onMounted(() => {
 
         <RouterLink
           to="/documents/nouveau"
-          class="inline-flex items-center justify-center gap-2 h-12 px-6 bg-[#111111] hover:bg-[#E0533C] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest transition-colors shadow-[4px_4px_0px_0px_rgba(224,83,60,1)] hover:shadow-none border border-[#111111]"
+          class="inline-flex items-center justify-center gap-2 h-12 px-6 bg-[#111111] hover:bg-[#C4341C] text-[#F4F1EA] font-mono text-xs uppercase tracking-widest transition-colors shadow-[4px_4px_0px_0px_rgba(224,83,60,1)] hover:shadow-none border border-[#111111]"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -270,7 +270,7 @@ onMounted(() => {
               <button
                 type="button"
                 title="Supprimer ce dossier"
-                class="opacity-0 group-hover:opacity-100 px-2 py-2 text-[#E0533C] hover:bg-[#E0533C]/10 transition-opacity"
+                class="opacity-0 group-hover:opacity-100 px-2 py-2 text-[#C4341C] hover:bg-[#C4341C]/10 transition-opacity"
                 @click="handleDeleteDossier(dossier)"
               >
                 ✕
@@ -289,13 +289,13 @@ onMounted(() => {
                 type="text"
                 placeholder="Nom du dossier"
                 maxlength="100"
-                class="w-full h-9 px-3 bg-[#F4F1EA] border border-[#111111] font-mono text-xs text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="w-full h-9 px-3 bg-[#F4F1EA] border border-[#111111] font-mono text-xs text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
               />
               <div class="flex gap-2">
                 <button
                   type="submit"
                   :disabled="isCreatingDossier"
-                  class="flex-1 h-8 font-mono text-[10px] uppercase tracking-wider bg-[#111111] text-[#F4F1EA] hover:bg-[#E0533C] disabled:opacity-50 transition-colors"
+                  class="flex-1 h-8 font-mono text-[10px] uppercase tracking-wider bg-[#111111] text-[#F4F1EA] hover:bg-[#C4341C] disabled:opacity-50 transition-colors"
                 >
                   {{ isCreatingDossier ? "…" : "Créer" }}
                 </button>
@@ -309,7 +309,7 @@ onMounted(() => {
               </div>
               <p
                 v-if="dossierError"
-                class="font-mono text-[10px] text-[#E0533C]"
+                class="font-mono text-[10px] text-[#C4341C]"
               >
                 {{ dossierError }}
               </p>
@@ -350,7 +350,7 @@ onMounted(() => {
                 type="search"
                 placeholder="Rechercher dans cette page..."
                 aria-label="Rechercher un document"
-                class="w-full h-11 pl-10 pr-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="w-full h-11 pl-10 pr-4 bg-[#F4F1EA] border border-[#111111] text-sm text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
               />
             </label>
 
@@ -364,7 +364,7 @@ onMounted(() => {
           <!-- ALERTE ERREUR -->
           <div
             v-if="errorMessage"
-            class="p-4 border-b border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold flex items-center gap-2"
+            class="p-4 border-b border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold flex items-center gap-2"
             role="alert"
           >
             <svg
@@ -390,7 +390,7 @@ onMounted(() => {
             class="p-12 text-center font-mono text-xs uppercase tracking-widest text-[#111111]/60 flex flex-col items-center gap-3"
           >
             <span
-              class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#E0533C] rounded-full animate-spin"
+              class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#C4341C] rounded-full animate-spin"
             ></span>
             Chargement de vos documents…
           </div>
@@ -411,7 +411,7 @@ onMounted(() => {
                   class="flex items-start gap-4 flex-1 w-full sm:w-auto mb-4 sm:mb-0"
                 >
                   <div
-                    class="w-10 h-10 border border-[#111111] bg-[#FAF8F5] group-hover:bg-[#E0533C] group-hover:text-[#F4F1EA] flex items-center justify-center shrink-0 transition-colors"
+                    class="w-10 h-10 border border-[#111111] bg-[#FAF8F5] group-hover:bg-[#C4341C] group-hover:text-[#F4F1EA] flex items-center justify-center shrink-0 transition-colors"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -436,7 +436,7 @@ onMounted(() => {
 
                   <div class="space-y-1">
                     <h3
-                      class="font-bold text-base sm:text-lg text-[#111111] group-hover:text-[#E0533C] transition-colors"
+                      class="font-bold text-base sm:text-lg text-[#111111] group-hover:text-[#C4341C] transition-colors"
                     >
                       {{ document.titre }}
                     </h3>
@@ -466,7 +466,7 @@ onMounted(() => {
                 <button
                   type="button"
                   :disabled="deletingId === document.id_document"
-                  class="self-end sm:self-center font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[#E0533C] text-[#E0533C] hover:bg-[#E0533C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors shrink-0"
+                  class="self-end sm:self-center font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[#C4341C] text-[#C4341C] hover:bg-[#C4341C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors shrink-0"
                   @click="handleDelete(document)"
                 >
                   {{
@@ -490,7 +490,7 @@ onMounted(() => {
               <RouterLink
                 v-if="!searchQuery"
                 to="/documents/nouveau"
-                class="inline-block font-mono text-xs uppercase tracking-widest text-[#E0533C] hover:underline underline-offset-4 font-bold"
+                class="inline-block font-mono text-xs uppercase tracking-widest text-[#C4341C] hover:underline underline-offset-4 font-bold"
               >
                 Créer votre premier document →
               </RouterLink>

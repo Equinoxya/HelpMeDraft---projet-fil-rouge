@@ -122,7 +122,7 @@ onMounted(fetchDashboardData);
       >
         <div>
           <p
-            class="font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3"
+            class="font-mono text-xs uppercase tracking-widest text-[#C4341C] font-bold mb-3"
           >
             // ESPACE PERSONNEL
           </p>
@@ -141,7 +141,7 @@ onMounted(fetchDashboardData);
 
         <RouterLink
           to="/documents/nouveau"
-          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-6 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black"
+          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-6 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -168,7 +168,7 @@ onMounted(fetchDashboardData);
         class="mt-12 p-12 text-center font-mono text-xs uppercase tracking-widest text-[#111111]/60 flex flex-col items-center gap-3"
       >
         <span
-          class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#E0533C] rounded-full animate-spin"
+          class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#C4341C] rounded-full animate-spin"
         ></span>
         Chargement de votre tableau de bord…
       </div>
@@ -176,7 +176,7 @@ onMounted(fetchDashboardData);
       <!-- ÉTAT D'ERREUR -->
       <div
         v-else-if="errorMessage"
-        class="mt-12 p-4 border border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold"
+        class="mt-12 p-4 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold"
         role="alert"
       >
         {{ errorMessage }}
@@ -201,7 +201,7 @@ onMounted(fetchDashboardData);
             <p class="font-serif text-5xl font-normal text-[#111111] my-1">
               {{ stat.value }}
             </p>
-            <p class="font-mono text-xs text-[#E0533C] font-bold mt-3">
+            <p class="font-mono text-xs text-[#C4341C] font-bold mt-3">
               ↑ {{ stat.detail }}
             </p>
           </article>
@@ -228,7 +228,7 @@ onMounted(fetchDashboardData);
             >
               <div>
                 <div
-                  class="w-12 h-12 border-2 border-[#111111] bg-[#F4F1EA] flex items-center justify-center text-[#111111] group-hover:bg-[#E0533C] group-hover:text-[#F4F1EA] transition-colors mb-6"
+                  class="w-12 h-12 border-2 border-[#111111] bg-[#F4F1EA] flex items-center justify-center text-[#111111] group-hover:bg-[#C4341C] group-hover:text-[#F4F1EA] transition-colors mb-6"
                 >
                   <svg
                     v-if="action.icon === 'document'"
@@ -311,7 +311,7 @@ onMounted(fetchDashboardData);
               </div>
 
               <div
-                class="mt-8 flex justify-end font-mono text-lg font-bold text-[#111111] group-hover:text-[#E0533C] transition-colors"
+                class="mt-8 flex justify-end font-mono text-lg font-bold text-[#111111] group-hover:text-[#C4341C] transition-colors"
               >
                 →
               </div>
@@ -351,7 +351,7 @@ onMounted(fetchDashboardData);
                   type="search"
                   placeholder="Rechercher par titre, type ou statut..."
                   aria-label="Rechercher un document"
-                  class="w-full bg-[#F4F1EA] border border-[#111111] pl-10 pr-4 py-2.5 font-mono text-xs text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                  class="w-full bg-[#F4F1EA] border border-[#111111] pl-10 pr-4 py-2.5 font-mono text-xs text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
                 />
               </div>
 
@@ -402,7 +402,7 @@ onMounted(fetchDashboardData);
 
                   <div>
                     <h3
-                      class="font-serif text-lg font-normal text-[#111111] group-hover:text-[#E0533C] transition-colors"
+                      class="font-serif text-lg font-normal text-[#111111] group-hover:text-[#C4341C] transition-colors"
                     >
                       {{ doc.titre }}
                     </h3>
@@ -427,7 +427,7 @@ onMounted(fetchDashboardData);
                   </span>
 
                   <span
-                    class="font-mono text-base font-bold text-[#111111] group-hover:translate-x-1 group-hover:text-[#E0533C] transition-transform"
+                    class="font-mono text-base font-bold text-[#111111] group-hover:translate-x-1 group-hover:text-[#C4341C] transition-transform"
                   >
                     →
                   </span>

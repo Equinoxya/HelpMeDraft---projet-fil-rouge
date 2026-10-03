@@ -5,7 +5,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA] flex flex-col"
   >
     <!-- MAIN CONTENT -->
     <main
@@ -14,7 +14,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
       <!-- EN-TÊTE PAGE -->
       <header class="mb-10 pb-6 border-b border-[#111111]/20">
         <span
-          class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+          class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-2"
         >
           [ Protection des Données ]
         </span>
@@ -40,7 +40,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">01.</span>
+            <span class="font-mono text-sm text-[#C4341C]">01.</span>
             Responsable du Traitement
           </h2>
           <p
@@ -56,13 +56,13 @@ const dpoContact = "rgpd@helpmedraft.fr";
             référent RGPD à l'adresse :
             <a
               :href="`mailto:${dpoContact}`"
-              class="font-mono text-xs text-[#E0533C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
+              class="font-mono text-xs text-[#C4341C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
               >{{ dpoContact }}</a
             >
             ou par e-mail général à
             <a
               :href="`mailto:${companyEmail}`"
-              class="font-mono text-xs text-[#E0533C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
+              class="font-mono text-xs text-[#C4341C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
               >{{ companyEmail }}</a
             >.
           </p>
@@ -75,7 +75,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">02.</span> Collecte
+            <span class="font-mono text-sm text-[#C4341C]">02.</span> Collecte
             des Données & Cookies
           </h2>
           <p
@@ -86,7 +86,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           </p>
 
           <ul
-            class="space-y-3 font-mono text-xs border-l-2 border-[#E0533C] pl-4 py-1 mb-6"
+            class="space-y-3 font-mono text-xs border-l-2 border-[#C4341C] pl-4 py-1 mb-6"
           >
             <li class="leading-relaxed">
               <strong class="uppercase text-[#111111]"
@@ -118,7 +118,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <div
             class="p-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs leading-relaxed text-[#111111]"
           >
-            <span class="font-bold text-[#E0533C] uppercase block mb-1"
+            <span class="font-bold text-[#C4341C] uppercase block mb-1"
               >[ Gestion des cookies et sessions ]</span
             >
             Ce site utilise uniquement des cookies et jetons de session (JWT /
@@ -135,7 +135,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">03.</span>
+            <span class="font-mono text-sm text-[#C4341C]">03.</span>
             Intelligence Artificielle & Confidentialité
           </h2>
           <p
@@ -164,7 +164,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">04.</span> Durée de
+            <span class="font-mono text-sm text-[#C4341C]">04.</span> Durée de
             Conservation des Données
           </h2>
           <p
@@ -176,7 +176,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           </p>
 
           <ul
-            class="space-y-3 font-mono text-xs border-l-2 border-[#E0533C] pl-4 py-1"
+            class="space-y-3 font-mono text-xs border-l-2 border-[#C4341C] pl-4 py-1"
           >
             <li class="leading-relaxed">
               <strong class="uppercase text-[#111111]"
@@ -215,7 +215,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">05.</span> Vos Droits
+            <span class="font-mono text-sm text-[#C4341C]">05.</span> Vos Droits
             Informatique et Libertés
           </h2>
           <p
@@ -226,7 +226,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           </p>
 
           <ul
-            class="space-y-3 font-mono text-xs border-l-2 border-[#E0533C] pl-4 py-1 mb-6"
+            class="space-y-3 font-mono text-xs border-l-2 border-[#C4341C] pl-4 py-1 mb-6"
           >
             <li class="leading-relaxed">
               <strong class="uppercase text-[#111111]"
@@ -263,7 +263,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
             Pour exercer l'un de ces droits, envoyez simplement votre demande à
             <a
               :href="`mailto:${companyEmail}`"
-              class="font-mono text-xs text-[#E0533C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
+              class="font-mono text-xs text-[#C4341C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
               >{{ companyEmail }}</a
             >. Si vous estimez que vos droits ne sont pas respectés, vous
             disposez également du droit d'introduire une réclamation auprès de

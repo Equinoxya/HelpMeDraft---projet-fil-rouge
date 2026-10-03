@@ -13,7 +13,7 @@ const companyInfo = {
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA] flex flex-col"
   >
     <!-- MAIN CONTENT -->
     <main
@@ -22,7 +22,7 @@ const companyInfo = {
       <!-- EN-TÊTE PAGE -->
       <header class="mb-10 pb-6 border-b border-[#111111]/20">
         <span
-          class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+          class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-2"
         >
           [ Cadre Réglementaire ]
         </span>
@@ -48,7 +48,7 @@ const companyInfo = {
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">01.</span> Éditeur du
+            <span class="font-mono text-sm text-[#C4341C]">01.</span> Éditeur du
             site
           </h2>
           <p
@@ -62,7 +62,7 @@ const companyInfo = {
           </p>
 
           <ul
-            class="space-y-3 font-mono text-xs border-l-2 border-[#E0533C] pl-4 py-1"
+            class="space-y-3 font-mono text-xs border-l-2 border-[#C4341C] pl-4 py-1"
           >
             <li
               class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2"
@@ -112,7 +112,7 @@ const companyInfo = {
               >
               <a
                 :href="`mailto:${companyInfo.email}`"
-                class="text-[#E0533C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1"
+                class="text-[#C4341C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1"
               >
                 {{ companyInfo.email }}
               </a>
@@ -127,7 +127,7 @@ const companyInfo = {
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">02.</span>
+            <span class="font-mono text-sm text-[#C4341C]">02.</span>
             Hébergement
           </h2>
           <p
@@ -149,7 +149,7 @@ const companyInfo = {
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">03.</span> Propriété
+            <span class="font-mono text-sm text-[#C4341C]">03.</span> Propriété
             intellectuelle
           </h2>
           <p class="text-sm sm:text-base leading-relaxed text-[#111111]/90">

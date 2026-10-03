@@ -11,7 +11,7 @@ export function getStatusStyle(status: DocumentStatus): string {
     case "brouillon":
       return "bg-[#111111] text-[#F4F1EA]";
     case "a_relire":
-      return "bg-[#E0533C] text-[#F4F1EA]";
+      return "bg-[#C4341C] text-[#F4F1EA]";
     case "termine":
       return "bg-[#F4F1EA] text-[#111111] border border-[#111111]";
   }
