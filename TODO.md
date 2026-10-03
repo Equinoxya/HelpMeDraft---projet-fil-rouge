@@ -84,9 +84,9 @@ Voir [`docs/gestion-de-projet.md`](./docs/gestion-de-projet.md), établi sur les
 - [ ] **Porter l'alerte de retard au formateur** et en verser le compte rendu (le critère exige que les acteurs soient alertés)
 
 Hygiène du Jira, relevée au passage :
+- [x] Rouvrir `KAN-10` et `KAN-13`, clos alors que des tâches restent ouvertes
+- [x] Fermer `KAN-99` (DOMPurify déjà à jour) et `KAN-93` (bug corrigé)
 - [ ] Rattacher ou supprimer les 10 tickets hors epic (`KAN-1` à `KAN-6`, `KAN-89` à `KAN-92`)
-- [ ] Rouvrir `KAN-10` et `KAN-13`, clos alors que des tâches restent ouvertes
-- [ ] Fermer `KAN-99` : DOMPurify 3.4.16 dépasse déjà le correctif demandé
 - [ ] Reporter les échéances des epics (toutes dépassées, de 76 à 129 jours)
 
 ### 4 · Conteneurisation CP 1, 11
