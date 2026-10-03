@@ -113,6 +113,7 @@ Hygiène du Jira, relevée au passage :
 - [x] **ESLint 9** configuré : 19 constats corrigés, dont les 7 `catch (err: any)`, remplacés par un module typé `utils/erreurs.ts` et ses tests
 - [ ] Savoir **interpréter les rapports de CI** (critère de performance) — à exercer sur les premières exécutions réelles
 - [ ] Ajouter un seuil de couverture au travail backend (`pytest --cov`, déjà installé)
+- [ ] **4 vulnérabilités `high` signalées par `npm audit`**, toutes issues de la même chaîne : `@vue/eslint-config-typescript` → `fast-glob` → `micromatch` → `braces@3.0.3`. L'avis [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) couvre `braces <= 3.0.3` et aucune version corrigée n'existe dans cette branche. **Dépendance de développement uniquement** : elle n'entre pas dans le bundle livré, et le déni de service décrit suppose qu'un attaquant contrôle les motifs de glob passés à ESLint. À revoir quand l'amont publiera un correctif
 - [x] **`npm run build` réparé** : les deux imports inutilisés retirés. Plus rien ne bloque la mise en CI
 - [x] Prettier passé sur les 6 fichiers non formatés — `prettier --check src/` est propre
 
