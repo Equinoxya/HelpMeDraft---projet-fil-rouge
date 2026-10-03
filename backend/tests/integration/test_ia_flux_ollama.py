@@ -158,6 +158,14 @@ def test_le_mode_raisonnement_est_desactive_dans_la_vraie_requete(app, ollama):
     assert corps["stream"] is True, "la réponse doit être demandée en flux"
     assert "think" not in corps["options"], "think est un champ de premier niveau"
 
+    # Le chargement du modèle domine le temps de réponse : 426,9 s sur les
+    # 427,66 s d'un appel à froid mesuré, contre 0,19 s à chaud. Ces deux
+    # réglages sont donc ce qui sépare sept minutes de deux dixièmes de
+    # seconde — ils doivent partir sur le réseau, pas seulement exister dans
+    # la configuration.
+    assert corps["keep_alive"] == app.config["OLLAMA_KEEP_ALIVE"]
+    assert corps["options"]["num_ctx"] == app.config["OLLAMA_NUM_CTX"]
+
 
 def test_un_modele_sans_mode_raisonnement_aboutit_quand_meme(app, ollama):
     """

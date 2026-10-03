@@ -251,7 +251,8 @@ Copier `.env.example` en `backend/.env`, puis renseigner :
 | `OLLAMA_URL` | URL du serveur Ollama | ➖ (`http://localhost:11434`) |
 | `OLLAMA_MODEL` | Modèle utilisé | ➖ (`qwen2.5:3b`) |
 | `OLLAMA_THINK` | Mode raisonnement du modèle. **À laisser à `false`** — voir l'avertissement ci-dessous | ➖ (`false`) |
-| `OLLAMA_NUM_CTX` | Fenêtre de contexte, en jetons | ➖ (`8192`) |
+| `OLLAMA_NUM_CTX` | Fenêtre de contexte, en jetons. **Dimensionnée, pas généreuse** — voir l'avertissement ci-dessous | ➖ (`4096`) |
+| `OLLAMA_KEEP_ALIVE` | Durée de maintien du modèle en mémoire. Le défaut d'Ollama (5 min) est trop court | ➖ (`30m`) |
 | `OLLAMA_CONNECT_TIMEOUT` | Délai pour établir la connexion à Ollama, en secondes. Aucun délai ne borne la génération elle-même | ➖ (`10`) |
 | `IA_MAX_CONTENU_LENGTH` | Taille maximale du texte soumis à l'IA, en caractères | ➖ (`3000`) |
 | `FRONTEND_URL` | Base du lien de réinitialisation | ➖ (`http://localhost:5173`) |
@@ -278,6 +279,21 @@ python -c "import secrets; print(secrets.token_urlsafe(64))"
 > Le facteur 440 ne vient pas du matériel mais du travail demandé. Et ce comportement **ne se désactive pas de façon fiable** : sur Ollama 0.35.1, ni `OLLAMA_THINK=false` ni la consigne `/no_think` (depuis retirée du projet, car recopiée dans la réponse) n'ont arrêté le monologue de `qwen3:4b`. Le seul levier qui fonctionne est le choix du modèle.
 >
 > `OLLAMA_THINK` reste donc à `false` et sans effet sur le modèle par défaut ; `_nettoyer_raisonnement` dans `ia_service.py` garde le filet de sécurité qui empêche un tel monologue d'être proposé pour insertion dans un document.
+
+> [!IMPORTANT]
+> **Le chargement du modèle domine le temps de réponse, pas la génération.** Sur une machine de développement, même modèle et même prompt :
+>
+> | Appel | Total | dont chargement | Inférence |
+> |---|---|---|---|
+> | à froid | 427,66 s | **426,9 s** | 0,76 s |
+> | à chaud | 0,19 s | 0 s | 0,19 s |
+>
+> Deux réglages en découlent, et ils comptent plus que le reste :
+>
+> - **`OLLAMA_NUM_CTX` ne doit pas être gonflé « au cas où ».** La fenêtre détermine la taille du cache d'attention alloué au chargement : passer de 4096 à 8192 faisait grimper ce chargement de 20,5 s à 426,9 s sur une machine dont la RAM est juste. Le besoin réel avec `IA_MAX_CONTENU_LENGTH=3000` est d'environ 1 700 jetons, soit une marge de 2,4 à 4096. Les deux valeurs se règlent **ensemble**.
+> - **`OLLAMA_KEEP_ALIVE` garde le modèle en mémoire** entre deux appels. Le défaut d'Ollama est de 5 minutes, trop court pour un usage par intermittence. Contrepartie : environ 2 Gio de RAM occupés pendant cette durée.
+>
+> Conséquence pour l'estimation affichée pendant la génération : elle ne compte **que** l'inférence. Le premier appel après une longue pause dépassera donc l'estimation, et le compteur basculera sur « plus long que prévu » — comportement correct, mais garder la cause en tête.
 
 ---
 
