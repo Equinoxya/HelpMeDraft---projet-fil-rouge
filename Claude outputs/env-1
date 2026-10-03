@@ -1,0 +1,33 @@
+# ==============================================================================
+# HelpMeDraft — backend/.env  (NE JAMAIS COMMIT — exclu par .gitignore)
+# Généré le 2026-10-03 pour un poste de développement.
+# ==============================================================================
+
+# ── Sécurité ──────────────────────────────────────────────────────────────────
+# Deux clés DISTINCTES (séparation des usages cryptographiques).
+# Pour en régénérer une : python -c "import secrets; print(secrets.token_urlsafe(64))"
+JWT_SECRET_KEY=YR0JkKdGjLaOWXKCQiYsT8jyhW2do8PC-v1_9hBUdTEiuozBJ9MaA6Mra0zRLsTsN1LMk761hTuzWZpMGS8fXA
+SECRET_KEY=nVh20H8iQKB1QaKaZ8igiqnB91f0pZL1szpwt6GxAVX8ToChRFb5tBaMZMOpzyCZcE3cxJ40QymPIYawVe-QkQ
+
+# ── Environnement d'exécution ─────────────────────────────────────────────────
+# "development" → cookie de refresh sans l'attribut Secure (http://localhost).
+APP_ENV=development
+
+# ── Emailing (Flask-Mail / sandbox Mailtrap) ──────────────────────────────────
+# À RENSEIGNER : identifiants de ta boîte Mailtrap (onglet SMTP Settings).
+# Laissés vides, l'app démarre mais l'envoi de mail de reset échouera.
+MAIL_SERVER=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_USE_TLS=True
+MAIL_USE_SSL=False
+MAIL_DEFAULT_SENDER=contact@helpmedraft.fr
+
+# ── IA locale (Ollama) ────────────────────────────────────────────────────────
+# Aucune clé API : inférence on-device (exigence RGPD du CDC).
+OLLAMA_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.1
+
+# ── Frontend ──────────────────────────────────────────────────────────────────
+FRONTEND_URL=http://localhost:5173
