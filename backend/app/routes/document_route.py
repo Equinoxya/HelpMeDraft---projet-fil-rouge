@@ -216,8 +216,10 @@ def delete_document(id_document):
         db_session.delete(document)
         db_session.commit()
 
-        return "", 
-    
+        return "", 204
+
+
+
 @document_bp.route("/stats", methods=["GET"])
 def document_stats():
     with SessionLocal() as db_session:

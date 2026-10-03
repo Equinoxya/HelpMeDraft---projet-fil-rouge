@@ -23,7 +23,8 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 | Architecture en couches effective | `routes/` → `services/` → `database/` + SPA découplée | 6 |
 | Modèle de données (7 entités) + script MySQL | `database/db.py`, `schema_mysql.sql` | 7 |
 | ORM SQLAlchemy, requêtes paramétrées, validation des entrées | `db.py`, routes | 8 |
-| Protection XSS (DOMPurify) + test | `MarkdownEditor.vue`, `test_xss.mjs` | 2 |
+| Protection XSS (DOMPurify) + 13 tests | `MarkdownEditor.vue`, `markdown-sanitization.spec.ts` | 2 |
+| Suite de tests automatisés (181 tests) | `backend/tests/`, `frontend/src/**/__tests__/` | 2, 3, 8, 9 |
 | Tokens hashés, rotation, anti-rejeu, cookie HttpOnly/SameSite | `auth_routes.py`, `test_securite.py` | 3 |
 | Consentement RGPD tracé en base | table `consentement` | 5, 7 |
 | Maquettes et captures | `docs/maquettes/`, `docs/captures/` | 5 |
@@ -51,14 +52,25 @@ Reste à faire sur ce lot :
 - [ ] Faire relire le périmètre et les écarts assumés par le formateur
 - [ ] Vérifier avec lui si le plan « formation » ou le plan « entreprise » du dossier est attendu
 
-### 2 · Tests automatisés et plan de tests ⭐ CP 2, 3, 8, 9
-- [ ] **pytest** côté backend (les tests actuels sont des scripts lancés à la main, pas une suite)
-- [ ] **Vitest** côté frontend (absent de `package.json`)
-- [ ] Tests unitaires par couche : composants métier (CP3), composants d'accès aux données (CP8), composants d'interface (CP2)
-- [ ] **Plan de tests** : intégration, non-régression, système, sécurité, charge
-- [ ] **Environnement de tests** dédié (critère de performance de CP9)
-- [ ] **Jeu d'essai de la fonctionnalité la plus représentative** : entrée / attendu / obtenu + analyse des écarts
-- [ ] **Dossier de compte rendu de tests**
+### 2 · Tests automatisés et plan de tests ⭐ CP 2, 3, 8, 9 — 🔄 l'essentiel est fait
+**181 tests, tous au vert** (139 pytest, 42 Vitest), 95 % de couverture backend.
+Voir [`docs/plan-de-tests.md`](./docs/plan-de-tests.md), [`backend/tests/README.md`](./backend/tests/README.md), [`frontend/TESTS.md`](./frontend/TESTS.md).
+
+- [x] **pytest** côté backend : unitaires, intégration, sécurité
+- [x] **Vitest** côté frontend
+- [x] Tests unitaires par couche : métier (CP3), accès aux données (CP8), interface (CP2)
+- [x] **Plan de tests** complet : 7 niveaux, ~90 cas, traçabilité des 10 règles de gestion
+- [x] **Environnement de tests** hermétique : base en mémoire, aucun appel réseau
+- [x] **Jeu d'essai de la fonctionnalité la plus représentative** : 11 cas exécutés, 0 écart
+- [x] **Compte rendu d'exécution** : plan de tests §11
+- [ ] **Tests système** TS-01 à TS-10 — manuels, attendent la conteneurisation
+- [ ] **Tests d'acceptation** avec le formateur
+- [ ] **Tests de charge** — après Docker
+- [ ] Brancher les deux suites dans la CI (voir §5)
+
+Trouvé et corrigé pendant la campagne :
+- [x] `KAN-93` — `DELETE /documents/<id>` renvoyait un tuple à un élément : erreur 500 au lieu de 204
+- [x] Testabilité : `db.py` liait le moteur à un chemin en dur dès l'import. L'URL est désormais lue dans `HELPMEDRAFT_DB_URL` (débloque aussi `KAN-86` et `KAN-15`)
 
 ### 3 · Gestion de projet ⭐ CP 4 — 🔄 en grande partie fait
 Voir [`docs/gestion-de-projet.md`](./docs/gestion-de-projet.md), établi sur les données réelles du Jira `KAN`.
@@ -83,7 +95,7 @@ Hygiène du Jira, relevée au passage :
 - [ ] Stack composée : backend + frontend + BDD (+ Ollama)
 
 ### 5 · CI/CD et qualité de code CP 11
-- [ ] Aucun `.github/workflows/` → pipeline GitHub Actions : lint, `vue-tsc`, tests back, tests front, build
+- [ ] Aucun `.github/workflows/` → pipeline GitHub Actions : lint, `vue-tsc`, `pytest`, `npm test`, build — **les deux suites de tests sont prêtes à y être branchées**
 - [ ] **Outil de qualité de code** : Ruff côté Python, ESLint côté Vue
 - [ ] Savoir **interpréter les rapports de CI** (critère de performance)
 
@@ -131,9 +143,9 @@ Hygiène du Jira, relevée au passage :
 
 ## Priorité suggérée
 
-1. **Documents de conception** (§1) — le jury les lit avant tout, et ils couvrent trois compétences obligatoires.
-2. **Tests + plan de tests** (§2) — compétence obligatoire, et verrou pour la CI.
-3. **Gestion de projet** (§3) — peu de travail, compétence obligatoire quasi vide aujourd'hui.
-4. **Docker + CI/CD** (§4, §5) — rapides, nourrissent l'entretien technique sur CP1, 10, 11.
-5. **BDD, NoSQL, sécurité, accessibilité** (§6 à §9).
-6. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste.
+1. ~~Documents de conception (§1)~~ — ✅ fait
+2. ~~Gestion de projet (§3)~~ — ✅ fait, sauf les comptes rendus réels
+3. ~~Tests + plan de tests (§2)~~ — ✅ fait, sauf tests système et acceptation
+4. **Docker + CI/CD** (§4, §5) — prochaine étape : rapides, les suites de tests sont prêtes à être branchées, et ça nourrit CP1, CP10, CP11 à l'entretien technique
+5. **BDD, NoSQL, sécurité, accessibilité** (§6 à §9)
+6. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste

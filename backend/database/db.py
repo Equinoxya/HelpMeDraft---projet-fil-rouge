@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 from pathlib import Path
 from datetime import datetime
 import uuid
@@ -12,7 +13,17 @@ from sqlalchemy.orm import (
 from utilitaires import utc_now_naive
 
 DB_PATH = Path("HelpMeDraft.db")
-engine = create_engine(f'sqlite:///{DB_PATH}', echo=False)
+
+# L'URL de connexion est configurable par l'environnement, avec le fichier
+# SQLite local pour valeur par défaut : lancer l'application sans variable
+# d'environnement se comporte exactement comme avant.
+#   - tests        : HELPMEDRAFT_DB_URL=sqlite://            (base en mémoire)
+#   - conteneur    : HELPMEDRAFT_DB_URL=mysql+pymysql://...  (KAN-86, KAN-15)
+# Sans ce point de configuration, le moteur serait lié au fichier dès l'import
+# du module : aucun test ne pourrait viser une autre base sans contourner
+# l'application elle-même.
+DB_URL = os.getenv("HELPMEDRAFT_DB_URL", f"sqlite:///{DB_PATH}")
+engine = create_engine(DB_URL, echo=False)
 
 
 @event.listens_for(engine, "connect")

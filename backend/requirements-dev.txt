@@ -1,0 +1,10 @@
+# ==============================================================================
+# HelpMeDraft — dépendances de développement et de test (backend)
+# ------------------------------------------------------------------------------
+#   pip install -r requirements.txt -r requirements-dev.txt
+#   pytest                      depuis backend/
+#   pytest --cov=app --cov=database --cov-report=term-missing
+# ==============================================================================
+
+pytest==9.0.1
+pytest-cov==7.0.0
