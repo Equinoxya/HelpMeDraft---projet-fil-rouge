@@ -10,6 +10,7 @@ a lieu : voir `frontend/src/components/__tests__/markdown-sanitization.spec.ts`.
 Chaque test porte le marqueur `securite` : `pytest -m securite` rejoue la
 seule campagne de sécurité, qui est bloquante pour la livraison.
 """
+
 import subprocess
 import sys
 from pathlib import Path
@@ -27,6 +28,7 @@ BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
 # ── TSEC-06 · Injection SQL ──────────────────────────────────────────────────
+
 
 @pytest.mark.parametrize(
     "charge",
@@ -60,9 +62,8 @@ def test_tsec06b_une_charge_sql_en_parametre_d_url_ne_casse_rien(client, auth):
 
 # ── TSEC-07 · Aucun secret en clair en base ──────────────────────────────────
 
-def test_tsec07_la_base_ne_contient_aucun_jeton_ni_mot_de_passe_en_clair(
-    client, utilisateur
-):
+
+def test_tsec07_la_base_ne_contient_aucun_jeton_ni_mot_de_passe_en_clair(client, utilisateur):
     """
     RG-10 — une fuite de la base ne doit permettre ni de rejouer une session,
     ni de retrouver un mot de passe.
@@ -89,9 +90,8 @@ def test_tsec07_la_base_ne_contient_aucun_jeton_ni_mot_de_passe_en_clair(
 
 # ── TSEC-08 · Rejeu de session ───────────────────────────────────────────────
 
-def test_tsec08_un_jeton_de_rafraichissement_rejoue_invalide_la_session(
-    client, utilisateur
-):
+
+def test_tsec08_un_jeton_de_rafraichissement_rejoue_invalide_la_session(client, utilisateur):
     client.post("/auth/login", json={"email": "camille@exemple.fr", "mdp": MDP_VALIDE})
     ancien = client.get_cookie("refresh_token", path="/auth").value
     client.post("/auth/refresh")
@@ -104,6 +104,7 @@ def test_tsec08_un_jeton_de_rafraichissement_rejoue_invalide_la_session(
 
 
 # ── TSEC-09 · Échec sécurisé au démarrage ────────────────────────────────────
+
 
 def test_tsec09_l_application_refuse_de_demarrer_sans_cle_de_signature():
     """
@@ -128,6 +129,7 @@ def test_tsec09_l_application_refuse_de_demarrer_sans_cle_de_signature():
 
 # ── TSEC-10 · CSRF ───────────────────────────────────────────────────────────
 
+
 def test_tsec10_le_cookie_de_session_est_protege_contre_le_csrf(client, utilisateur):
     reponse = client.post("/auth/login", json={"email": "camille@exemple.fr", "mdp": MDP_VALIDE})
     entete = reponse.headers["Set-Cookie"]
@@ -148,6 +150,7 @@ def test_le_cookie_est_marque_secure_hors_developpement(app, client, utilisateur
 
 
 # ── TSEC-11 · Accès horizontal ───────────────────────────────────────────────
+
 
 def test_tsec11_aucune_ressource_d_autrui_n_est_accessible(
     client, auth, autre_utilisateur, creer_document, creer_dossier
@@ -182,9 +185,8 @@ def test_tsec11_aucune_ressource_d_autrui_n_est_accessible(
 
 # ── TSEC-12 · Escalade de privilèges ─────────────────────────────────────────
 
-def test_tsec12_un_jeton_standard_ne_donne_pas_acces_au_back_office(
-    client, auth, administrateur
-):
+
+def test_tsec12_un_jeton_standard_ne_donne_pas_acces_au_back_office(client, auth, administrateur):
     for reponse in (
         client.get("/admin/users", headers=auth),
         client.get("/admin/stats", headers=auth),
@@ -207,6 +209,7 @@ def test_promouvoir_un_compte_ne_passe_pas_par_l_api_publique(client, auth, util
 
 # ── TSEC-13 · Intégrité référentielle ────────────────────────────────────────
 
+
 def test_tsec13_les_cles_etrangeres_sont_appliquees_par_le_sgbd():
     """
     SQLite n'applique pas les contraintes de clé étrangère par défaut : sans
@@ -219,6 +222,7 @@ def test_tsec13_les_cles_etrangeres_sont_appliquees_par_le_sgbd():
 
 
 # ── TSEC-14 · Limitation de débit (KAN-95) ───────────────────────────────────
+
 
 def test_tsec14_le_rafraichissement_est_limite_en_debit(app, client, utilisateur):
     """
@@ -246,6 +250,7 @@ def test_tsec14_le_rafraichissement_est_limite_en_debit(app, client, utilisateur
 
 
 # ── TSEC-15 · Clé de session Flask ───────────────────────────────────────────
+
 
 def test_tsec15_l_application_refuse_de_demarrer_sans_cle_de_session():
     """

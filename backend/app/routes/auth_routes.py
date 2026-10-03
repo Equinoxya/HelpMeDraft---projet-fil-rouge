@@ -1,14 +1,27 @@
-from flask import Blueprint, jsonify, request, current_app
-from database.db import SessionLocal, User, UserSession, Consentement, PasswordReset
-from app.services.auth_service import hash_password, verify_password, generate_access_token, create_session, rotate_refresh_token, generate_reset_token, is_password_valid, hash_reset_token, is_reset_token_expired, hash_refresh_token
-from app.services.email_service import send_reset_password_email
-from sqlalchemy import select
-from functools import wraps
-from datetime import timedelta
 import os
-from app.services.auth_service import decode_access_token
+from datetime import timedelta
+from functools import wraps
+
+from flask import Blueprint, current_app, jsonify, request
+from sqlalchemy import select
+
+from app.extension import limiter, mail
+from app.services.auth_service import (
+    create_session,
+    decode_access_token,
+    generate_access_token,
+    generate_reset_token,
+    hash_password,
+    hash_refresh_token,
+    hash_reset_token,
+    is_password_valid,
+    is_reset_token_expired,
+    rotate_refresh_token,
+    verify_password,
+)
+from app.services.email_service import send_reset_password_email
+from database.db import Consentement, PasswordReset, SessionLocal, User, UserSession
 from utilitaires import utc_now_naive
-from app.extension import mail, limiter
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -43,7 +56,8 @@ def set_refresh_cookie(response, refresh_token: str):
       seul — un formulaire tiers ne peut donc pas les appeler au nom du client.
     """
     response.set_cookie(
-        "refresh_token", refresh_token,
+        "refresh_token",
+        refresh_token,
         httponly=True,
         secure=current_app.config["COOKIE_SECURE"],
         samesite="Strict",
@@ -51,6 +65,7 @@ def set_refresh_cookie(response, refresh_token: str):
         path="/auth",
     )
     return response
+
 
 @auth_bp.route("/register", methods=["POST"])
 @limiter.limit("3 per hour")
@@ -66,9 +81,13 @@ def register():
 
     email = data["email"]
     plain_password = data["mdp"]
-    
+
     if not is_password_valid(plain_password):
-        return jsonify({"error": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre"}), 400
+        return jsonify(
+            {
+                "error": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre"
+            }
+        ), 400
 
     with SessionLocal() as db_session:
         stmt = select(User).where(User.email == email)
@@ -96,36 +115,48 @@ def register():
         db_session.commit()
         db_session.refresh(new_user)
 
-        return jsonify({
-            "message": "Utilisateur créé avec succès",
-            "user_id": new_user.user_id,
-            "email": new_user.email,
-        }), 201
-        
-@auth_bp.route("/login", methods= ["POST"])
+        return jsonify(
+            {
+                "message": "Utilisateur créé avec succès",
+                "user_id": new_user.user_id,
+                "email": new_user.email,
+            }
+        ), 201
+
+
+@auth_bp.route("/login", methods=["POST"])
 @limiter.limit("5 per minute")
 def login():
     data = request.get_json()
     if not data.get("email") or not data.get("mdp"):
-        return jsonify({"error" : "Email ou mot de passe requis"}), 400
+        return jsonify({"error": "Email ou mot de passe requis"}), 400
     email = data["email"]
     plain_password = data["mdp"]
-    
+
     with SessionLocal() as db_session:
-        stmt = select(User). where(User.email == email)
+        stmt = select(User).where(User.email == email)
         user = db_session.execute(stmt).scalar_one_or_none()
         if user is None or not verify_password(plain_password, user.mdp_hash):
-            return jsonify({"error" : "Email ou mot de passe incorrect"}), 401
+            return jsonify({"error": "Email ou mot de passe incorrect"}), 401
         access_token = generate_access_token(user.user_id)
         refresh_token = create_session(user.user_id)
-        
-        response = jsonify({
-        "access_token": access_token,
-        "user": {"id": user.user_id, "email": user.email, "firstname" : user.firstname, "lastname": user.lastname, "role": user.role}
-    })
+
+        response = jsonify(
+            {
+                "access_token": access_token,
+                "user": {
+                    "id": user.user_id,
+                    "email": user.email,
+                    "firstname": user.firstname,
+                    "lastname": user.lastname,
+                    "role": user.role,
+                },
+            }
+        )
         set_refresh_cookie(response, refresh_token)
         return response, 200
-        
+
+
 @auth_bp.route("/refresh", methods=["POST"])
 # Le jeton de rafraîchissement fait 64 octets tirés au hasard : le deviner par
 # force brute est hors de portée, cette limite ne protège donc pas le secret.
@@ -142,16 +173,17 @@ def refresh():
     try:
         user_id, new_refresh_token = rotate_refresh_token(token)
     except ValueError as e:
-        response = jsonify({'error': str(e)})
-        response.delete_cookie('refresh_token', path ='/auth')
+        response = jsonify({"error": str(e)})
+        response.delete_cookie("refresh_token", path="/auth")
         return response, 401
     new_access_token = generate_access_token(user_id)
-    
-    response= jsonify({'access_token' : new_access_token})
+
+    response = jsonify({"access_token": new_access_token})
     set_refresh_cookie(response, new_refresh_token)
     return response, 200
-        
-@auth_bp.route("/logout", methods=['POST'])
+
+
+@auth_bp.route("/logout", methods=["POST"])
 def logout():
     token = request.cookies.get("refresh_token")
     if not token:
@@ -170,6 +202,7 @@ def logout():
     response.delete_cookie("refresh_token", path="/auth")
     return response, 200
 
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -183,7 +216,9 @@ def token_required(f):
             return jsonify({"error": "Token invalide ou expiré"}), 401
         request.user_id = payload["sub"]  # adapte "sub" au nom réel de la claim dans ton JWT
         return f(*args, **kwargs)
+
     return decorated
+
 
 @auth_bp.route("/me", methods=["GET"])
 @token_required
@@ -193,15 +228,18 @@ def me():
         user = db_session.execute(stmt).scalar_one_or_none()
         if user is None:
             return jsonify({"error": "Utilisateur introuvable"}), 404
-        return jsonify({
-            "id": user.user_id,
-            "email": user.email,
-            "firstname": user.firstname,
-            "lastname": user.lastname,
-            "role": user.role
-        }), 200
+        return jsonify(
+            {
+                "id": user.user_id,
+                "email": user.email,
+                "firstname": user.firstname,
+                "lastname": user.lastname,
+                "role": user.role,
+            }
+        ), 200
 
-#==========================================RESET PASSWORD====================================================
+
+# ==========================================RESET PASSWORD====================================================
 @auth_bp.route("/forgot-password", methods=["POST"])
 @limiter.limit("3 per hour")
 def forgot_password():
@@ -229,10 +267,12 @@ def forgot_password():
 
             frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
             reset_link = f"{frontend_url}/reset-password?token={plain_token}"
-# adapte au chemin réel de ton objet Mail
+            # adapte au chemin réel de ton objet Mail
             send_reset_password_email(mail, user.email, user.firstname, reset_link)
 
-        return jsonify({"message": "Si cet email existe, un lien de réinitialisation a été envoyé"}), 200
+        return jsonify(
+            {"message": "Si cet email existe, un lien de réinitialisation a été envoyé"}
+        ), 200
 
 
 @auth_bp.route("/reset-password", methods=["POST"])
@@ -245,14 +285,22 @@ def reset_password():
         return jsonify({"error": "Token et nouveau mot de passe requis"}), 400
 
     if not is_password_valid(new_password):
-        return jsonify({"error": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre"}), 400
+        return jsonify(
+            {
+                "error": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre"
+            }
+        ), 400
 
     token_hash = hash_reset_token(token)
 
     with SessionLocal() as db_session:
         stmt = select(PasswordReset).where(
             PasswordReset.token_hash == token_hash,
-            PasswordReset.used == False,
+            # .is_(False) et non « not ... » : on construit ici une expression
+            # SQL, pas une condition Python. La correction que suggère Ruff
+            # (E712) évaluerait la véracité de l'objet colonne et produirait une
+            # requête fausse.
+            PasswordReset.used.is_(False),
         )
         reset_entry = db_session.execute(stmt).scalar_one_or_none()
 
@@ -268,9 +316,9 @@ def reset_password():
         reset_entry.used = True
         stmt_session = select(UserSession).where(UserSession.user_id == user.user_id)
         sessions = db_session.execute(stmt_session).scalars().all()
-        for session in sessions: 
+        for session in sessions:
             db_session.delete(session)
-        
+
         db_session.commit()
 
         return jsonify({"message": "Mot de passe réinitialisé avec succès"}), 200

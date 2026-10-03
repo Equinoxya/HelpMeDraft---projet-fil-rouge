@@ -1,8 +1,10 @@
 from datetime import timedelta
+
 from flask import Blueprint, jsonify, request
-from database.db import SessionLocal, User, Document, IA
-from sqlalchemy import select, func
+from sqlalchemy import func, select
+
 from app.routes.auth_routes import token_required
+from database.db import IA, Document, SessionLocal, User
 from utilitaires import utc_now_naive
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -52,19 +54,38 @@ def _validate_update_payload(data: dict):
     if "role" in data:
         role = data.get("role")
         if role not in ALLOWED_ROLES:
-            return None, (jsonify({"error": f"Le rôle doit être l'un de : {', '.join(sorted(ALLOWED_ROLES))}"}), 400)
+            return None, (
+                jsonify(
+                    {"error": f"Le rôle doit être l'un de : {', '.join(sorted(ALLOWED_ROLES))}"}
+                ),
+                400,
+            )
         fields["role"] = role
 
     if "quota_daily_limit" in data:
         quota = data.get("quota_daily_limit")
         # isinstance(quota, bool) exclu explicitement : en Python, bool est une
         # sous-classe de int, donc `True`/`False` passeraient sinon la validation.
-        if not isinstance(quota, int) or isinstance(quota, bool) or not (MIN_QUOTA <= quota <= MAX_QUOTA):
-            return None, (jsonify({"error": f"quota_daily_limit doit être un entier entre {MIN_QUOTA} et {MAX_QUOTA}"}), 400)
+        if (
+            not isinstance(quota, int)
+            or isinstance(quota, bool)
+            or not (MIN_QUOTA <= quota <= MAX_QUOTA)
+        ):
+            return None, (
+                jsonify(
+                    {
+                        "error": f"quota_daily_limit doit être un entier entre {MIN_QUOTA} et {MAX_QUOTA}"
+                    }
+                ),
+                400,
+            )
         fields["quota_daily_limit"] = quota
 
     if not fields:
-        return None, (jsonify({"error": "Aucun champ valide à mettre à jour (role, quota_daily_limit)"}), 400)
+        return None, (
+            jsonify({"error": "Aucun champ valide à mettre à jour (role, quota_daily_limit)"}),
+            400,
+        )
 
     return fields, None
 
@@ -108,12 +129,16 @@ def list_users():
         )
         rows = db_session.execute(stmt).all()
 
-        return jsonify({
-            "items": [_serialize_admin_user(user, nb_docs, nb_ia) for user, nb_docs, nb_ia in rows],
-            "page": page,
-            "per_page": per_page,
-            "total": total,
-        }), 200
+        return jsonify(
+            {
+                "items": [
+                    _serialize_admin_user(user, nb_docs, nb_ia) for user, nb_docs, nb_ia in rows
+                ],
+                "page": page,
+                "per_page": per_page,
+                "total": total,
+            }
+        ), 200
 
 
 @admin_bp.route("/users/<user_id>", methods=["PATCH"])
@@ -128,7 +153,9 @@ def update_user(user_id):
     # par erreur (ou via un appel API direct), ce qui pourrait bloquer l'accès
     # au back-office si c'est le seul admin.
     if "role" in fields and fields["role"] != "admin" and user_id == request.user_id:
-        return jsonify({"error": "Vous ne pouvez pas retirer vos propres droits administrateur"}), 400
+        return jsonify(
+            {"error": "Vous ne pouvez pas retirer vos propres droits administrateur"}
+        ), 400
 
     with SessionLocal() as db_session:
         stmt = select(User).where(User.user_id == user_id)
@@ -174,7 +201,9 @@ def delete_user(user_id):
 def global_stats():
     with SessionLocal() as db_session:
         total_users = db_session.execute(select(func.count()).select_from(User)).scalar_one()
-        total_documents = db_session.execute(select(func.count()).select_from(Document)).scalar_one()
+        total_documents = db_session.execute(
+            select(func.count()).select_from(Document)
+        ).scalar_one()
 
         now = utc_now_naive()
         total_ia_calls_today = db_session.execute(
@@ -191,10 +220,12 @@ def global_stats():
         for status, count in status_rows:
             documents_by_status[status] = count
 
-        return jsonify({
-            "total_users": total_users,
-            "total_documents": total_documents,
-            "total_ia_calls_today": total_ia_calls_today,
-            "total_ia_calls_7j": total_ia_calls_7j,
-            "documents_by_status": documents_by_status,
-        }), 200
+        return jsonify(
+            {
+                "total_users": total_users,
+                "total_documents": total_documents,
+                "total_ia_calls_today": total_ia_calls_today,
+                "total_ia_calls_7j": total_ia_calls_7j,
+                "documents_by_status": documents_by_status,
+            }
+        ), 200

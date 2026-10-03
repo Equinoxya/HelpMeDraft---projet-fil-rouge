@@ -9,6 +9,7 @@ Couvre les branches que les tests de routes n'atteignent pas : expiration des
 jetons, révocation en cascade, et `verify_refresh_token`, qui n'est appelée
 par aucune route aujourd'hui.
 """
+
 from datetime import timedelta
 
 import pytest
@@ -34,15 +35,14 @@ def _perimer(jeton):
     """Antidate l'expiration d'une session pour tester la branche d'expiration."""
     with SessionLocal() as session:
         ligne = session.execute(
-            select(UserSession).where(
-                UserSession.refresh_token_hash == hash_refresh_token(jeton)
-            )
+            select(UserSession).where(UserSession.refresh_token_hash == hash_refresh_token(jeton))
         ).scalar_one()
         ligne.refresh_token_exp = utc_now_naive() - timedelta(seconds=1)
         session.commit()
 
 
 # ── Création ─────────────────────────────────────────────────────────────────
+
 
 def test_create_session_enregistre_l_empreinte_et_non_le_jeton(utilisateur):
     jeton = create_session(utilisateur)
@@ -59,6 +59,7 @@ def test_create_session_enregistre_l_empreinte_et_non_le_jeton(utilisateur):
 
 
 # ── Vérification ─────────────────────────────────────────────────────────────
+
 
 def test_verify_refresh_token_rend_le_proprietaire(utilisateur):
     jeton = create_session(utilisateur)
@@ -85,6 +86,7 @@ def test_verify_refresh_token_refuse_et_purge_un_jeton_expire(utilisateur):
 
 # ── Rotation ─────────────────────────────────────────────────────────────────
 
+
 def test_rotate_refresh_token_marque_l_ancienne_session_et_en_cree_une_nouvelle(
     utilisateur,
 ):
@@ -96,7 +98,7 @@ def test_rotate_refresh_token_marque_l_ancienne_session_et_en_cree_une_nouvelle(
 
     with SessionLocal() as session:
         lignes = session.execute(select(UserSession)).scalars().all()
-    etats = {l.refresh_token_hash: l.revoke for l in lignes}
+    etats = {ligne.refresh_token_hash: ligne.revoke for ligne in lignes}
     assert etats[hash_refresh_token(ancien)] is True, "l'ancienne session doit être marquée"
     assert etats[hash_refresh_token(nouveau)] is False
 
@@ -124,8 +126,8 @@ def test_rejouer_un_jeton_revoque_coupe_toutes_les_sessions(utilisateur):
     nouvelle authentification.
     """
     premier = create_session(utilisateur)
-    create_session(utilisateur)              # seconde session, autre appareil
-    rotate_refresh_token(premier)            # le premier est désormais révoqué
+    create_session(utilisateur)  # seconde session, autre appareil
+    rotate_refresh_token(premier)  # le premier est désormais révoqué
 
     with pytest.raises(ValueError, match="Réutilisation détectée"):
         rotate_refresh_token(premier)
@@ -136,9 +138,7 @@ def test_rejouer_un_jeton_revoque_coupe_toutes_les_sessions(utilisateur):
         )
 
 
-def test_revoke_all_user_sessions_ne_touche_pas_les_autres_comptes(
-    utilisateur, autre_utilisateur
-):
+def test_revoke_all_user_sessions_ne_touche_pas_les_autres_comptes(utilisateur, autre_utilisateur):
     create_session(utilisateur)
     create_session(autre_utilisateur)
 
@@ -148,10 +148,11 @@ def test_revoke_all_user_sessions_ne_touche_pas_les_autres_comptes(
 
     with SessionLocal() as session:
         restantes = session.execute(select(UserSession)).scalars().all()
-    assert [l.user_id for l in restantes] == [autre_utilisateur]
+    assert [ligne.user_id for ligne in restantes] == [autre_utilisateur]
 
 
 # ── Jetons de réinitialisation ───────────────────────────────────────────────
+
 
 def test_generate_reset_token_rend_un_couple_clair_empreinte():
     clair, empreinte = generate_reset_token()
@@ -171,6 +172,7 @@ def test_is_reset_token_expired_distingue_passe_et_futur():
 
 # ── Purge des sessions (KAN-96) ──────────────────────────────────────────────
 
+
 def test_purge_supprime_les_sessions_expirees(utilisateur):
     vivante = create_session(utilisateur)
     morte = create_session(utilisateur)
@@ -180,7 +182,7 @@ def test_purge_supprime_les_sessions_expirees(utilisateur):
 
     with SessionLocal() as session:
         restantes = session.execute(select(UserSession)).scalars().all()
-    assert [l.refresh_token_hash for l in restantes] == [hash_refresh_token(vivante)]
+    assert [ligne.refresh_token_hash for ligne in restantes] == [hash_refresh_token(vivante)]
 
 
 def test_purge_conserve_une_session_revoquee_non_expiree(utilisateur):
@@ -192,7 +194,7 @@ def test_purge_conserve_une_session_revoquee_non_expiree(utilisateur):
     tomberait silencieusement.
     """
     ancien = create_session(utilisateur)
-    rotate_refresh_token(ancien)             # l'ancienne session passe à revoke=True
+    rotate_refresh_token(ancien)  # l'ancienne session passe à revoke=True
 
     assert purge_expired_sessions() == 0
 
@@ -210,7 +212,7 @@ def test_purge_ciblee_ne_touche_pas_les_autres_comptes(utilisateur, autre_utilis
 
     with SessionLocal() as session:
         restantes = session.execute(select(UserSession)).scalars().all()
-    assert [l.user_id for l in restantes] == [autre_utilisateur]
+    assert [ligne.user_id for ligne in restantes] == [autre_utilisateur]
 
 
 def test_la_connexion_purge_les_sessions_mortes_du_compte(client, utilisateur):

@@ -5,12 +5,13 @@ Le fil conducteur est RG-01 : un utilisateur n'accède qu'à ses propres
 données. Chaque opération est donc testée deux fois — par son propriétaire,
 puis par un tiers.
 """
+
 from sqlalchemy import select
 
-from database.db import Consentement, Document, Dossier, IA, SessionLocal, User, UserSession
-
+from database.db import IA, Consentement, Document, Dossier, SessionLocal, User, UserSession
 
 # ── Création ─────────────────────────────────────────────────────────────────
+
 
 def test_ti20_creation_rattache_le_document_a_son_auteur(client, auth, utilisateur):
     reponse = client.post("/documents", json={"titre": "Note de service"}, headers=auth)
@@ -26,9 +27,7 @@ def test_ti20_creation_rattache_le_document_a_son_auteur(client, auth, utilisate
 
 def test_ti21_creation_refuse_un_statut_hors_liste_blanche(client, auth):
     """RG-05 — les statuts sont validés contre un ensemble fermé."""
-    reponse = client.post(
-        "/documents", json={"titre": "Note", "status": "archive"}, headers=auth
-    )
+    reponse = client.post("/documents", json={"titre": "Note", "status": "archive"}, headers=auth)
     assert reponse.status_code == 400
 
 
@@ -64,6 +63,7 @@ def test_creation_refuse_un_dossier_appartenant_a_autrui(
 
 
 # ── Lecture et cloisonnement ─────────────────────────────────────────────────
+
 
 def test_ti22_chacun_ne_voit_que_ses_documents(
     client, auth, auth_autre, utilisateur, autre_utilisateur, creer_document
@@ -109,6 +109,7 @@ def test_pagination_refuse_des_bornes_invalides(client, auth):
 
 # ── Modification ─────────────────────────────────────────────────────────────
 
+
 def test_modification_par_le_proprietaire(client, auth, utilisateur, creer_document):
     document = creer_document(utilisateur)
     reponse = client.put(
@@ -148,6 +149,7 @@ def test_modification_partielle_ne_touche_pas_les_autres_champs(
 
 # ── Suppression ──────────────────────────────────────────────────────────────
 
+
 def test_ti25_suppression_par_le_proprietaire(client, auth, utilisateur, creer_document):
     """
     Régression KAN-93 : la route renvoyait `return "",` — un tuple à un seul
@@ -174,6 +176,7 @@ def test_ti26_supprimer_le_document_d_autrui_ne_supprime_rien(
 
 # ── Statistiques ─────────────────────────────────────────────────────────────
 
+
 def test_ti30_les_statistiques_comptent_par_statut(client, auth, utilisateur, creer_document):
     creer_document(utilisateur, titre="A", status="brouillon")
     creer_document(utilisateur, titre="B", status="brouillon")
@@ -193,6 +196,7 @@ def test_les_statistiques_ignorent_les_documents_d_autrui(
 
 
 # ── Dossiers ─────────────────────────────────────────────────────────────────
+
 
 def test_ti27_creation_de_dossier(client, auth, utilisateur):
     reponse = client.post("/dossiers", json={"name": "Contrats"}, headers=auth)
@@ -238,14 +242,13 @@ def test_ti28_supprimer_un_dossier_declasse_ses_documents_sans_les_detruire(
             assert document.id_dossier is None, "il doit être déclassé"
 
 
-def test_supprimer_le_dossier_d_autrui_rend_404(
-    client, auth, autre_utilisateur, creer_dossier
-):
+def test_supprimer_le_dossier_d_autrui_rend_404(client, auth, autre_utilisateur, creer_dossier):
     dossier_tiers = creer_dossier(autre_utilisateur)
     assert client.delete(f"/dossiers/{dossier_tiers}", headers=auth).status_code == 404
 
 
 # ── Intégrité référentielle ──────────────────────────────────────────────────
+
 
 def test_ti29_supprimer_un_compte_efface_toutes_ses_donnees(
     client, utilisateur, creer_dossier, creer_document, creer_appels_ia

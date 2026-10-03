@@ -13,6 +13,7 @@ Importer l'application avant d'avoir posé ces variables ferait donc échouer la
 collecte des tests, ou pire, écrirait dans la vraie base HelpMeDraft.db du
 poste. D'où les `os.environ[...]` en tête de fichier, avant les imports.
 """
+
 import os
 import pathlib
 import sys
@@ -21,7 +22,7 @@ import sys
 BACKEND_ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_ROOT))
 
-os.environ["HELPMEDRAFT_DB_URL"] = "sqlite://"   # base en mémoire, jamais sur disque
+os.environ["HELPMEDRAFT_DB_URL"] = "sqlite://"  # base en mémoire, jamais sur disque
 os.environ["JWT_SECRET_KEY"] = "cle-jwt-de-test-sans-valeur-en-production"
 os.environ["SECRET_KEY"] = "cle-session-de-test-distincte-de-la-precedente"
 # APP_ENV pilote l'attribut Secure du cookie de refresh : hors développement,
@@ -40,10 +41,10 @@ from app import create_app  # noqa: E402
 from app.extension import limiter  # noqa: E402
 from app.services.auth_service import hash_password  # noqa: E402
 from database.db import (  # noqa: E402
+    IA,
     Base,
     Document,
     Dossier,
-    IA,
     SessionLocal,
     User,
     UserSession,
@@ -55,6 +56,7 @@ MDP_VALIDE = "MotDePasse1"
 
 
 # ── Isolation ────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture(autouse=True)
 def base_vierge():
@@ -72,6 +74,7 @@ def base_vierge():
 
 
 # ── Application ──────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def app():
@@ -110,6 +113,7 @@ def client(app):
 
 
 # ── Jeux de données ──────────────────────────────────────────────────────────
+
 
 def _creer_utilisateur(email, role="user", mdp=MDP_VALIDE, quota=20):
     with SessionLocal() as session:
@@ -178,19 +182,25 @@ def auth_admin(client, administrateur):
 
 # ── Fabriques de contenu ─────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def creer_document():
-    def _creer(user_id, titre="Note de service", contenu="Bonjour.", id_dossier=None,
-               status="brouillon"):
+    def _creer(
+        user_id, titre="Note de service", contenu="Bonjour.", id_dossier=None, status="brouillon"
+    ):
         with SessionLocal() as session:
             document = Document(
-                titre=titre, content=contenu, status=status,
-                id_dossier=id_dossier, user_id=user_id,
+                titre=titre,
+                content=contenu,
+                status=status,
+                id_dossier=id_dossier,
+                user_id=user_id,
             )
             session.add(document)
             session.commit()
             session.refresh(document)
             return document.id_document
+
     return _creer
 
 
@@ -203,6 +213,7 @@ def creer_dossier():
             session.commit()
             session.refresh(dossier)
             return dossier.id_dossier
+
     return _creer
 
 
@@ -215,17 +226,24 @@ def creer_appels_ia():
     20 appels réels au modèle, et ne permettrait pas de placer un appel
     au-delà de la fenêtre de 24 h pour vérifier qu'elle est bien glissante.
     """
+
     def _creer(user_id, id_document, nombre=1, heures_avant=0):
         instant = utc_now_naive() - timedelta(hours=heures_avant)
         with SessionLocal() as session:
             for _ in range(nombre):
-                session.add(IA(
-                    type_action="reformuler",
-                    content_before="avant", content_after="après",
-                    tokens_used=10, user_id=user_id, id_document=id_document,
-                    created_at=instant,
-                ))
+                session.add(
+                    IA(
+                        type_action="reformuler",
+                        content_before="avant",
+                        content_after="après",
+                        tokens_used=10,
+                        user_id=user_id,
+                        id_document=id_document,
+                        created_at=instant,
+                    )
+                )
             session.commit()
+
     return _creer
 
 
@@ -240,12 +258,15 @@ def ollama_double(monkeypatch):
     propre référence à la fonction. Remplacer l'original dans le service
     n'aurait aucun effet sur la référence déjà importée par la route.
     """
+
     def _poser(retour=("Texte reformulé.", 42), exception=None):
         def _faux_appel(prompt, *args, **kwargs):
             if exception is not None:
                 raise exception
             return retour
+
         monkeypatch.setattr("app.routes.ia_route.call_ollama", _faux_appel)
+
     return _poser
 
 
@@ -253,6 +274,7 @@ def ollama_double(monkeypatch):
 # Reprises telles quelles pour que tests/test_auth_routes.py,
 # tests/test_auth_service.py et tests/test_document_routes.py continuent de
 # fonctionner sans modification après la fusion des deux suites.
+
 
 @pytest.fixture
 def ctx(app):
@@ -282,8 +304,11 @@ def compte(client):
     """Crée un compte et renvoie ses identifiants de connexion."""
     reponse = client.post("/auth/register", json=COMPTE)
     assert reponse.status_code == 201, reponse.get_data(as_text=True)
-    return {"email": COMPTE["email"], "mdp": COMPTE["mdp"],
-            "user_id": reponse.get_json()["user_id"]}
+    return {
+        "email": COMPTE["email"],
+        "mdp": COMPTE["mdp"],
+        "user_id": reponse.get_json()["user_id"],
+    }
 
 
 @pytest.fixture
@@ -293,8 +318,7 @@ def connecte(client, compte):
     headers (Authorization), refresh (jeton en clair tel que le client le
     détient) et user_id.
     """
-    reponse = client.post("/auth/login",
-                          json={"email": compte["email"], "mdp": compte["mdp"]})
+    reponse = client.post("/auth/login", json={"email": compte["email"], "mdp": compte["mdp"]})
     assert reponse.status_code == 200, reponse.get_data(as_text=True)
     cookie = client.get_cookie("refresh_token", path="/auth")
     return {
@@ -313,8 +337,9 @@ def sessions_en_base():
     ce que la réponse HTTP annonce : c'est la seule façon de vérifier qu'on
     stocke une empreinte et non le jeton lui-même.
     """
+
     def lire():
         with SessionLocal() as db:
-            return [(s.refresh_token_hash, s.revoke)
-                    for s in db.query(UserSession).all()]
+            return [(s.refresh_token_hash, s.revoke) for s in db.query(UserSession).all()]
+
     return lire

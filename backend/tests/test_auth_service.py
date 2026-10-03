@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tests unitaires du composant métier le plus sensible : auth_service.
 Couvre TU-09 à TU-15 du § 9.3.3, plus la politique de mot de passe (§ 7.2.1)
@@ -7,6 +6,7 @@ et le hachage des refresh tokens (§ 7.2.2).
 Ces tests n'ouvrent aucune route : ils exercent directement les fonctions, ce
 que permet la séparation en couches du § 5.2.2.
 """
+
 import datetime
 import hashlib
 
@@ -51,15 +51,18 @@ def test_le_hachage_ne_contient_jamais_le_mot_de_passe():
     assert MDP not in hash_password(MDP)
 
 
-@pytest.mark.parametrize("mdp,attendu", [
-    ("MotDePasse1", True),     # 8+ car., majuscule, minuscule, chiffre
-    ("Mdp1", False),           # trop court
-    ("motdepasse1", False),    # pas de majuscule
-    ("MOTDEPASSE1", False),    # pas de minuscule
-    ("MotDePasse", False),     # pas de chiffre
-    ("Aa1aaaaa", True),        # exactement 8 caractères : borne acceptée
-    ("Aa1aaaa", False),        # 7 caractères : borne refusée
-])
+@pytest.mark.parametrize(
+    "mdp,attendu",
+    [
+        ("MotDePasse1", True),  # 8+ car., majuscule, minuscule, chiffre
+        ("Mdp1", False),  # trop court
+        ("motdepasse1", False),  # pas de majuscule
+        ("MOTDEPASSE1", False),  # pas de minuscule
+        ("MotDePasse", False),  # pas de chiffre
+        ("Aa1aaaaa", True),  # exactement 8 caractères : borne acceptée
+        ("Aa1aaaa", False),  # 7 caractères : borne refusée
+    ],
+)
 def test_politique_de_mot_de_passe(mdp, attendu):
     """La politique n'exige pas de caractère spécial : choix assumé (§ 7.2.1).
 
@@ -86,10 +89,11 @@ def test_tu13_access_token_expire_est_rejete(ctx):
     On forge le jeton avec la vraie clé et un `exp` dans le passé, plutôt que
     d'attendre 15 minutes.
     """
-    passe = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=1)
+    passe = datetime.datetime.now(datetime.UTC) - datetime.timedelta(minutes=1)
     token = jwt.encode(
         {"sub": "u-123", "iat": passe - datetime.timedelta(minutes=15), "exp": passe},
-        ctx.config["JWT_SECRET_KEY"], algorithm="HS256",
+        ctx.config["JWT_SECRET_KEY"],
+        algorithm="HS256",
     )
     with pytest.raises(ValueError):
         decode_access_token(token)
@@ -98,11 +102,11 @@ def test_tu13_access_token_expire_est_rejete(ctx):
 def test_tu14_jeton_signe_avec_une_autre_cle_est_rejete(ctx):
     """Sans cette propriété, la clé secrète ne servirait à rien : n'importe qui
     pourrait forger un jeton pour n'importe quel user_id (§ 6.3)."""
-    maintenant = datetime.datetime.now(datetime.timezone.utc)
+    maintenant = datetime.datetime.now(datetime.UTC)
     token = jwt.encode(
-        {"sub": "u-123", "iat": maintenant,
-         "exp": maintenant + datetime.timedelta(minutes=15)},
-        "une-autre-cle-que-celle-de-l-application", algorithm="HS256",
+        {"sub": "u-123", "iat": maintenant, "exp": maintenant + datetime.timedelta(minutes=15)},
+        "une-autre-cle-que-celle-de-l-application",
+        algorithm="HS256",
     )
     with pytest.raises(ValueError):
         decode_access_token(token)
@@ -118,11 +122,11 @@ def test_tu15_jeton_en_algorithme_none_est_rejete(ctx):
     retirait l'argument un jour, l'authentification tomberait entièrement et
     ce test serait le seul à le signaler.
     """
-    maintenant = datetime.datetime.now(datetime.timezone.utc)
+    maintenant = datetime.datetime.now(datetime.UTC)
     token = jwt.encode(
-        {"sub": "u-123", "iat": maintenant,
-         "exp": maintenant + datetime.timedelta(minutes=15)},
-        key="", algorithm="none",
+        {"sub": "u-123", "iat": maintenant, "exp": maintenant + datetime.timedelta(minutes=15)},
+        key="",
+        algorithm="none",
     )
     with pytest.raises(ValueError):
         decode_access_token(token)
@@ -136,8 +140,8 @@ def test_un_jeton_malforme_est_rejete(ctx):
 # ── Refresh tokens (§ 7.2.2) ─────────────────────────────────────────────────
 def test_les_refresh_tokens_sont_uniques_et_longs():
     jetons = {generate_refresh_token() for _ in range(50)}
-    assert len(jetons) == 50                      # aucun doublon
-    assert all(len(j) > 60 for j in jetons)       # 64 octets encodés en url-safe
+    assert len(jetons) == 50  # aucun doublon
+    assert all(len(j) > 60 for j in jetons)  # 64 octets encodés en url-safe
 
 
 def test_l_empreinte_du_refresh_token_est_un_sha256():

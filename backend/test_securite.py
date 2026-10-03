@@ -16,7 +16,12 @@ Exécution (depuis backend/, venv activé) :
 Il crée et détruit sa propre HelpMeDraft.db — ne pas lancer sur une base
 de dev contenant des données à conserver.
 """
-import os, sys, hashlib, subprocess, json, pathlib
+
+import hashlib
+import os
+import pathlib
+import subprocess
+import sys
 
 HERE = pathlib.Path(__file__).parent
 os.chdir(HERE)
@@ -24,7 +29,8 @@ os.chdir(HERE)
 # --- Test 3 : absence de JWT_SECRET_KEY => échec explicite au démarrage ------
 code = "import app.config"
 env = {k: v for k, v in os.environ.items() if k != "JWT_SECRET_KEY"}
-env["PATH"] = os.environ["PATH"]; env["DOTENV_DISABLED"] = "1"
+env["PATH"] = os.environ["PATH"]
+env["DOTENV_DISABLED"] = "1"
 r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=env, cwd=HERE)
 assert r.returncode != 0, "L'app a démarré sans JWT_SECRET_KEY !"
 assert "JWT_SECRET_KEY est absente" in r.stderr, r.stderr[-500:]
@@ -36,19 +42,23 @@ os.environ["APP_ENV"] = "development"
 for p in ("HelpMeDraft.db",):
     pathlib.Path(p).unlink(missing_ok=True)
 
+from sqlalchemy import select
+
 from app import create_app
 from database.db import SessionLocal, UserSession
-from sqlalchemy import select
 
 app = create_app()
 app.config["RATELIMIT_ENABLED"] = False
 c = app.test_client()
 print("[boot] OK  create_app() sans erreur")
 
-EMAIL = "equi@test.fr"; MDP = "Motdepasse1"
+EMAIL = "equi@test.fr"
+MDP = "Motdepasse1"
 
-r = c.post("/auth/register", json={"email": EMAIL, "mdp": MDP, "lastname": "B",
-                                   "firstname": "Equi", "rgpd_consent": True})
+r = c.post(
+    "/auth/register",
+    json={"email": EMAIL, "mdp": MDP, "lastname": "B", "firstname": "Equi", "rgpd_consent": True},
+)
 assert r.status_code == 201, (r.status_code, r.get_json())
 print("[parcours] OK  inscription 201")
 
@@ -76,7 +86,7 @@ with SessionLocal() as db:
 assert stored != plain_token, "le jeton est stocké en clair !"
 assert stored == hashlib.sha256(plain_token.encode()).hexdigest()
 assert len(stored) == 64
-print("[2] OK  base = empreinte SHA-256 (%s...), jeton en clair absent" % stored[:16])
+print(f"[2] OK  base = empreinte SHA-256 ({stored[:16]}...), jeton en clair absent")
 
 # --- refresh : rotation + rejeu détecté -------------------------------------
 r = c.post("/auth/refresh")
@@ -91,7 +101,9 @@ print("[2] OK  /auth/refresh : rotation avec nouvelle empreinte")
 c.set_cookie("refresh_token", plain_token, path="/auth")
 r = c.post("/auth/refresh")
 assert r.status_code == 401, r.status_code
-assert "utilisation" in r.get_json()["error"] or "Réutilisation" in r.get_json()["error"], r.get_json()
+assert "utilisation" in r.get_json()["error"] or "Réutilisation" in r.get_json()["error"], (
+    r.get_json()
+)
 with SessionLocal() as db:
     assert db.execute(select(UserSession)).scalars().all() == []
 print("[2] OK  rejeu d'un ancien jeton -> 401 + révocation de toutes les sessions")
@@ -113,11 +125,13 @@ print("[2] OK  /auth/logout supprime bien la session (recherche par empreinte)")
 
 # --- Test 5 : cascade côté SGBD ---------------------------------------------
 from sqlalchemy import text
+
 from database.db import engine
+
 with engine.connect() as conn:
     ddl = conn.execute(text("SELECT sql FROM sqlite_master WHERE name='user_session'")).scalar()
 assert "ON DELETE CASCADE" in ddl, ddl
-print("[5] OK  DDL généré :", [l.strip() for l in ddl.splitlines() if "CASCADE" in l])
+print("[5] OK  DDL généré :", [ligne.strip() for ligne in ddl.splitlines() if "CASCADE" in ligne])
 
 with engine.connect() as conn:
     conn.execute(text("PRAGMA foreign_keys=ON"))

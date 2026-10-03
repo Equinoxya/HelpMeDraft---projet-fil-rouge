@@ -1,7 +1,9 @@
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 class Config:
     # SÉCURITÉ : aucune valeur de repli. Une clé de secours en dur dans le code

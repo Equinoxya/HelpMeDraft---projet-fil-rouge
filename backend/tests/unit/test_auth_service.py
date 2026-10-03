@@ -5,6 +5,7 @@ Couvre les primitives sur lesquelles repose toute la sécurité des comptes :
 hachage des mots de passe, émission et vérification des jetons d'accès,
 empreinte des jetons de rafraîchissement.
 """
+
 import datetime
 
 import jwt
@@ -20,8 +21,8 @@ from app.services.auth_service import (
     verify_password,
 )
 
-
 # ── Mots de passe ────────────────────────────────────────────────────────────
+
 
 def test_tu01_hash_password_ne_renvoie_pas_le_clair():
     empreinte = hash_password("MotDePasse1")
@@ -66,6 +67,7 @@ def test_is_password_valid_refuse_les_mots_de_passe_faibles(mdp, raison):
 
 # ── Jetons d'accès ───────────────────────────────────────────────────────────
 
+
 def test_tu05_generate_access_token_produit_un_jwt_decodable(app):
     with app.app_context():
         jeton = generate_access_token("utilisateur-123")
@@ -75,7 +77,7 @@ def test_tu05_generate_access_token_produit_un_jwt_decodable(app):
 
 
 def test_tu06_decode_access_token_refuse_un_jeton_expire(app):
-    passe = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=1)
+    passe = datetime.datetime.now(datetime.UTC) - datetime.timedelta(minutes=1)
     with app.app_context():
         jeton_expire = jwt.encode(
             {"sub": "utilisateur-123", "exp": passe},
@@ -92,7 +94,7 @@ def test_tu07_decode_access_token_refuse_une_signature_etrangere(app):
     vérification, n'importe qui pourrait forger un jeton pour n'importe quel
     user_id et usurper une identité.
     """
-    futur = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)
+    futur = datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=15)
     jeton_etranger = jwt.encode(
         {"sub": "attaquant", "exp": futur}, "une-autre-cle", algorithm="HS256"
     )
@@ -108,6 +110,7 @@ def test_decode_access_token_refuse_un_jeton_malforme(app):
 
 
 # ── Jetons de rafraîchissement ───────────────────────────────────────────────
+
 
 def test_tu08_hash_refresh_token_est_un_sha256_deterministe():
     empreinte = hash_refresh_token("jeton-de-rafraichissement")

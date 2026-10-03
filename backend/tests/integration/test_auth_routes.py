@@ -3,6 +3,7 @@ Tests d'intégration des routes d'authentification — TI-01 à TI-14.
 
 Chaque test traverse la pile complète : HTTP → contrôleur → service → base.
 """
+
 from sqlalchemy import select
 
 from database.db import PasswordReset, SessionLocal, User, UserSession
@@ -19,6 +20,7 @@ INSCRIPTION = {
 
 # ── Inscription ──────────────────────────────────────────────────────────────
 
+
 def test_ti01_inscription_cree_le_compte_et_trace_le_consentement(client):
     reponse = client.post("/auth/register", json=INSCRIPTION)
     assert reponse.status_code == 201
@@ -27,7 +29,9 @@ def test_ti01_inscription_cree_le_compte_et_trace_le_consentement(client):
         utilisateur = session.execute(
             select(User).where(User.email == "nouveau@exemple.fr")
         ).scalar_one()
-        assert utilisateur.mdp_hash != MDP_VALIDE, "le mot de passe ne doit jamais être stocké en clair"
+        assert utilisateur.mdp_hash != MDP_VALIDE, (
+            "le mot de passe ne doit jamais être stocké en clair"
+        )
         assert utilisateur.role == "user", "le rôle par défaut ne doit pas être administrateur"
         assert len(utilisateur.consentements) == 1, "le consentement RGPD doit être tracé en base"
         assert utilisateur.consentements[0].accepte is True
@@ -38,9 +42,9 @@ def test_ti02_inscription_refuse_une_adresse_deja_prise(client, utilisateur):
     assert reponse.status_code == 409
 
     with SessionLocal() as session:
-        comptes = session.execute(
-            select(User).where(User.email == "camille@exemple.fr")
-        ).scalars().all()
+        comptes = (
+            session.execute(select(User).where(User.email == "camille@exemple.fr")).scalars().all()
+        )
     assert len(comptes) == 1, "aucun doublon ne doit être créé"
 
 
@@ -79,6 +83,7 @@ def test_inscription_refuse_un_mot_de_passe_faible(client):
 
 # ── Connexion ────────────────────────────────────────────────────────────────
 
+
 def test_ti04_connexion_valide_rend_un_jeton_et_ouvre_une_session(client, utilisateur):
     reponse = client.post("/auth/login", json={"email": "camille@exemple.fr", "mdp": MDP_VALIDE})
     assert reponse.status_code == 200
@@ -89,9 +94,11 @@ def test_ti04_connexion_valide_rend_un_jeton_et_ouvre_une_session(client, utilis
     assert "mdp_hash" not in corps["user"], "l'empreinte ne doit jamais sortir de l'API"
 
     with SessionLocal() as session:
-        sessions = session.execute(
-            select(UserSession).where(UserSession.user_id == utilisateur)
-        ).scalars().all()
+        sessions = (
+            session.execute(select(UserSession).where(UserSession.user_id == utilisateur))
+            .scalars()
+            .all()
+        )
     assert len(sessions) == 1
 
 
@@ -140,6 +147,7 @@ def test_le_jeton_de_rafraichissement_n_est_jamais_stocke_en_clair(client, utili
 
 # ── Rafraîchissement et rotation ─────────────────────────────────────────────
 
+
 def test_ti08_le_rafraichissement_tourne_le_jeton(client, utilisateur):
     client.post("/auth/login", json={"email": "camille@exemple.fr", "mdp": MDP_VALIDE})
     ancien = client.get_cookie("refresh_token", path="/auth").value
@@ -160,16 +168,18 @@ def test_ti09_un_jeton_rejoue_est_refuse(client, utilisateur):
     client.post("/auth/login", json={"email": "camille@exemple.fr", "mdp": MDP_VALIDE})
     ancien = client.get_cookie("refresh_token", path="/auth").value
 
-    client.post("/auth/refresh")                      # rotation : l'ancien devient invalide
+    client.post("/auth/refresh")  # rotation : l'ancien devient invalide
     client.set_cookie("refresh_token", ancien, path="/auth")
 
     reponse = client.post("/auth/refresh")
     assert reponse.status_code == 401
 
     with SessionLocal() as session:
-        restantes = session.execute(
-            select(UserSession).where(UserSession.user_id == utilisateur)
-        ).scalars().all()
+        restantes = (
+            session.execute(select(UserSession).where(UserSession.user_id == utilisateur))
+            .scalars()
+            .all()
+        )
     assert restantes == [], "la session doit être supprimée après détection d'un rejeu"
 
 
@@ -178,6 +188,7 @@ def test_ti10_le_rafraichissement_sans_cookie_est_refuse(client):
 
 
 # ── Déconnexion ──────────────────────────────────────────────────────────────
+
 
 def test_ti11_la_deconnexion_supprime_la_session(client, utilisateur):
     client.post("/auth/login", json={"email": "camille@exemple.fr", "mdp": MDP_VALIDE})
@@ -193,6 +204,7 @@ def test_la_deconnexion_sans_session_est_refusee(client):
 
 
 # ── Identité ─────────────────────────────────────────────────────────────────
+
 
 def test_ti12_me_sans_jeton_est_refuse(client):
     assert client.get("/auth/me").status_code == 401
@@ -213,6 +225,7 @@ def test_ti13_me_rend_l_identite_sans_l_empreinte(client, auth):
 
 
 # ── Réinitialisation de mot de passe ─────────────────────────────────────────
+
 
 def test_ti14_mot_de_passe_oublie_repond_pareil_pour_une_adresse_inconnue(client, utilisateur):
     connue = client.post("/auth/forgot-password", json={"email": "camille@exemple.fr"})

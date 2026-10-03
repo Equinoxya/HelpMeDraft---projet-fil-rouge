@@ -1,12 +1,15 @@
 from flask import Flask, jsonify
-from .config import Config
 from flask_cors import CORS
+
+from app.extension import limiter, mail
+
+from .config import Config
+from .routes.admin_route import admin_bp
 from .routes.auth_routes import auth_bp
 from .routes.document_route import document_bp
 from .routes.dossier_route import dossier_bp
 from .routes.ia_route import ia_bp
-from .routes.admin_route import admin_bp
-from app.extension import mail, limiter
+
 
 def create_app():
     app = Flask(__name__)
@@ -24,6 +27,6 @@ def create_app():
 
     @app.errorhandler(429)
     def ratelimit_handler(e):
-        return jsonify({"error" : "Trop de tentatives, réessayer plus tard"}), 429
+        return jsonify({"error": "Trop de tentatives, réessayer plus tard"}), 429
 
     return app

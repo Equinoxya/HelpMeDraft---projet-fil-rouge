@@ -5,6 +5,7 @@ Chacun était une valeur EN DUR qui marchait sur un poste de développement et
 cassait ailleurs, sans message d'erreur exploitable. Ces tests existent pour
 qu'on ne les y remette pas.
 """
+
 import importlib
 import os
 
@@ -14,6 +15,7 @@ import pytest
 def _recharger_config():
     """Recharge app.config, dont les valeurs sont lues à l'import du module."""
     import app.config
+
     return importlib.reload(app.config).Config
 
 
@@ -28,6 +30,7 @@ def config_propre():
 
 
 # ── Origines CORS ────────────────────────────────────────────────────────────
+
 
 def test_les_origines_cors_par_defaut_sont_celles_du_poste_de_dev(config_propre):
     """
