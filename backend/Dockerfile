@@ -17,10 +17,29 @@ WORKDIR /app
 # met en cache chaque étape, et le code change bien plus souvent que les
 # dépendances. Inverser les deux lignes relancerait un pip install complet à
 # chaque modification d'une route.
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.lock .
+# Trois protections contre une compromission de la chaîne d'approvisionnement,
+# signalées par SonarCloud (docker:S8541 et S8544) :
+#
+#   --require-hashes      chaque paquet doit correspondre à l'empreinte inscrite
+#                         dans le verrou. Un paquet altéré sur l'index est
+#                         refusé, au lieu d'être installé en silence.
+#   --only-binary :all:   n'installe que des roues précompilées. Une archive
+#                         source exécute son setup.py PENDANT l'installation,
+#                         c'est-à-dire du code arbitraire au moment du build.
+#   requirements.lock     verrouille aussi les dépendances TRANSITIVES, ce que
+#                         requirements.txt ne faisait pas (ticket KAN-102).
+RUN pip install --no-cache-dir --require-hashes --only-binary :all: \
+        -r requirements.lock
 
-COPY . .
+# Copie EXPLICITE, et non « COPY . . » (docker:S6470, critique). Une copie
+# récursive embarque tout ce qui traîne dans le contexte — un .env oublié, une
+# base locale, des clés — et le .dockerignore ne protège que de ce qu'on a
+# pensé à y écrire. Nommer ce qu'on veut est plus sûr que nommer ce qu'on
+# refuse.
+COPY app/ ./app/
+COPY database/ ./database/
+COPY run.py utilitaires.py ./
 
 # L'application ne tourne pas en root. Un conteneur compromis hérite sinon de
 # tous les droits sur son système de fichiers.

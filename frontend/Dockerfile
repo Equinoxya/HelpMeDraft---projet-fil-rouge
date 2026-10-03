@@ -17,7 +17,11 @@ WORKDIR /app
 # décrit package-lock.json, sans jamais le réécrire — c'est ce qui rend une
 # construction reproductible.
 COPY package.json package-lock.json ./
-RUN npm ci
+# --ignore-scripts : les scripts de cycle de vie npm (postinstall et consorts)
+# exécutent du code arbitraire au moment de l'installation. C'est une voie
+# d'attaque connue sur la chaîne d'approvisionnement, et SonarCloud la signale
+# (docker:S6505). Vérifié : la construction de ce projet n'en a pas besoin.
+RUN npm ci --ignore-scripts
 
 COPY . .
 
