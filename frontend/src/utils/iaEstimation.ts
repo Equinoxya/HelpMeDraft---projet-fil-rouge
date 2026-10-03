@@ -26,6 +26,19 @@ import type { IaTypeAction } from "../types/ia";
  * L'estimation est donc un ORDRE DE GRANDEUR affiché pour situer l'attente,
  * jamais une promesse. L'interface doit rester correcte quand elle est
  * dépassée — voir le compteur dans DocumentEditorView.vue.
+ *
+ * LIMITE CONNUE : LES MODÈLES À RAISONNEMENT
+ *
+ * Le calcul suppose que la longueur de la sortie suit celle de l'entrée. Un
+ * modèle à raisonnement (qwen3, deepseek-r1) viole cette hypothèse : il
+ * produit d'abord un bloc <think>...</think> de taille à peu près CONSTANTE,
+ * qui domine tout le reste sur un texte court. Corriger « BJR » demandait
+ * ainsi plusieurs minutes là où l'estimation annonçait cinq secondes.
+ *
+ * C'est pourquoi le backend désactive ce mode (OLLAMA_THINK, false par
+ * défaut). Si quelqu'un le réactive, l'estimation redeviendra fausse sur les
+ * textes courts — et le compteur basculera simplement sur « plus long que
+ * prévu », ce qui reste correct, mais peu informatif.
  */
 
 /**

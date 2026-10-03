@@ -9,6 +9,8 @@ Deux responsabilités testées séparément :
 
 Aucun appel réseau : `requests.post` est remplacé par un double.
 """
+import json
+
 import pytest
 import requests
 
@@ -55,14 +57,33 @@ def test_build_prompt_ignore_une_consigne_vide(consigne):
 # ── Appel au service d'inférence ─────────────────────────────────────────────
 
 class _ReponseFactice:
+    """
+    Double d'une réponse Ollama en flux NDJSON.
+
+    Ollama renvoie une ligne JSON par jeton, pas un objet unique : le double
+    doit donc imiter `iter_lines`, et non `json()`. Un dictionnaire passé seul
+    est traité comme un flux d'une seule ligne, ce qui garde lisibles les tests
+    qui ne s'intéressent pas au découpage.
+    """
+
     def __init__(self, charge):
-        self._charge = charge
+        blocs = charge if isinstance(charge, list) else [{**charge, "done": True}]
+        self._lignes = [
+            json.dumps(bloc).encode("utf-8") for bloc in blocs
+        ]
 
     def raise_for_status(self):
         return None
 
-    def json(self):
-        return self._charge
+    def iter_lines(self):
+        return iter(self._lignes)
+
+    # `call_ollama` ouvre la réponse avec `with` pour garantir sa fermeture.
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
 
 
 def test_tu14_call_ollama_renvoie_le_texte_et_la_somme_des_jetons(app, monkeypatch):
@@ -155,6 +176,239 @@ def test_call_ollama_borne_la_connexion_mais_pas_la_lecture(app, monkeypatch):
         "requests.post doit recevoir un couple (connexion bornée, lecture "
         f"illimitée), reçu : {appels.get('timeout')!r}"
     )
+
+
+# ── Lecture du flux NDJSON ───────────────────────────────────────────────────
+
+def test_call_ollama_recompose_le_texte_depuis_le_flux(app, monkeypatch):
+    """
+    Le cas qui cassait toute génération.
+
+    Avec `"stream": true`, Ollama renvoie une ligne JSON par jeton et non un
+    objet unique. Le code appelait `response.json()` dessus, qui échoue avec
+    « Extra data: line 2 column 1 » — et l'échec se produisait APRÈS le bloc
+    de traduction des erreurs, donc la route renvoyait un 500 opaque.
+
+    Les morceaux doivent être recollés dans l'ordre, sans séparateur ajouté.
+    """
+    flux = [
+        {"response": "Bonjour", "done": False},
+        {"response": ", je serai", "done": False},
+        {"response": " en retard.", "done": False},
+        {"response": "", "done": True, "prompt_eval_count": 30, "eval_count": 12},
+    ]
+    monkeypatch.setattr(
+        "app.services.ia_service.requests.post",
+        lambda *a, **k: _ReponseFactice(flux),
+    )
+    with app.app_context():
+        texte, jetons = call_ollama("un prompt")
+
+    assert texte == "Bonjour, je serai en retard."
+    assert jetons == 42, "les compteurs ne figurent que sur la ligne done: true"
+
+
+def test_call_ollama_demande_bien_un_flux(app, monkeypatch):
+    """
+    Les deux `stream` ne sont pas redondants : celui de la charge utile
+    demande à Ollama de diffuser, celui de `requests` l'empêche d'accumuler
+    tout le corps avant de nous le rendre. Sans le second, diffuser ne sert
+    à rien.
+    """
+    envoye = {}
+
+    def _capture(*a, **k):
+        envoye.update(k)
+        return _ReponseFactice({"response": "Texte."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        call_ollama("un prompt")
+
+    assert envoye["json"]["stream"] is True, "Ollama doit diffuser sa réponse"
+    assert envoye["stream"] is True, "requests ne doit pas tamponner le corps"
+
+
+def test_call_ollama_signale_une_erreur_survenue_pendant_le_flux(app, monkeypatch):
+    """
+    Une erreur peut arriver EN COURS de flux, après un statut 200 :
+    `raise_for_status()` ne la verra jamais. Sans ce traitement, la ligne
+    d'erreur serait silencieusement comptée comme du texte généré et
+    enregistrée dans le document de l'utilisateur.
+    """
+    flux = [
+        {"response": "Début", "done": False},
+        {"error": "model runner has unexpectedly stopped"},
+    ]
+    monkeypatch.setattr(
+        "app.services.ia_service.requests.post",
+        lambda *a, **k: _ReponseFactice(flux),
+    )
+    with app.app_context():
+        with pytest.raises(RuntimeError, match="model runner"):
+            call_ollama("un prompt")
+
+
+def test_call_ollama_refuse_un_flux_illisible(app, monkeypatch):
+    """
+    Un corps qui n'est pas du JSON ligne par ligne doit donner une
+    RuntimeError — donc un 502 explicite — et non une exception non
+    interprétée remontée en 500.
+    """
+    class _FluxCasse(_ReponseFactice):
+        def iter_lines(self):
+            return iter([b"<html>502 Bad Gateway</html>"])
+
+    monkeypatch.setattr(
+        "app.services.ia_service.requests.post",
+        lambda *a, **k: _FluxCasse({"response": ""}),
+    )
+    with app.app_context():
+        with pytest.raises(RuntimeError, match="illisible"):
+            call_ollama("un prompt")
+
+
+# ── Mode raisonnement ────────────────────────────────────────────────────────
+
+def test_call_ollama_desactive_le_mode_raisonnement(app, monkeypatch):
+    """
+    Le réglage qui rendait l'IA inutilisable sur processeur seul.
+
+    Un modèle à raisonnement produit un bloc <think>...</think> avant sa
+    réponse, de taille à peu près constante : il réfléchit autant pour
+    corriger « BJR » que pour reformuler trois pages. Mesuré sur qwen3:4b,
+    cela faisait plusieurs minutes d'attente pour corriger une phrase de
+    quarante caractères.
+
+    Le champ est de PREMIER niveau et non une option : c'est ce qu'attend
+    l'API d'Ollama.
+    """
+    envoye = {}
+
+    def _capture(*a, **k):
+        envoye.update(k.get("json", {}))
+        return _ReponseFactice({"response": "Texte."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        call_ollama("un prompt")
+
+    assert envoye.get("think") is False, (
+        "le mode raisonnement doit être désactivé : il coûte des minutes "
+        "d'attente pour une tâche de réécriture"
+    )
+    assert "think" not in envoye["options"], (
+        "think est un champ de premier niveau, pas une option d'inférence"
+    )
+
+
+def test_call_ollama_reessaie_sans_think_si_le_modele_ne_le_supporte_pas(
+    app, monkeypatch
+):
+    """
+    Ollama répond 400 « "<modèle>" does not support thinking » quand on passe
+    `think` à un modèle qui n'a pas de mode raisonnement. Le modèle venant de
+    la configuration, une machine peut tourner sur llama3.1 là où une autre
+    tourne sur qwen3 : les deux doivent marcher sans réglage.
+
+    L'utilisateur ne peut rien corriger lui-même ici, donc on refait l'appel
+    sans le champ au lieu de remonter une erreur.
+    """
+    appels = []
+
+    def _capture(*a, **k):
+        charge = k.get("json", {})
+        appels.append(charge)
+        if "think" in charge:
+            reponse = _ReponseEnErreur(
+                400, {"error": '"llama3.1" does not support thinking'}
+            )
+            raise requests.exceptions.HTTPError(response=reponse)
+        return _ReponseFactice({"response": "Texte généré."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        texte, _ = call_ollama("un prompt")
+
+    assert texte == "Texte généré.", "la génération doit aboutir malgré le refus"
+    assert len(appels) == 2, "il faut exactement un nouvel essai, pas une boucle"
+    assert "think" not in appels[1], "le second essai doit omettre le champ"
+
+
+def test_call_ollama_lit_le_detail_avant_de_liberer_la_connexion(app, monkeypatch):
+    """
+    Régression trouvée contre un vrai serveur HTTP, invisible pour un double.
+
+    La réponse est obtenue en flux et ouverte avec `with`. Si le corps n'est
+    lu qu'une fois sorti du bloc, la connexion est déjà libérée et le corps
+    devient illisible : le diagnostic d'Ollama (« model not found », « does
+    not support thinking ») est remplacé par un « 400 Client Error » muet.
+
+    Ce double refuse de livrer son corps après fermeture, ce qu'un double
+    ordinaire ne fait pas — c'est précisément ce qui avait laissé passer le
+    bug.
+    """
+    class _CorpsFermable(_ReponseEnErreur):
+        def __init__(self):
+            super().__init__(400, {"error": '"llama3.1" does not support thinking'})
+            self.ferme = False
+
+        def raise_for_status(self):
+            raise requests.exceptions.HTTPError("400 Client Error", response=self)
+
+        def json(self):
+            if self.ferme:
+                raise ValueError("corps déjà consommé : connexion libérée")
+            return self._charge
+
+        def iter_lines(self):
+            return iter([json.dumps({"response": "Texte.", "done": True}).encode()])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            self.ferme = True
+            return False
+
+    appels = []
+
+    def _capture(*a, **k):
+        appels.append(k.get("json", {}))
+        if "think" in k.get("json", {}):
+            return _CorpsFermable()
+        return _ReponseFactice({"response": "Texte."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        texte, _ = call_ollama("un prompt")
+
+    assert texte == "Texte.", (
+        "le refus de think doit être reconnu alors que le corps n'est lisible "
+        "qu'à l'intérieur du bloc with"
+    )
+    assert len(appels) == 2
+
+
+def test_call_ollama_ne_masque_pas_les_autres_erreurs_400(app, monkeypatch):
+    """
+    Le nouvel essai ne doit se déclencher que sur le refus de `think`. Un 400
+    pour une autre raison reste une erreur à remonter, sinon on la redemande
+    une seconde fois pour rien avant de la signaler.
+    """
+    appels = []
+
+    def _capture(*a, **k):
+        appels.append(k.get("json", {}))
+        reponse = _ReponseEnErreur(400, {"error": "invalid options: num_ctx"})
+        raise requests.exceptions.HTTPError(response=reponse)
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        with pytest.raises(RuntimeError, match="num_ctx"):
+            call_ollama("un prompt")
+
+    assert len(appels) == 1, "un 400 sans rapport avec think ne doit pas être rejoué"
 
 
 # ── Température par action ───────────────────────────────────────────────────

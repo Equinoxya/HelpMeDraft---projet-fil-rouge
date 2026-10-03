@@ -1,3 +1,5 @@
+import json
+
 import requests
 from flask import current_app
 
@@ -77,10 +79,17 @@ def _detail_ollama(response) -> str:
     return " ".join(str(detail).split())[:200]
 
 
-def _erreur_http(exception, model: str) -> str:
-    """Construit un message exploitable à partir d'une réponse HTTP en erreur."""
+def _erreur_http(exception, model: str, detail: str | None = None) -> str:
+    """
+    Construit un message exploitable à partir d'une réponse HTTP en erreur.
+
+    `detail` peut être fourni déjà lu. C'est indispensable sur une réponse
+    obtenue en flux : une fois la connexion libérée, le corps n'est plus
+    lisible, et le diagnostic d'Ollama serait perdu.
+    """
     response = getattr(exception, "response", None)
-    detail = _detail_ollama(response)
+    if detail is None:
+        detail = _detail_ollama(response)
     statut = getattr(response, "status_code", None)
 
     # 404 sur /api/generate ne veut pas dire « endpoint absent » mais « modèle
@@ -98,44 +107,136 @@ def _erreur_http(exception, model: str) -> str:
         return f"Erreur Ollama ({statut}) : {detail}"
     return f"Erreur Ollama: {exception}"
 
-
-def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int]:
+class _ThinkRefuse(Exception):
     """
-    Appelle l'API locale Ollama et retourne (texte_genere, tokens_utilises).
-    Lève RuntimeError si Ollama est injoignable ou renvoie une erreur,
-    pour que la route puisse la transformer proprement en réponse HTTP.
-
-    Le modèle, la fenêtre de contexte et le délai de connexion viennent de la
-    configuration : ils dépendent de la machine d'exécution, pas du code.
+    Ollama a rejeté le champ `think` parce que le modèle n'a pas de mode
+    raisonnement. Interne au module : convertie en nouvel essai, jamais
+    remontée à l'appelant.
     """
-    base_url = current_app.config["OLLAMA_URL"]
-    model = current_app.config["OLLAMA_MODEL"]
-    if temperature is None:
-        temperature = TEMPERATURE_PAR_DEFAUT
 
+
+def _charge_utile(
+    model: str,
+    prompt: str,
+    temperature: float,
+    num_ctx: int,
+    think: bool | None,
+) -> dict:
+    """Corps de la requête envoyée à /api/generate."""
+    charge = {
+        "model": model,
+        "prompt": prompt,
+        # Flux NDJSON : une ligne JSON par jeton, et non un seul objet en fin
+        # de génération. Voir _lire_flux pour la raison.
+        "stream": True,
+        "options": {
+            "temperature": temperature,
+            # Transmise explicitement : voir OLLAMA_NUM_CTX dans
+            # config.py — sans elle, Ollama tronque sans rien dire.
+            "num_ctx": num_ctx,
+        },
+    }
+    # Champ de PREMIER niveau, pas une option : c'est ce qu'attend l'API
+    # d'Ollama. Omis quand la configuration ne dit rien, pour ne pas imposer
+    # un champ que les versions anciennes d'Ollama ignorent.
+    if think is not None:
+        charge["think"] = think
+    return charge
+
+
+def _lire_flux(response) -> tuple[str, int]:
+    """
+    Reconstitue le texte complet à partir du flux NDJSON d'Ollama.
+
+    POURQUOI CETTE FONCTION EXISTE
+
+    Avec `"stream": true`, Ollama ne renvoie PAS un objet JSON mais une ligne
+    JSON par jeton généré :
+
+        {"response":"Bon","done":false}
+        {"response":"jour","done":false}
+        {"response":"","done":true,"prompt_eval_count":30,"eval_count":12}
+
+    `response.json()` échoue dessus — « Extra data: line 2 column 1 » — et
+    l'échec se produisait APRÈS le bloc de traduction des erreurs, donc la
+    route renvoyait un 500 opaque au lieu d'un 502 explicite. Toute génération
+    était cassée.
+
+    Les compteurs de jetons ne figurent que sur la dernière ligne, celle qui
+    porte `done: true` : c'est elle, et elle seule, qui les donne.
+    """
+    morceaux: list[str] = []
+    jetons = 0
+
+    for ligne in response.iter_lines():
+        if not ligne:
+            continue
+        try:
+            # json.loads accepte les octets et suppose UTF-8, ce qui est ce
+            # qu'Ollama envoie. On évite ainsi la question de l'encodage
+            # déclaré, qu'Ollama ne précise pas toujours.
+            bloc = json.loads(ligne)
+        except ValueError:
+            raise RuntimeError(
+                "Réponse illisible d'Ollama : le flux ne contient pas du JSON "
+                "ligne par ligne. Vérifiez la version d'Ollama."
+            )
+
+        # Une erreur peut arriver EN COURS de flux, après un statut 200 :
+        # raise_for_status() ne la verra jamais.
+        detail = bloc.get("error")
+        if detail:
+            raise RuntimeError(
+                f"Erreur Ollama pendant la génération : "
+                f"{' '.join(str(detail).split())[:200]}"
+            )
+
+        morceaux.append(bloc.get("response", ""))
+
+        if bloc.get("done"):
+            jetons = bloc.get("prompt_eval_count", 0) + bloc.get("eval_count", 0)
+
+    return "".join(morceaux).strip(), jetons
+
+
+def _appel(base_url: str, charge: dict, connect_timeout: int) -> tuple[str, int]:
+    """Un aller-retour avec Ollama, erreurs réseau traduites en RuntimeError."""
+    model = charge["model"]
     try:
-        response = requests.post(
+        # stream=True côté requests aussi : sans lui, la bibliothèque
+        # accumulerait tout le corps avant de nous le rendre, ce qui annulerait
+        # l'intérêt du flux.
+        with requests.post(
             f"{base_url}/api/generate",
-            json={
-                "model": model,
-                "prompt": prompt,
-                "stream": True,
-                "options": {
-                    "temperature": temperature,
-                    # Transmise explicitement : voir OLLAMA_NUM_CTX dans
-                    # config.py — sans elle, Ollama tronque sans rien dire.
-                    "num_ctx": current_app.config["OLLAMA_NUM_CTX"],
-                },
-            },
+            json=charge,
+            stream=True,
             # Couple (connexion, lecture). La lecture est volontairement
             # SANS limite : sur processeur seul, une reformulation de quelques
             # milliers de caractères dépasse la minute, et l'interrompre
             # affichait une erreur alors que la génération aboutissait. La
             # connexion, elle, garde un délai court pour qu'un Ollama non
             # lancé échoue tout de suite. Voir OLLAMA_CONNECT_TIMEOUT.
-            timeout=(current_app.config["OLLAMA_CONNECT_TIMEOUT"], None),
-        )
-        response.raise_for_status()
+            timeout=(connect_timeout, None),
+        ) as response:
+            try:
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                # Le corps est lu ICI, avant de quitter le bloc `with`.
+                #
+                # Avec stream=True, sortir du bloc libère la connexion et le
+                # corps devient illisible : _detail_ollama renvoyait alors une
+                # chaîne vide, et le diagnostic d'Ollama — « model not found »,
+                # « does not support thinking » — était perdu au profit d'un
+                # « 400 Client Error » sans information.
+                #
+                # Un test unitaire ne voyait pas le problème : son double de
+                # réponse répond toujours à json(). Il a fallu un vrai serveur
+                # HTTP pour le mettre en évidence.
+                detail = _detail_ollama(response)
+                if _est_think_refuse(e, detail):
+                    raise _ThinkRefuse()
+                raise RuntimeError(_erreur_http(e, model, detail))
+            return _lire_flux(response)
     except requests.exceptions.ConnectionError:
         # ConnectTimeout hérite de ConnectionError et tombe donc ici : un
         # délai de connexion dépassé veut dire la même chose qu'un refus de
@@ -154,10 +255,62 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
             "Vérifiez qu'il est lancé sur votre machine."
         )
     except requests.exceptions.HTTPError as e:
+        if _est_think_refuse(e):
+            raise _ThinkRefuse()
         raise RuntimeError(_erreur_http(e, model))
 
-    
-    data = response.json()
-    generated_text = data.get("response", "").strip()
-    tokens_used = data.get("prompt_eval_count", 0) + data.get("eval_count",0)
-    return generated_text, tokens_used
+
+def _est_think_refuse(exception, detail: str | None = None) -> bool:
+    """
+    Reconnaît le refus du champ `think` par Ollama.
+
+    Ollama répond 400 « "<modèle>" does not support thinking » quand on lui
+    passe `think` pour un modèle qui n'a pas de mode raisonnement. Le modèle
+    venant de la configuration, la machine qui exécute le projet peut très bien
+    tourner sur llama3.1 là où une autre tourne sur qwen3 : le code doit
+    accepter les deux sans réglage.
+    """
+    response = getattr(exception, "response", None)
+    if getattr(response, "status_code", None) != 400:
+        return False
+    if detail is None:
+        detail = _detail_ollama(response)
+    return "does not support thinking" in detail.lower()
+
+
+def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int]:
+    """
+    Appelle l'API locale Ollama et retourne (texte_genere, tokens_utilises).
+    Lève RuntimeError si Ollama est injoignable ou renvoie une erreur,
+    pour que la route puisse la transformer proprement en réponse HTTP.
+
+    Le modèle, la fenêtre de contexte, le délai de connexion et le mode
+    raisonnement viennent de la configuration : ils dépendent de la machine
+    d'exécution, pas du code.
+    """
+    base_url = current_app.config["OLLAMA_URL"]
+    model = current_app.config["OLLAMA_MODEL"]
+    num_ctx = current_app.config["OLLAMA_NUM_CTX"]
+    connect_timeout = current_app.config["OLLAMA_CONNECT_TIMEOUT"]
+    think = current_app.config["OLLAMA_THINK"]
+    if temperature is None:
+        temperature = TEMPERATURE_PAR_DEFAUT
+
+    charge = _charge_utile(model, prompt, temperature, num_ctx, think)
+    try:
+        return _appel(base_url, charge, connect_timeout)
+    except _ThinkRefuse:
+        # Le modèle n'a pas de mode raisonnement : il n'y a rien à désactiver.
+        # On refait l'appel sans le champ plutôt que de remonter une erreur
+        # que l'utilisateur ne peut pas corriger lui-même.
+        del charge["think"]
+        try:
+            return _appel(base_url, charge, connect_timeout)
+        except _ThinkRefuse:
+            # Ne devrait pas arriver : le champ a été retiré. Traduit quand
+            # même, pour qu'une exception interne au module ne puisse jamais
+            # remonter jusqu'à la route et s'y transformer en 500 opaque.
+            raise RuntimeError(
+                f"Ollama refuse le mode raisonnement pour « {model} » alors "
+                "que le champ n'est plus envoyé. Vérifiez la version d'Ollama."
+            )
