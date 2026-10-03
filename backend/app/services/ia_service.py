@@ -119,7 +119,7 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
             json={
                 "model": model,
                 "prompt": prompt,
-                "stream": False,
+                "stream": True,
                 "options": {
                     "temperature": temperature,
                     # Transmise explicitement : voir OLLAMA_NUM_CTX dans
