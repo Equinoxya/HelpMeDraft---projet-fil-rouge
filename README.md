@@ -113,7 +113,7 @@ Côté vitrine : pages publiques **Accueil**, **Fonctionnalités**, **Modèles**
 | 📝 Éditeur | CodeMirror 6 (`@codemirror/lang-markdown`) + `marked` + `DOMPurify` |
 | 🐍 Back-end | Python 3.11+ · Flask 3 · SQLAlchemy 2 |
 | 🗄️ Base de données | SQLite en développement (cible MySQL en production) |
-| 🤖 IA | **Ollama en local** (`qwen3:4b`) — aucune donnée envoyée à un service tiers |
+| 🤖 IA | **Ollama en local** (`qwen2.5:3b`) — aucune donnée envoyée à un service tiers |
 | 🔑 Authentification | JWT HS256 (access 15 min) + refresh token `httpOnly` haché, avec rotation |
 | ✉️ Emailing | Flask-Mail, sandbox Mailtrap en développement |
 
@@ -211,7 +211,7 @@ pnpm install
 ### 4 · Modèle IA
 
 ```bash
-ollama pull qwen3:4b
+ollama pull qwen2.5:3b
 ollama serve                   # écoute sur http://localhost:11434
 ```
 
@@ -249,7 +249,7 @@ Copier `.env.example` en `backend/.env`, puis renseigner :
 | `MAIL_DEFAULT_SENDER` | Expéditeur des emails | ✅ |
 | `MAIL_USE_TLS`, `MAIL_USE_SSL` | Chiffrement SMTP | ➖ (défauts fournis) |
 | `OLLAMA_URL` | URL du serveur Ollama | ➖ (`http://localhost:11434`) |
-| `OLLAMA_MODEL` | Modèle utilisé | ➖ (`qwen3:4b`) |
+| `OLLAMA_MODEL` | Modèle utilisé | ➖ (`qwen2.5:3b`) |
 | `OLLAMA_THINK` | Mode raisonnement du modèle. **À laisser à `false`** — voir l'avertissement ci-dessous | ➖ (`false`) |
 | `OLLAMA_NUM_CTX` | Fenêtre de contexte, en jetons | ➖ (`8192`) |
 | `OLLAMA_CONNECT_TIMEOUT` | Délai pour établir la connexion à Ollama, en secondes. Aucun délai ne borne la génération elle-même | ➖ (`10`) |
@@ -266,9 +266,18 @@ python -c "import secrets; print(secrets.token_urlsafe(64))"
 > `config.py` ne définit **aucune valeur de repli** pour `JWT_SECRET_KEY` : l'application refuse de démarrer sans elle. Le fichier `.env` est exclu par `.gitignore` et ne doit jamais être commité.
 
 > [!IMPORTANT]
-> **`OLLAMA_THINK` doit rester à `false`.** `qwen3` est un modèle à raisonnement : avec ce mode actif, il génère un bloc `<think>…</think>` avant sa réponse, de taille à peu près **constante**. Il « réfléchit » autant pour corriger `BJR` que pour reformuler trois pages — soit plusieurs minutes d'attente pour une phrase de quarante caractères sur une machine sans carte graphique. Ce mode n'apporte rien à des tâches de réécriture.
+> **Ne pas remplacer `OLLAMA_MODEL` par un modèle à raisonnement** (`qwen3`, `deepseek-r1`), même plus petit. Un tel modèle produit un monologue d'analyse avant de répondre, de taille à peu près **constante** : il « réfléchit » autant pour une faute d'orthographe que pour trois pages.
 >
-> **Ollama 0.9 minimum est requis** pour que ce réglage soit respecté. Vérifier avec `ollama --version` et mettre à jour si besoin. Avant la 0.9, le champ `think` de l'API n'existe pas : Ollama l'ignore **sans rien dire** et le modèle raisonne quand même. Le service envoie donc aussi la consigne `/no_think` dans le prompt, qui fonctionne sur toutes les versions, et retire le bloc de la réponse s'il arrive malgré tout — mais le temps de génération, lui, aura bien été payé.
+> Mesuré sur la même machine, pour corriger `BJR je serai en retar` :
+>
+> | Modèle | Jetons générés | Débit | Durée |
+> |---|---|---|---|
+> | `qwen3:4b` | 1 443 | 11,9 j/s | **2 min 01 s** |
+> | `qwen2.5:3b` | 9 | 38,5 j/s | **0,27 s** |
+>
+> Le facteur 440 ne vient pas du matériel mais du travail demandé. Et ce comportement **ne se désactive pas de façon fiable** : sur Ollama 0.35.1, ni `OLLAMA_THINK=false` ni la consigne `/no_think` (depuis retirée du projet, car recopiée dans la réponse) n'ont arrêté le monologue de `qwen3:4b`. Le seul levier qui fonctionne est le choix du modèle.
+>
+> `OLLAMA_THINK` reste donc à `false` et sans effet sur le modèle par défaut ; `_nettoyer_raisonnement` dans `ia_service.py` garde le filet de sécurité qui empêche un tel monologue d'être proposé pour insertion dans un document.
 
 ---
 

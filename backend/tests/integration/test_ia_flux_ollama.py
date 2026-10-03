@@ -229,11 +229,15 @@ def test_un_ollama_ancien_qui_ignore_think_ne_pollue_pas_le_resultat(app, ollama
     assert texte == "Bonjour, je serai en retard. Désolée."
     assert "<think>" not in texte and "</think>" not in texte
 
-    # La double protection doit bien être partie sur le réseau : le champ pour
-    # les Ollama récents, la consigne de prompt pour les anciens.
+    # Le champ `think` doit bien être parti sur le réseau. La consigne de
+    # prompt /no_think, elle, a été retirée du projet : mesurée inopérante sur
+    # Ollama 0.35.1, elle était recopiée dans la réponse au lieu de désactiver
+    # quoi que ce soit.
     corps = faux.corps_recus[0]
     assert corps["think"] is False
-    assert corps["prompt"].endswith("/no_think")
+    assert "/no_think" not in corps["prompt"], (
+        "la consigne ne doit plus être envoyée : elle ressortait dans le texte"
+    )
 
     assert jetons == 950, (
         "les jetons de raisonnement restent comptés au quota : ils ont bien "

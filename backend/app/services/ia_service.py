@@ -52,28 +52,17 @@ def build_prompt(type_action: str, contenu: str, instructions: str | None = None
         prompt += f"\n\nConsigne particulière à respecter: {instructions}"
     return prompt
 
-# Consigne de prompt qui désactive le raisonnement sur les modèles qwen3.
+# La consigne de prompt /no_think a été RETIRÉE, et c'est un constat de
+# mesure, pas un choix de style.
 #
-# POURQUOI DEUX MÉCANISMES PLUTÔT QU'UN
+# Elle est documentée par Qwen comme un interrupteur du mode raisonnement.
+# Testée sur Ollama 0.35.1 avec qwen3:4b, en tête de prompt comme en fin :
+# le modèle l'a lue comme du TEXTE, l'a commentée dans sa réflexion, puis
+# l'a recopiée dans sa réponse. Elle ne désactivait rien et polluait le
+# résultat rendu à l'utilisateur.
 #
-# Le champ `think` de l'API ne fonctionne qu'à partir d'Ollama 0.9. Avant,
-# c'est un champ inconnu : Ollama l'ignore SANS RIEN DIRE, le modèle raisonne
-# quand même, et le bloc <think>...</think> arrive mélangé au texte de la
-# réponse — c'est seulement depuis la 0.9 qu'il est renvoyé à part.
-#
-# Cette consigne, elle, voyage dans le prompt : elle marche sur toutes les
-# versions. Les deux sont donc envoyées ensemble, et _nettoyer_raisonnement
-# rattrape ce qui passerait malgré tout.
-DIRECTIVE_SANS_RAISONNEMENT = "/no_think"
-
-
-def _modele_qwen(model: str) -> bool:
-    """
-    La consigne /no_think est propre à qwen. Sur llama3.1 ou mistral, ce
-    serait du texte parasite au milieu du prompt, que le modèle pourrait
-    recopier dans sa réponse.
-    """
-    return "qwen" in model.lower()
+# Reste le champ `think` de l'API (voir _charge_utile), qui est le mécanisme
+# correct, et _nettoyer_raisonnement en filet de sécurité.
 
 
 def _nettoyer_raisonnement(texte: str) -> str:
@@ -345,11 +334,6 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
     think = current_app.config["OLLAMA_THINK"]
     if temperature is None:
         temperature = TEMPERATURE_PAR_DEFAUT
-
-    # La consigne de prompt double le champ `think` de l'API, qui ne marche
-    # qu'à partir d'Ollama 0.9 et est ignoré en silence avant.
-    if not think and _modele_qwen(model):
-        prompt = f"{DIRECTIVE_SANS_RAISONNEMENT}{prompt}\n\n"
 
     charge = _charge_utile(model, prompt, temperature, num_ctx, think)
     try:

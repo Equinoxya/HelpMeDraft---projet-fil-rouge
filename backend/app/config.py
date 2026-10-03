@@ -47,13 +47,36 @@ class Config:
     MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "False") == "True"
     OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 
-    # qwen3:4b plutôt qu'un modèle de 7 ou 8 milliards de paramètres : le projet
-    # doit tourner sur une machine sans carte graphique, où la vitesse est bornée
-    # par la bande passante mémoire — à chaque jeton généré, le processeur relit
-    # tous les poids. Un modèle deux fois plus petit est donc deux fois plus
-    # rapide, et qwen3 est nativement multilingue, ce qui compte pour une
-    # application de rédaction en français.
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:4b")
+    # qwen2.5:3b — et le critère de choix n'est PAS la taille, c'est l'absence
+    # de mode raisonnement.
+    #
+    # Le projet doit tourner sans carte graphique, où la vitesse est bornée par
+    # la bande passante mémoire : à chaque jeton généré, le processeur relit
+    # tous les poids. Un modèle plus petit est donc plus rapide. Mais ce facteur
+    # est secondaire devant le NOMBRE de jetons produits, et c'est là que qwen3
+    # a échoué.
+    #
+    # Mesuré sur la même machine, pour corriger « BJR je serai en retar » :
+    #
+    #              jetons générés   débit        durée
+    #   qwen3:4b         1 443      11,9 j/s    2 min 01 s
+    #   qwen2.5:3b           9      38,5 j/s       0,27 s
+    #
+    # qwen3 est un modèle à raisonnement : il produit un monologue d'analyse
+    # avant de répondre, de taille à peu près constante — il « réfléchit »
+    # autant pour une faute d'orthographe que pour trois pages. Ni le champ
+    # `think` de l'API ni la consigne /no_think ne l'ont arrêté sur Ollama
+    # 0.35.1. Le facteur 440 ci-dessus ne vient donc pas du matériel mais du
+    # travail demandé.
+    #
+    # qwen2.5 est la génération précédente de la même famille : nativement
+    # multilingue, ce qui compte pour une application de rédaction en français,
+    # et sans mode raisonnement à neutraliser.
+    #
+    # LEÇON À RETENIR AVANT DE CHANGER CETTE VALEUR : pour de la réécriture,
+    # un modèle à raisonnement est le mauvais outil, quelle que soit sa taille.
+    # Vérifier qu'un modèle candidat n'en a pas avant de le retenir.
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
 
     # Fenêtre de contexte. SANS CETTE VALEUR, Ollama applique un défaut de 4096
     # jetons en deçà de 24 Gio de mémoire vidéo, et tronque SILENCIEUSEMENT
