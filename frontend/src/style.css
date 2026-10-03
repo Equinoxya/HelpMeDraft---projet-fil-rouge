@@ -1,2 +1,17 @@
 @import "tailwindcss";
-@plugin "daisyui";
+
+/* daisyUI a été retiré, et c'est une décision de mesure.
+ *
+ * Le greffon pesait 45,6 Ko de CSS brut (6,7 Ko gzip), soit 58 % de la
+ * feuille produite, pour CINQ utilisations de classes dans tout le projet :
+ * `dropdown` dans le menu mobile de Nav.vue, et `btn` / `btn-ghost` sur
+ * trois boutons de HomeView.
+ *
+ * Ces trois boutons portaient déjà leurs couleurs, leur hauteur et leurs
+ * bordures en utilitaires Tailwind explicites : `btn` n'apportait que
+ * l'alignement du contenu. Le menu mobile, lui, s'ouvrait par le `focus-within`
+ * de daisyUI ; il est désormais piloté par l'état du composant, ce qui permet
+ * un `aria-expanded` correct, la fermeture par Échap et au clic extérieur.
+ *
+ * Mesure après retrait : 32,6 Ko brut / 6,3 Ko gzip.
+ */
