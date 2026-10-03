@@ -35,21 +35,30 @@ import type { IaTypeAction } from "../types/ia";
  * qui domine tout le reste sur un texte court. Corriger « BJR » demandait
  * ainsi plusieurs minutes là où l'estimation annonçait cinq secondes.
  *
- * C'est pourquoi le backend désactive ce mode (OLLAMA_THINK, false par
- * défaut). Si quelqu'un le réactive, l'estimation redeviendra fausse sur les
- * textes courts — et le compteur basculera simplement sur « plus long que
- * prévu », ce qui reste correct, mais peu informatif.
+ * C'est pourquoi le projet n'utilise PAS de modèle à raisonnement. Le réglage
+ * OLLAMA_THINK du backend ne suffisait pas : mesuré sur Ollama 0.35.1 avec
+ * qwen3:4b, ni ce champ ni la consigne /no_think n'arrêtaient le monologue.
+ * 1 443 jetons générés pour corriger une phrase de vingt caractères, là où
+ * qwen2.5:3b en produit 9.
+ *
+ * Si quelqu'un configure malgré tout un tel modèle, l'estimation sera fausse
+ * sur les textes courts — et le compteur basculera sur « plus long que
+ * prévu », ce qui reste correct mais peu informatif.
  */
 
 /**
  * Débit d'inférence de la machine, en jetons par seconde.
  *
- * Valeur par défaut : qwen3:4b sur processeur seul, la configuration la plus
- * lente sur laquelle le projet doit tourner. Une machine avec carte graphique
- * monte à 40 jetons/s et surchargera cette valeur via frontend/.env.
+ * Valeur par défaut : 30, choisie à partir d'une mesure de 38,5 jetons/s pour
+ * qwen2.5:3b sur une machine de développement courante sans carte graphique.
+ * On retient volontairement moins que le chiffre mesuré : une estimation un
+ * peu pessimiste se tient, une estimation trop optimiste est démentie à
+ * chaque appel.
+ *
+ * Se surcharge par machine via VITE_IA_JETONS_PAR_SECONDE dans frontend/.env.
  */
 export const JETONS_PAR_SECONDE = Number(
-  import.meta.env.VITE_IA_JETONS_PAR_SECONDE ?? 15,
+  import.meta.env.VITE_IA_JETONS_PAR_SECONDE ?? 30,
 );
 
 /** Environ 3,7 caractères par jeton en français. */

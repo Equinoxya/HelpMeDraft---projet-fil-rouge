@@ -14,11 +14,13 @@ MAIL_DEFAULT_SENDER=contact@helpmedraft.fr
 
 # ── IA locale (Ollama) ────────────────────────────────────────────────────────
 OLLAMA_URL=http://localhost:11434
-OLLAMA_MODEL=qwen3:4b
+OLLAMA_MODEL=qwen2.5:3b
 OLLAMA_NUM_CTX=8192
-# Mode raisonnement DÉSACTIVÉ. qwen3 génère sinon un bloc <think>...</think>
-# avant sa réponse, de taille à peu près constante : plusieurs minutes
-# d'attente pour corriger une phrase de quarante caractères.
+# Mode raisonnement désactivé. Sans effet sur qwen2.5, qui n'en a pas —
+# et c'est précisément pourquoi ce modèle a été retenu : sur qwen3:4b, ni ce
+# champ ni la consigne /no_think ne parvenaient à l'arrêter (mesuré sur
+# Ollama 0.35.1 : 1 443 jetons et 2 minutes pour corriger une phrase de
+# vingt caractères, contre 9 jetons et 0,27 s avec qwen2.5:3b).
 OLLAMA_THINK=false
 OLLAMA_CONNECT_TIMEOUT=10
 IA_MAX_CONTENU_LENGTH=3000

@@ -15,7 +15,6 @@ import pytest
 import requests
 
 from app.services.ia_service import (
-    DIRECTIVE_SANS_RAISONNEMENT,
     PROMPT_TEMPLATES,
     TEMPERATURE_PAR_DEFAUT,
     _nettoyer_raisonnement,
@@ -478,70 +477,16 @@ def test_call_ollama_ne_renvoie_jamais_le_raisonnement(app, monkeypatch):
     )
 
 
-# ── Consigne de prompt /no_think ─────────────────────────────────────────────
-
-def test_la_consigne_sans_raisonnement_est_ajoutee_pour_qwen(app, monkeypatch):
-    """
-    Le champ `think` de l'API ne marche qu'à partir d'Ollama 0.9, et avant il
-    est ignoré en silence. La consigne de prompt, elle, voyage dans le prompt
-    et marche sur toutes les versions : c'est la seule protection pour
-    quelqu'un qui n'a pas mis Ollama à jour.
-    """
-    envoye = {}
-
-    def _capture(*a, **k):
-        envoye.update(k.get("json", {}))
-        return _ReponseFactice({"response": "Texte."})
-
-    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
-    with app.app_context():
-        app.config["OLLAMA_MODEL"] = "qwen3:4b"
-        call_ollama("Reformule : bonjour")
-
-    assert envoye["prompt"].endswith(DIRECTIVE_SANS_RAISONNEMENT), (
-        "la consigne doit être en fin de prompt : qwen suit la plus récente"
-    )
-    assert "Reformule : bonjour" in envoye["prompt"], "le prompt reste intact"
-
-
-def test_la_consigne_n_est_pas_ajoutee_a_un_modele_non_qwen(app, monkeypatch):
-    """
-    /no_think est propre à qwen. Sur llama3.1 ou mistral, ce serait du texte
-    parasite dans le prompt, que le modèle pourrait recopier dans sa réponse.
-    """
-    envoye = {}
-
-    def _capture(*a, **k):
-        envoye.update(k.get("json", {}))
-        return _ReponseFactice({"response": "Texte."})
-
-    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
-    with app.app_context():
-        app.config["OLLAMA_MODEL"] = "llama3.1"
-        call_ollama("Reformule : bonjour")
-
-    assert DIRECTIVE_SANS_RAISONNEMENT not in envoye["prompt"]
-
-
-def test_la_consigne_disparait_si_le_raisonnement_est_demande(app, monkeypatch):
-    """
-    Cohérence : quelqu'un qui met OLLAMA_THINK=true pour comparer les deux
-    modes ne doit pas recevoir une consigne qui annule son réglage.
-    """
-    envoye = {}
-
-    def _capture(*a, **k):
-        envoye.update(k.get("json", {}))
-        return _ReponseFactice({"response": "Texte."})
-
-    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
-    with app.app_context():
-        app.config["OLLAMA_MODEL"] = "qwen3:4b"
-        app.config["OLLAMA_THINK"] = True
-        call_ollama("Reformule : bonjour")
-
-    assert DIRECTIVE_SANS_RAISONNEMENT not in envoye["prompt"]
-    assert envoye["think"] is True
+# ── Le mode raisonnement ne se désactive pas par le prompt ───────────────────
+#
+# Les trois tests de la consigne /no_think ont été supprimés avec elle.
+# Mesuré sur Ollama 0.35.1 avec qwen3:4b, en tête de prompt comme en fin : le
+# modèle lit la consigne comme du TEXTE, la commente dans sa réflexion, puis
+# la recopie dans sa réponse. Elle ne désactivait rien et polluait le résultat.
+#
+# Le projet a donc changé de modèle plutôt que de consigne — voir
+# OLLAMA_MODEL dans config.py. Un modèle sans mode raisonnement n'a rien à
+# désactiver.
 
 
 # ── Température par action ───────────────────────────────────────────────────
