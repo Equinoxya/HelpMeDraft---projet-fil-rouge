@@ -189,6 +189,12 @@ const iconMap: Record<string, string> = {
                 <div
                   class="w-10 h-10 border border-[#111111] bg-[#F4F1EA] flex-shrink-0 flex items-center justify-center"
                 >
+                  <!--
+                    iconMap est une constante LOCALE de ce fichier : des tracés SVG écrits
+                    en dur, jamais une saisie d'utilisateur. La règle reste active partout
+                    ailleurs, où v-html serait un vrai risque.
+                  -->
+                  <!-- eslint-disable vue/no-v-html -->
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -197,6 +203,7 @@ const iconMap: Record<string, string> = {
                     class="w-5 h-5 text-[#111111]"
                     v-html="iconMap[template.icon]"
                   ></svg>
+                  <!-- eslint-enable vue/no-v-html -->
                 </div>
                 <div>
                   <h3

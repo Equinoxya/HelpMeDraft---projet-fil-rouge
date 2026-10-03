@@ -21,7 +21,7 @@ async function handleSubmit() {
     await authService.forgotPassword(email.value.trim());
     // Message générique anti-énumération d'utilisateurs
     isSubmitted.value = true;
-  } catch (err: unknown) {
+  } catch {
     errorMessage.value = "Une erreur est survenue, réessayez plus tard";
   } finally {
     isLoading.value = false;

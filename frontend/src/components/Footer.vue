@@ -1,4 +1,9 @@
 <script setup lang="ts">
+// Nom explicite : « Nav » et « Footer » entrent en collision avec les
+// éléments HTML <nav> et <footer>. La convention Vue impose un nom composé,
+// ce que defineOptions permet sans renommer le fichier ni ses références.
+defineOptions({ name: "AppFooter" });
+
 import { RouterLink } from "vue-router";
 
 const currentYear = new Date().getFullYear();

@@ -383,6 +383,14 @@ defineExpose({ focus });
         v-if="showPreview"
         class="w-1/2 border-l border-[#111111] bg-[#FAF8F5] overflow-auto p-6"
       >
+        <!--
+          C'est LE v-html à risque du projet : previewHtml vient du texte de
+          l'utilisateur. Il est assaini par DOMPurify avant d'arriver ici, et
+          cette parade est couverte par 13 tests de non-régression
+          (markdown-sanitization.spec.ts). Toute modification de la chaîne de
+          rendu doit les faire passer avant d'être retenue.
+        -->
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <div class="prose max-w-none" v-html="previewHtml"></div>
       </div>
     </div>

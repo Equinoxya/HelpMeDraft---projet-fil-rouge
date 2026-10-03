@@ -13,6 +13,7 @@ import {
   avancementEstime,
 } from "../utils/iaEstimation";
 import MarkdownEditor from "../components/MarkdownEditor.vue";
+import { messageErreur, estAnnulation, estStatut } from "../utils/erreurs";
 
 // Type pour le ref de l'éditeur
 interface MarkdownEditorExposed {
@@ -194,15 +195,14 @@ async function handleGenerateIa() {
       iaAbort.signal,
     );
     iaResult.value = result.content_after;
-  } catch (err: any) {
+  } catch (err) {
     // Une annulation n'est pas une erreur : l'utilisateur sait ce qu'il a
     // fait, et lui afficher « L'assistant IA n'a pas pu répondre » le
     // laisserait croire à une panne.
-    if (err?.code === "ERR_CANCELED" || err?.name === "CanceledError") {
+    if (estAnnulation(err)) {
       iaError.value = "";
     } else {
-      iaError.value =
-        err.response?.data?.error ?? "L'assistant IA n'a pas pu répondre.";
+      iaError.value = messageErreur(err, "L'assistant IA n'a pas pu répondre.");
     }
   } finally {
     iaLoading.value = false;
@@ -245,8 +245,8 @@ async function loadDocument(id: string) {
     content.value = document.content ?? "";
     isLoading.value = false;
     return;
-  } catch (err: any) {
-    if (err.response?.status === 404) {
+  } catch (err) {
+    if (estStatut(err, 404)) {
       errorMessage.value = "Ce document est introuvable.";
     } else {
       errorMessage.value =
@@ -342,10 +342,11 @@ async function handleSave() {
     savedNoticeTimeout = setTimeout(() => {
       savedNotice.value = false;
     }, 2500);
-  } catch (err: any) {
-    errorMessage.value =
-      err.response?.data?.error ??
-      "Une erreur est survenue lors de l'enregistrement.";
+  } catch (err) {
+    errorMessage.value = messageErreur(
+      err,
+      "Une erreur est survenue lors de l'enregistrement.",
+    );
   } finally {
     isSaving.value = false;
   }
@@ -712,7 +713,7 @@ function handleCancel() {
             ref="markdownEditorRef"
             v-model="content"
             @input="handleEditorInput"
-            @openIaPanel="openIaPanel"
+            @open-ia-panel="openIaPanel"
           />
 
           <!-- BOUTONS EN BAS -->
