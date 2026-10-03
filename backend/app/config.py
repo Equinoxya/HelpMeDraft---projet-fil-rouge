@@ -18,6 +18,20 @@ class Config:
             'python -c "import secrets; print(secrets.token_urlsafe(64))"'
         )
 
+    # Clé de session Flask. Distincte de JWT_SECRET_KEY : réutiliser une même
+    # clé pour deux usages cryptographiques différents fait qu'une fuite sur
+    # l'un compromet l'autre (séparation des clés). Flask s'en sert pour signer
+    # les cookies de session et les messages flash. L'application n'en utilise
+    # aucun aujourd'hui, mais une clé absente ferait échouer silencieusement le
+    # premier usage ajouté — on la exige au démarrage, comme JWT_SECRET_KEY.
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    if not SECRET_KEY:
+        raise RuntimeError(
+            "SECRET_KEY est absente de l'environnement. "
+            "Copier .env.example en backend/.env puis générer une clé : "
+            'python -c "import secrets; print(secrets.token_urlsafe(64))"'
+        )
+
     # Environnement d'exécution : pilote l'attribut Secure du cookie de refresh.
     # En dev le front tourne en http://localhost, un cookie Secure ne serait
     # jamais envoyé ; hors dev, Secure est obligatoire sinon le jeton peut

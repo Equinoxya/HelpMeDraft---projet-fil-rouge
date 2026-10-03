@@ -31,7 +31,11 @@ CREATE TABLE `user` (
     PRIMARY KEY (user_id),
     UNIQUE KEY uq_user_email (email),
     CONSTRAINT ck_user_role  CHECK (role IN ('user','admin')),
-    CONSTRAINT ck_user_quota CHECK (quota_daily_limit BETWEEN 0 AND 1000)
+    -- Borne basse à 1 et non 0, alignée sur MIN_QUOTA de app/routes/admin_route.py.
+    -- Un quota de 0 serait un compte bridé sans que rien ne le dise : couper
+    -- l'accès à l'IA relève d'un champ explicite, pas de la valeur nulle d'un
+    -- compteur (KAN-98).
+    CONSTRAINT ck_user_quota CHECK (quota_daily_limit BETWEEN 1 AND 1000)
 ) ENGINE=InnoDB;
 
 -- ---------- Dossiers -------------------------------------------------------

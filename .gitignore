@@ -30,3 +30,10 @@ __pycache__/
 *.db
 
 .env
+
+# Tests et couverture
+.venv-test/
+.coverage
+coverage/
+htmlcov/
+.pytest_cache/
