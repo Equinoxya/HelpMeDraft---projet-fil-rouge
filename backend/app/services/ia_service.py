@@ -160,11 +160,17 @@ def _charge_utile(
     temperature: float,
     num_ctx: int,
     think: bool | None,
+    keep_alive: str,
 ) -> dict:
     """Corps de la requête envoyée à /api/generate."""
     charge = {
         "model": model,
         "prompt": prompt,
+        # Maintient le modèle en mémoire entre deux appels. Le défaut
+        # d'Ollama est de 5 minutes, trop court pour un usage par
+        # intermittence : le chargement domine complètement le temps de
+        # réponse. Voir OLLAMA_KEEP_ALIVE dans config.py.
+        "keep_alive": keep_alive,
         # Flux NDJSON : une ligne JSON par jeton, et non un seul objet en fin
         # de génération. Voir _lire_flux pour la raison.
         "stream": True,
@@ -332,10 +338,13 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
     num_ctx = current_app.config["OLLAMA_NUM_CTX"]
     connect_timeout = current_app.config["OLLAMA_CONNECT_TIMEOUT"]
     think = current_app.config["OLLAMA_THINK"]
+    keep_alive = current_app.config["OLLAMA_KEEP_ALIVE"]
     if temperature is None:
         temperature = TEMPERATURE_PAR_DEFAUT
 
-    charge = _charge_utile(model, prompt, temperature, num_ctx, think)
+    charge = _charge_utile(
+        model, prompt, temperature, num_ctx, think, keep_alive
+    )
     try:
         return _appel(base_url, charge, connect_timeout)
     except _ThinkRefuse:

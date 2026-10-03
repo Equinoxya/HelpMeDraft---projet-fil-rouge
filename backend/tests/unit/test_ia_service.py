@@ -545,8 +545,74 @@ def test_call_ollama_transmet_num_ctx(app, monkeypatch):
 
     assert "num_ctx" in envoye["options"], "num_ctx n'est pas transmis à Ollama"
     assert envoye["options"]["num_ctx"] == app.config["OLLAMA_NUM_CTX"]
-    assert envoye["options"]["num_ctx"] > 4096, (
-        "une fenêtre au défaut d'Ollama ne couvre pas la borne de contenu acceptée"
+
+def test_call_ollama_maintient_le_modele_en_memoire(app, monkeypatch):
+    """
+    Le chargement du modèle domine complètement le temps de réponse. Mesuré
+    sur une machine de développement, même modèle et même prompt :
+
+        appel à froid   427,66 s dont 426,9 s de chargement
+        appel à chaud     0,19 s dont     0 s de chargement
+
+    Le défaut d'Ollama décharge le modèle après 5 minutes, ce qui ne convient
+    pas à un usage par intermittence : entre deux corrections espacées d'un
+    quart d'heure, l'utilisateur repaie le chargement intégralement.
+
+    Le champ est de PREMIER niveau, pas une option d'inférence.
+    """
+    envoye = {}
+
+    def _capture(*a, **k):
+        envoye.update(k.get("json", {}))
+        return _ReponseFactice({"response": "Texte."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        call_ollama("un prompt")
+
+    assert envoye.get("keep_alive") == app.config["OLLAMA_KEEP_ALIVE"], (
+        "le modèle doit être maintenu en mémoire entre deux appels"
+    )
+    assert "keep_alive" not in envoye["options"], (
+        "keep_alive est un champ de premier niveau, pas une option d'inférence"
+    )
+
+
+def test_la_fenetre_de_contexte_est_dimensionnee_pas_genereuse(app):
+    """
+    La fenêtre doit être assez grande, et PAS PLUS. Les deux sens comptent.
+
+    Trop petite, Ollama tronque en silence. Trop grande, le cache d'attention
+    à allouer au chargement grossit, et sur une machine dont la RAM est juste
+    cela déclenche du va-et-vient disque. Mesuré sur une machine de
+    développement, même modèle et même prompt :
+
+        num_ctx=4096   chargement   20,5 s
+        num_ctx=8192   chargement  426,9 s
+
+    Sept minutes pour une génération de 0,2 seconde. Ce test a été ajouté
+    après ce constat, en remplacement d'une assertion « num_ctx > 4096 » qui
+    encodait précisément l'erreur : elle traitait une fenêtre généreuse comme
+    une précaution gratuite.
+    """
+    besoin = (
+        app.config["IA_MAX_CONTENU_LENGTH"] / CARACTERES_PAR_JETON  # entrée
+        + 70                                                        # gabarit
+        + app.config["IA_MAX_CONTENU_LENGTH"] / CARACTERES_PAR_JETON  # sortie
+    )
+    fenetre = app.config["OLLAMA_NUM_CTX"]
+
+    assert fenetre > besoin, (
+        f"OLLAMA_NUM_CTX={fenetre} ne loge pas les ~{besoin:.0f} jetons requis "
+        f"par IA_MAX_CONTENU_LENGTH={app.config['IA_MAX_CONTENU_LENGTH']} : "
+        "Ollama tronquerait en silence, par l'avant, donc les consignes avant "
+        "le texte"
+    )
+    assert fenetre < besoin * 4, (
+        f"OLLAMA_NUM_CTX={fenetre} dépasse de plus de 4 fois le besoin réel "
+        f"(~{besoin:.0f} jetons). Une fenêtre surdimensionnée n'est pas une "
+        "précaution gratuite : elle alourdit le chargement du modèle, qui "
+        "domine déjà le temps de réponse"
     )
 
 

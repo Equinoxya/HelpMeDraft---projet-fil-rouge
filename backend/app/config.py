@@ -78,14 +78,49 @@ class Config:
     # Vérifier qu'un modèle candidat n'en a pas avant de le retenir.
     OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
 
-    # Fenêtre de contexte. SANS CETTE VALEUR, Ollama applique un défaut de 4096
-    # jetons en deçà de 24 Gio de mémoire vidéo, et tronque SILENCIEUSEMENT
-    # au-delà : aucune erreur, rien dans la réponse. La coupe se fait par
-    # l'avant, donc ce sont les consignes du gabarit de prompt qui disparaissent
-    # en premier, pas le texte de l'utilisateur. Le modèle reçoit alors un
-    # document sans instruction, et répond n'importe quoi sans que rien ne le
-    # signale.
-    OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", 8192))
+    # Fenêtre de contexte, en jetons.
+    #
+    # TRANSMISE EXPLICITEMENT, parce que sans elle Ollama tronque
+    # SILENCIEUSEMENT les prompts trop longs : aucune erreur, rien dans la
+    # réponse. La coupe se fait par l'avant, donc ce sont les consignes du
+    # gabarit qui disparaissent en premier, pas le texte de l'utilisateur. Le
+    # modèle reçoit alors un document sans instruction et répond n'importe
+    # quoi, sans que rien ne le signale.
+    #
+    # DIMENSIONNÉE, ET PAS GÉNÉREUSE « AU CAS OÙ ». Elle valait 8192, ce qui
+    # paraissait prudent et coûtait très cher : la fenêtre détermine la taille
+    # du cache d'attention à allouer au chargement, et sur une machine dont la
+    # RAM est juste, trop grand déclenche du va-et-vient disque. Mesuré sur une
+    # machine de développement, même modèle, même prompt :
+    #
+    #   num_ctx=4096 (défaut d'Ollama)   chargement   20,5 s
+    #   num_ctx=8192                     chargement  426,9 s
+    #
+    # Sept minutes pour une génération qui prend 0,2 seconde. Le calcul du
+    # besoin réel, avec IA_MAX_CONTENU_LENGTH à 3 000 caractères :
+    #
+    #   contenu          811 jetons  (3 000 / 3,7 caractères par jeton)
+    #   gabarit           70 jetons
+    #   sortie           811 jetons  (réécrire produit autant qu'on reçoit)
+    #   ---------------------------
+    #   total          1 692 jetons  ->  4096 laisse une marge de 2,4
+    #
+    # Relever cette valeur sans relever IA_MAX_CONTENU_LENGTH n'apporte donc
+    # rien, et peut rendre l'application inutilisable. Les deux vont ensemble.
+    OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", 4096))
+
+    # Durée pendant laquelle Ollama garde le modèle en mémoire après un appel.
+    #
+    # Son défaut est de 5 MINUTES, ce qui ne convient pas à un usage par
+    # intermittence : entre deux corrections espacées d'un quart d'heure, le
+    # modèle est déchargé et il faut le recharger. Or le chargement domine
+    # complètement le temps de réponse — mesuré sur une machine de
+    # développement, 20,5 s de chargement pour 0,2 s de génération.
+    #
+    # Contrepartie à assumer : le modèle occupe la RAM pendant toute cette
+    # durée (environ 2 Gio pour qwen2.5:3b). Sur une machine très contrainte,
+    # réduire la valeur, ou la mettre à "0" pour décharger immédiatement.
+    OLLAMA_KEEP_ALIVE = os.getenv("OLLAMA_KEEP_ALIVE", "30m")
 
     # Mode « raisonnement » des modèles qui en ont un (qwen3, deepseek-r1...).
     #
