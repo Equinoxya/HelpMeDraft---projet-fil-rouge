@@ -27,7 +27,8 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 | Tokens hashés, rotation, anti-rejeu, cookie HttpOnly/SameSite | `auth_routes.py`, `test_securite.py` | 3 |
 | Consentement RGPD tracé en base | table `consentement` | 5, 7 |
 | Maquettes et captures | `docs/maquettes/`, `docs/captures/` | 5 |
-| Journal de veille | `docs/veille-helpmedraft.html` | transversale |
+| Journal de veille (3 périmètres, avril → octobre 2026) | `docs/veille/journal-de-veille.md` | transversale |
+| Suivi de projet sur données Jira réelles | `docs/gestion-de-projet.md` | 4 |
 | Git / GitHub, branches, PR | — | 1, 4 |
 | `.env.example` | racine | 10 |
 
@@ -59,13 +60,22 @@ Reste à faire sur ce lot :
 - [ ] **Jeu d'essai de la fonctionnalité la plus représentative** : entrée / attendu / obtenu + analyse des écarts
 - [ ] **Dossier de compte rendu de tests**
 
-### 3 · Gestion de projet ⭐ CP 4
-Intégralement documentaire, donc rapide — et aujourd'hui la compétence obligatoire la moins couverte.
+### 3 · Gestion de projet ⭐ CP 4 — 🔄 en grande partie fait
+Voir [`docs/gestion-de-projet.md`](./docs/gestion-de-projet.md), établi sur les données réelles du Jira `KAN`.
 
-- [ ] **Planning** (Gantt ou backlog agile découpé en itérations)
-- [ ] **Suivi des tâches** rapproché du planning, avec écarts identifiés
-- [ ] **Comptes rendus de réunion** (points d'étape avec le formateur comptent)
-- [ ] **Objectifs et procédures qualité** : conventions de code, définition de « terminé », revue
+- [x] **Planning** : Gantt des 9 epics, échéances relevées dans Jira
+- [x] **Suivi des tâches** rapproché du planning : écart par epic, vélocité mensuelle, incohérences d'état relevées
+- [x] **Analyse des causes** du retard et **replanification** priorisée
+- [x] **Objectifs et procédures qualité** : définition de « terminé », conventions de code, règles de sécurité non négociables
+- [x] **Modèle de compte rendu** structuré + repères de dates pour retrouver les points tenus
+- [ ] **Rédiger les comptes rendus réels** dans `docs/comptes-rendus/` — ne peut pas être reconstitué, c'est à faire par la candidate
+- [ ] **Porter l'alerte de retard au formateur** et en verser le compte rendu (le critère exige que les acteurs soient alertés)
+
+Hygiène du Jira, relevée au passage :
+- [ ] Rattacher ou supprimer les 10 tickets hors epic (`KAN-1` à `KAN-6`, `KAN-89` à `KAN-92`)
+- [ ] Rouvrir `KAN-10` et `KAN-13`, clos alors que des tâches restent ouvertes
+- [ ] Fermer `KAN-99` : DOMPurify 3.4.16 dépasse déjà le correctif demandé
+- [ ] Reporter les échéances des epics (toutes dépassées, de 76 à 129 jours)
 
 ### 4 · Conteneurisation CP 1, 11
 - [ ] `docker-compose.yml` est **vide (0 octet)** — CP1 exige que « les conteneurs implémentent les services requis »
