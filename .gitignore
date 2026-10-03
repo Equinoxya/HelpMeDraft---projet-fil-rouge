@@ -34,7 +34,18 @@ ENV/
 *.db
 *.db.avant-migration
 
+# ── Fichiers d'environnement ──────────────────────────────────────────────────
+# La règle `.env` seule ne suffisait pas : elle ne couvre que ce nom exact.
+# Deux clés réelles se sont ainsi retrouvées commitées dans « Claude outputs/env-1 »,
+# un fichier dont l'en-tête disait pourtant « NE JAMAIS COMMIT ».
 .env
+.env.*
+!.env.example
+
+# Dossier de travail où ces copies avaient atterri. Ignoré en entier : rien
+# qui y soit déposé ne doit partir dans le dépôt par inadvertance.
+# (settings.json y est déjà suivi et le reste — .gitignore ne désuit pas.)
+Claude outputs/
 
 # Tests et couverture
 .venv-test/
