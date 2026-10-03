@@ -12,7 +12,13 @@ Aucun appel réseau : `requests.post` est remplacé par un double.
 import pytest
 import requests
 
-from app.services.ia_service import PROMPT_TEMPLATES, build_prompt, call_ollama
+from app.services.ia_service import (
+    PROMPT_TEMPLATES,
+    TEMPERATURE_PAR_DEFAUT,
+    build_prompt,
+    call_ollama,
+    temperature_pour,
+)
 
 
 # ── Construction du prompt ───────────────────────────────────────────────────
@@ -130,3 +136,127 @@ def test_call_ollama_envoie_un_delai_maximum(app, monkeypatch):
         call_ollama("un prompt")
 
     assert appels.get("timeout"), "aucun délai maximum n'est passé à requests.post"
+
+
+# ── Température par action ───────────────────────────────────────────────────
+
+def test_temperature_corriger_est_la_plus_basse():
+    """
+    Corriger l'orthographe demande au modèle de ne rien changer d'autre. Une
+    température élevée l'incite à reformuler au passage, c'est-à-dire
+    exactement ce que le gabarit lui interdit. L'ordre entre les trois actions
+    est donc une propriété à verrouiller, pas un réglage cosmétique.
+    """
+    assert temperature_pour("corriger") < temperature_pour("reformuler")
+    assert temperature_pour("reformuler") < temperature_pour("completer")
+
+
+def test_temperature_pour_une_action_inconnue_reste_conservatrice():
+    assert temperature_pour("traduire") == TEMPERATURE_PAR_DEFAUT
+
+
+def test_la_route_transmet_la_temperature_de_l_action(app, monkeypatch):
+    """La température choisie doit réellement atteindre Ollama."""
+    envoye = {}
+
+    def _capture(*a, **k):
+        envoye.update(k.get("json", {}))
+        return _ReponseFactice({"response": "Texte."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        call_ollama("un prompt", temperature=temperature_pour("corriger"))
+
+    assert envoye["options"]["temperature"] == 0.1
+
+
+# ── Fenêtre de contexte ──────────────────────────────────────────────────────
+
+def test_call_ollama_transmet_num_ctx(app, monkeypatch):
+    """
+    Régression. Sans `num_ctx` explicite, Ollama applique un défaut de 4096
+    jetons en deçà de 24 Gio de mémoire vidéo et **tronque silencieusement**
+    au-delà : ni erreur, ni avertissement côté client. La coupe se faisant par
+    l'avant, ce sont les consignes du gabarit qui disparaissent en premier, pas
+    le texte de l'utilisateur — le modèle reçoit un document sans instruction.
+
+    Ce test échoue si l'option est retirée.
+    """
+    envoye = {}
+
+    def _capture(*a, **k):
+        envoye.update(k.get("json", {}))
+        return _ReponseFactice({"response": "Texte."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        call_ollama("un prompt")
+
+    assert "num_ctx" in envoye["options"], "num_ctx n'est pas transmis à Ollama"
+    assert envoye["options"]["num_ctx"] == app.config["OLLAMA_NUM_CTX"]
+    assert envoye["options"]["num_ctx"] > 4096, (
+        "une fenêtre au défaut d'Ollama ne couvre pas la borne de contenu acceptée"
+    )
+
+
+def test_le_modele_et_le_delai_viennent_de_la_configuration(app, monkeypatch):
+    """
+    Le modèle dépend de la machine, pas du code : une machine sans carte
+    graphique n'exécute pas le même que celle qui en a une.
+    """
+    envoye = {}
+
+    def _capture(*a, **k):
+        envoye.update({"json": k.get("json"), "timeout": k.get("timeout")})
+        return _ReponseFactice({"response": "Texte."})
+
+    monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
+    with app.app_context():
+        call_ollama("un prompt")
+
+    assert envoye["json"]["model"] == app.config["OLLAMA_MODEL"]
+    assert envoye["timeout"] == app.config["OLLAMA_TIMEOUT"]
+
+
+def test_la_borne_de_contenu_tient_dans_la_fenetre_de_contexte(app):
+    """
+    Cohérence des deux réglages. Reformuler produit à peu près autant de texte
+    qu'il en reçoit : la fenêtre doit donc loger l'entrée ET la sortie. En
+    comptant environ 3,7 caractères par jeton en français, la borne de contenu
+    ne doit pas dépasser la moitié de la fenêtre.
+    """
+    jetons_entree = app.config["IA_MAX_CONTENU_LENGTH"] / 3.7
+    assert jetons_entree * 2 < app.config["OLLAMA_NUM_CTX"], (
+        f"IA_MAX_CONTENU_LENGTH={app.config['IA_MAX_CONTENU_LENGTH']} ne tient pas "
+        f"avec sa réponse dans OLLAMA_NUM_CTX={app.config['OLLAMA_NUM_CTX']}"
+    )
+
+
+# Débit plancher retenu pour le dimensionnement : qwen3:4b sur processeur seul,
+# sans carte graphique. C'est la machine la plus lente sur laquelle le projet
+# doit tourner, donc celle qui fixe la borne.
+JETONS_PAR_SECONDE_PLANCHER = 15
+CARACTERES_PAR_JETON = 3.7
+
+
+def test_la_borne_de_contenu_est_generable_avant_le_delai_maximum(app):
+    """
+    Cohérence entre la borne d'entrée et le délai maximum.
+
+    Reformuler produit à peu près autant de texte qu'il en reçoit. Accepter
+    plus de caractères que la machine ne sait en générer avant OLLAMA_TIMEOUT
+    revient à promettre à l'utilisateur un service qui se terminera en 502 :
+    la validation le laisse passer, et l'inférence dépasse le délai.
+
+    Ce test a été ajouté après avoir constaté que la valeur initialement
+    retenue (4 000 caractères) demandait 72 secondes de génération au débit
+    plancher, pour un délai maximum de 60 secondes.
+    """
+    jetons_a_generer = app.config["IA_MAX_CONTENU_LENGTH"] / CARACTERES_PAR_JETON
+    secondes = jetons_a_generer / JETONS_PAR_SECONDE_PLANCHER
+
+    assert secondes < app.config["OLLAMA_TIMEOUT"], (
+        f"IA_MAX_CONTENU_LENGTH={app.config['IA_MAX_CONTENU_LENGTH']} demande "
+        f"~{secondes:.0f} s de génération à {JETONS_PAR_SECONDE_PLANCHER} jetons/s, "
+        f"pour un OLLAMA_TIMEOUT de {app.config['OLLAMA_TIMEOUT']} s"
+    )

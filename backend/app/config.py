@@ -46,4 +46,37 @@ class Config:
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
     MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "False") == "True"
     OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1")
+
+    # qwen3:4b plutôt qu'un modèle de 7 ou 8 milliards de paramètres : le projet
+    # doit tourner sur une machine sans carte graphique, où la vitesse est bornée
+    # par la bande passante mémoire — à chaque jeton généré, le processeur relit
+    # tous les poids. Un modèle deux fois plus petit est donc deux fois plus
+    # rapide, et qwen3 est nativement multilingue, ce qui compte pour une
+    # application de rédaction en français.
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:4b")
+
+    # Fenêtre de contexte. SANS CETTE VALEUR, Ollama applique un défaut de 4096
+    # jetons en deçà de 24 Gio de mémoire vidéo, et tronque SILENCIEUSEMENT
+    # au-delà : aucune erreur, rien dans la réponse. La coupe se fait par
+    # l'avant, donc ce sont les consignes du gabarit de prompt qui disparaissent
+    # en premier, pas le texte de l'utilisateur. Le modèle reçoit alors un
+    # document sans instruction, et répond n'importe quoi sans que rien ne le
+    # signale.
+    OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", 8192))
+
+    # Délai maximum d'un appel d'inférence, en secondes.
+    OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", 60))
+
+    # Taille maximale du texte soumis à l'IA, en caractères.
+    #
+    # Cette borne n'est pas un garde-fou de sécurité : c'est la traduction d'une
+    # contrainte matérielle. Reformuler produit à peu près autant de texte qu'il
+    # en reçoit, donc le plafond réel est donné par ce que la machine peut
+    # générer avant OLLAMA_TIMEOUT. À 15 jetons par seconde sur processeur seul,
+    # 60 secondes donnent environ 900 jetons, soit à peu près 3 300 caractères ;
+    # on retient 3 000 pour garder une marge. Promettre 20 000 caractères sur
+    # une telle machine, c'est promettre un délai dépassé.
+    #
+    # La valeur se règle donc par machine, dans .env — voir les deux profils
+    # documentés dans .env.example.
+    IA_MAX_CONTENU_LENGTH = int(os.getenv("IA_MAX_CONTENU_LENGTH", 3000))

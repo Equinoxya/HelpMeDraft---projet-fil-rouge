@@ -231,8 +231,8 @@ frontend/
 | TI-41 | — | `type_action` hors liste | `400` (RG-06) |
 | TI-42 | — | `scope` hors liste | `400` |
 | TI-43 | — | contenu vide | `400` |
-| TI-44 | — | contenu de 20 001 caractères | `400` (RG-08) |
-| TI-45 | — | contenu de 20 000 caractères | `201` — **borne incluse** |
+| TI-44 | — | contenu de la borne + 1 caractère | `400` (RG-08) |
+| TI-45 | — | contenu au-delà de la borne configurée | `201` — **borne incluse** |
 | TI-46 | — | instructions de 501 caractères | `400` |
 | TI-47 | — | document d'autrui | `404` |
 | TI-48 | — | 20 appels déjà dans les 24 h | `429` (RG-07) |
@@ -344,8 +344,8 @@ Exécuté le **3 octobre 2026**, modèle d'inférence remplacé par un double.
 | JE-02 | `U1`, `D1`, `corriger` puis `completer` | `201`, 3 lignes `ia` au total | `201`, 3 lignes, ordre antichronologique à la relecture | aucun | TI-52 |
 | JE-03 | `U1`, `D1`, `traduire` *(hors liste)* | `400` | `400`, aucune ligne `ia` | aucun | TI-41 |
 | JE-04 | `U1`, **`D2`**, `reformuler` | `404` | `404`, aucune ligne `ia` | aucun | TI-47 |
-| JE-05 | `U1`, `D1`, contenu de 20 001 caractères | `400` | `400` | aucun | TI-44 |
-| JE-05b | `U1`, `D1`, contenu de 20 000 caractères | `201` | `201` — borne inclusive confirmée | aucun | TI-45 |
+| JE-05 | `U1`, `D1`, contenu de la borne + 1 caractère | `400` | `400` | aucun | TI-44 |
+| JE-05b | `U1`, `D1`, contenu au-delà de la borne configurée | `201` | `201` — borne inclusive confirmée | aucun | TI-45 |
 | JE-06 | `U1`, `D1`, 20 lignes `ia` sur 24 h | `429` | `429`, compteur figé à 20 | aucun | TI-48 |
 | JE-07 | 19 lignes récentes + 1 datée de 25 h | `201` | `201` — fenêtre bien glissante | aucun | TI-49 |
 | JE-08 | `U1`, `D1`, service d'inférence en panne | `502`, **0 nouvelle ligne `ia`** | `502`, 0 ligne : le quota n'est pas consommé | aucun | TI-50 |
@@ -355,7 +355,7 @@ Exécuté le **3 octobre 2026**, modèle d'inférence remplacé par un double.
 **Analyse des écarts.** Aucun écart sur les onze cas. Deux résultats méritent d'être relevés
 parce qu'ils n'allaient pas de soi :
 
-- **JE-05 / JE-05b** — tester seulement 20 001 caractères ne distinguerait pas un `>` d'un `>=`.
+- **JE-05 / JE-05b** — tester seulement la borne + 1 caractère ne distinguerait pas un `>` d'un `>=`.
   Les deux côtés de la borne sont nécessaires pour prouver qu'elle est inclusive.
 - **JE-08** — un appel échoué n'écrit aucune ligne `ia`, donc ne consomme pas de quota. Sans
   cette propriété, une panne du service d'inférence épuiserait le quota de l'utilisateur sans

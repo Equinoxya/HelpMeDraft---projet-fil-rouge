@@ -90,7 +90,7 @@ flowchart TB
 |---|---|
 | **Responsabilité** | frontière HTTP : désérialiser, **valider**, **autoriser**, orchestrer, sérialiser, choisir le code de statut |
 | **Sécurité** | `token_required` sur chaque route protégée ; `require_admin` en `before_request` du blueprint d'administration ; **validation systématique des entrées par liste blanche** ; CORS restreint à une seule origine ; rate limiting Flask-Limiter |
-| **Menaces traitées** | accès horizontal — chaque requête filtre sur `(identifiant, user_id)` conjointement ; escalade de privilèges — rôle vérifié serveur ; bourrage d'identifiants — 5 connexions/min, 3 réinitialisations/heure ; déni de service par charge utile — contenu plafonné à 20 000 caractères, instructions à 500 |
+| **Menaces traitées** | accès horizontal — chaque requête filtre sur `(identifiant, user_id)` conjointement ; escalade de privilèges — rôle vérifié serveur ; bourrage d'identifiants — 5 connexions/min, 3 réinitialisations/heure ; déni de service par charge utile — contenu plafonné par une borne configurable, instructions à 500 |
 | **Principe** | **c'est la seule couche qui parle HTTP.** Les services ne connaissent ni `request` ni les codes de statut ; ils lèvent des exceptions que le contrôleur traduit. |
 
 ### Couche métier — `backend/app/services/`

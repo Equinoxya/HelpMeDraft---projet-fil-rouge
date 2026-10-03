@@ -108,28 +108,37 @@ def test_ti43_contenu_vide_refuse(client, auth, utilisateur, creer_document, oll
 
 
 def test_ti44_contenu_au_dela_de_la_borne_refuse(
-    client, auth, utilisateur, creer_document, ollama_double
+    app, client, auth, utilisateur, creer_document, ollama_double
 ):
-    """RG-08 — 20 000 caractères maximum."""
+    """
+    RG-08 — la borne est lue dans la configuration et non codée en dur : elle
+    dépend de la machine d'exécution, puisque ce que celle-ci peut générer
+    avant le délai maximum limite ce qu'elle peut accepter en entrée.
+    """
+    borne = app.config["IA_MAX_CONTENU_LENGTH"]
     ollama_double()
     document = creer_document(utilisateur)
     reponse = client.post(
-        f"/documents/{document}/ia/generer", json=_charge(contenu="x" * 20_001), headers=auth
+        f"/documents/{document}/ia/generer",
+        json=_charge(contenu="x" * (borne + 1)), headers=auth,
     )
     assert reponse.status_code == 400
+    assert str(borne) in reponse.get_json()["error"]
 
 
 def test_ti45_contenu_exactement_a_la_borne_accepte(
-    client, auth, utilisateur, creer_document, ollama_double
+    app, client, auth, utilisateur, creer_document, ollama_double
 ):
     """
-    La borne doit être inclusive. Un test à 20 001 seul ne distingue pas un
+    La borne doit être inclusive. Un test à borne + 1 seul ne distingue pas un
     `>` d'un `>=` : il faut les deux côtés de la limite.
     """
+    borne = app.config["IA_MAX_CONTENU_LENGTH"]
     ollama_double()
     document = creer_document(utilisateur)
     reponse = client.post(
-        f"/documents/{document}/ia/generer", json=_charge(contenu="x" * 20_000), headers=auth
+        f"/documents/{document}/ia/generer",
+        json=_charge(contenu="x" * borne), headers=auth,
     )
     assert reponse.status_code == 201
 

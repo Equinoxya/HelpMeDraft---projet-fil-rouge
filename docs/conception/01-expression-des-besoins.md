@@ -97,6 +97,6 @@ Chaque besoin est tracé à la section du cahier des charges qui l'exige.
 | RG-05 | Un document a un statut parmi brouillon, à relire, terminé | validation serveur sur liste blanche |
 | RG-06 | Une action IA est l'une des trois : compléter, reformuler, corriger | liste blanche `ALLOWED_TYPE_ACTIONS` |
 | RG-07 | Le quota IA est glissant sur 24 h, par utilisateur, 20 requêtes par défaut | `COUNT` des lignes `ia` depuis `now − 24 h` comparé à `user.quota_daily_limit` ; `HTTP 429` au-delà |
-| RG-08 | Le contenu soumis à l'IA est limité à 20 000 caractères, les instructions à 500 | validation serveur avant appel |
+| RG-08 | Le contenu soumis à l'IA est limité à la borne configurée, les instructions à 500 | validation serveur avant appel |
 | RG-09 | Le refresh token est tourné à chaque usage ; un jeton rejoué invalide la session | rotation + détection de rejeu (`test_securite.py`) |
 | RG-10 | La base ne contient jamais un jeton en clair, seulement son empreinte SHA-256 | `user_session.refresh_token_hash`, `password_reset.token_hash` |

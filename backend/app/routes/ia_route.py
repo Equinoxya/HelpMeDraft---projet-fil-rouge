@@ -1,8 +1,8 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from database.db import SessionLocal, Document, IA, User
 from sqlalchemy import select, func
 from app.routes.auth_routes import token_required
-from app.services.ia_service import build_prompt, call_ollama
+from app.services.ia_service import build_prompt, call_ollama, temperature_pour
 from utilitaires import utc_now_naive
 from datetime import timedelta
 
@@ -10,8 +10,19 @@ ia_bp = Blueprint("ia", __name__, url_prefix="/documents")
 
 ALLOWED_TYPE_ACTIONS = {"reformuler", "corriger", "completer"}
 ALLOWED_SCOPES = {"selection", "document"}
-MAX_CONTENU_LENGTH = 20000       # évite d'envoyer des payloads démesurés à Ollama
 MAX_INSTRUCTIONS_LENGTH = 500
+
+
+def _max_contenu() -> int:
+    """
+    Taille maximale du contenu soumis à l'IA, lue dans la configuration.
+
+    La valeur dépend de la machine d'exécution : ce qu'elle peut générer avant
+    le délai maximum borne ce qu'elle peut accepter en entrée, puisque
+    reformuler produit à peu près autant de texte qu'il en reçoit. Voir
+    IA_MAX_CONTENU_LENGTH dans app/config.py.
+    """
+    return current_app.config["IA_MAX_CONTENU_LENGTH"]
 
 
 @ia_bp.before_request
@@ -47,8 +58,8 @@ def generer_ia(id_document):
     if not contenu or not isinstance(contenu, str) or not contenu.strip():
         return jsonify({"error": "Le champ contenu est requis"}), 400
 
-    if len(contenu) > MAX_CONTENU_LENGTH:
-        return jsonify({"error": f"Le contenu ne peut pas dépasser {MAX_CONTENU_LENGTH} caractères"}), 400
+    if len(contenu) > _max_contenu():
+        return jsonify({"error": f"Le contenu ne peut pas dépasser {_max_contenu()} caractères"}), 400
 
     if instructions is not None:
         if not isinstance(instructions, str):
@@ -81,7 +92,9 @@ def generer_ia(id_document):
         prompt = build_prompt(type_action, contenu, instructions)
 
         try:
-            content_after, tokens_used = call_ollama(prompt)
+            content_after, tokens_used = call_ollama(
+                prompt, temperature=temperature_pour(type_action)
+            )
         except RuntimeError as e:
             return jsonify({"error": str(e)}), 502
 

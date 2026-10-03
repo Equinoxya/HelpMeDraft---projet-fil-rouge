@@ -127,7 +127,7 @@ flowchart LR
 2. Il choisit une action : compléter, reformuler ou corriger.
 3. Il peut ajouter une consigne particulière (500 caractères maximum).
 4. Le système vérifie l'access token.
-5. Le système valide `type_action` et `scope` contre des listes blanches, et la taille du contenu (20 000 caractères maximum).
+5. Le système valide `type_action` et `scope` contre des listes blanches, et la taille du contenu (borne configurable par machine (3 000 caractères par défaut)).
 6. Le système vérifie que le document appartient bien à l'utilisateur.
 7. Le système compte les appels IA de l'utilisateur sur les 24 dernières heures et les compare à son quota.
 8. Le système construit le prompt à partir du gabarit de l'action, puis y ajoute la consigne.
@@ -137,7 +137,7 @@ flowchart LR
 
 **Scénarios alternatifs**
 - *A1 — Action ou périmètre hors liste blanche* : `400`.
-- *A2 — Contenu vide, ou au-delà de 20 000 caractères* : `400`.
+- *A2 — Contenu vide, ou au-delà au-delà de la borne configurée* : `400`.
 - *A3 — Document inexistant ou appartenant à un autre utilisateur* : `404` — un `403` révélerait l'existence du document.
 - *A4 — Quota atteint* : `429`, message indiquant la limite.
 - *A5 — Ollama injoignable, ou délai dépassé* : `502`, message explicite ; aucune ligne `ia` n'est écrite.
