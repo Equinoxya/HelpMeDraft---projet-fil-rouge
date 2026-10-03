@@ -105,7 +105,7 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
     Lève RuntimeError si Ollama est injoignable ou renvoie une erreur,
     pour que la route puisse la transformer proprement en réponse HTTP.
 
-    Le modèle, la fenêtre de contexte et le délai maximum viennent de la
+    Le modèle, la fenêtre de contexte et le délai de connexion viennent de la
     configuration : ils dépendent de la machine d'exécution, pas du code.
     """
     base_url = current_app.config["OLLAMA_URL"]
@@ -127,16 +127,32 @@ def call_ollama(prompt: str, temperature: float | None = None) -> tuple[str, int
                     "num_ctx": current_app.config["OLLAMA_NUM_CTX"],
                 },
             },
-            timeout=current_app.config["OLLAMA_TIMEOUT"],
+            # Couple (connexion, lecture). La lecture est volontairement
+            # SANS limite : sur processeur seul, une reformulation de quelques
+            # milliers de caractères dépasse la minute, et l'interrompre
+            # affichait une erreur alors que la génération aboutissait. La
+            # connexion, elle, garde un délai court pour qu'un Ollama non
+            # lancé échoue tout de suite. Voir OLLAMA_CONNECT_TIMEOUT.
+            timeout=(current_app.config["OLLAMA_CONNECT_TIMEOUT"], None),
         )
         response.raise_for_status()
     except requests.exceptions.ConnectionError:
+        # ConnectTimeout hérite de ConnectionError et tombe donc ici : un
+        # délai de connexion dépassé veut dire la même chose qu'un refus de
+        # connexion — Ollama n'est pas joignable à cette adresse.
         raise RuntimeError(
             f"Impossible de joindre Ollama sur {base_url}. "
             "Vérifiez qu'il est lancé sur votre machine."
         )
     except requests.exceptions.Timeout:
-        raise RuntimeError("Ollama a mis trop de temps à répondre")
+        # Filet de sécurité. Plus aucun délai n'est imposé à la lecture, donc
+        # ce cas ne devrait plus se produire ; il reste traité pour qu'une
+        # bibliothèque qui en lèverait un quand même donne une réponse 502
+        # explicite au lieu d'une erreur 500 non interprétée.
+        raise RuntimeError(
+            f"La connexion à Ollama sur {base_url} n'a pas abouti. "
+            "Vérifiez qu'il est lancé sur votre machine."
+        )
     except requests.exceptions.HTTPError as e:
         raise RuntimeError(_erreur_http(e, model))
 

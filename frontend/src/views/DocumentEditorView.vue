@@ -14,6 +14,11 @@ import dossierService from "../services/dossierService";
 import type { DossierItem } from "../types/dossier";
 import iaService from "../services/iaService";
 import { type IaTypeAction, type IaScope } from "../types/ia";
+import {
+  estimerDureeGeneration,
+  formaterDuree,
+  avancementEstime,
+} from "../utils/iaEstimation";
 import MarkdownEditor from "../components/MarkdownEditor.vue";
 
 // Type pour le ref de l'éditeur
@@ -64,6 +69,62 @@ const iaLoading = ref(false);
 const iaError = ref("");
 const iaResult = ref<string | null>(null);
 
+// Compteur de progression de la génération.
+//
+// Le backend n'interrompt plus l'inférence (voir OLLAMA_CONNECT_TIMEOUT dans
+// backend/app/config.py) : une génération peut légitimement durer plus d'une
+// minute sur une machine sans carte graphique. Un bouton figé pendant tout ce
+// temps ne dit pas si quelque chose avance ou si l'application est bloquée.
+// On affiche donc le temps écoulé et le temps estimé.
+const iaSecondesEcoulees = ref(0);
+const iaSecondesEstimees = ref(0);
+let iaCompteurInterval: ReturnType<typeof setInterval> | null = null;
+
+const iaAttenteDepassee = computed(
+  () =>
+    iaSecondesEstimees.value > 0 &&
+    iaSecondesEcoulees.value > iaSecondesEstimees.value,
+);
+
+const iaAvancement = computed(() =>
+  avancementEstime(iaSecondesEcoulees.value, iaSecondesEstimees.value),
+);
+
+const iaTexteProgression = computed(() => {
+  const ecoule = formaterDuree(iaSecondesEcoulees.value);
+  if (iaAttenteDepassee.value) {
+    // L'estimation n'est qu'un ordre de grandeur : la dépasser est normal et
+    // ne doit pas ressembler à une panne. On arrête de l'afficher plutôt que
+    // de montrer un temps restant négatif.
+    return `${ecoule} écoulées — plus long que prévu, la génération continue`;
+  }
+  return `${ecoule} / ~${formaterDuree(iaSecondesEstimees.value)} estimées`;
+});
+
+function demarrerCompteurIa(contenu: string) {
+  iaSecondesEcoulees.value = 0;
+  iaSecondesEstimees.value = estimerDureeGeneration(
+    contenu,
+    iaTypeAction.value,
+  );
+  // On repart du temps de départ réel à chaque tick plutôt que d'incrémenter :
+  // les intervalles de l'onglet en arrière-plan sont ralentis par le
+  // navigateur, et un compteur incrémenté dériverait du temps réellement
+  // écoulé.
+  const debut = Date.now();
+  arreterCompteurIa();
+  iaCompteurInterval = setInterval(() => {
+    iaSecondesEcoulees.value = (Date.now() - debut) / 1000;
+  }, 1000);
+}
+
+function arreterCompteurIa() {
+  if (iaCompteurInterval) {
+    clearInterval(iaCompteurInterval);
+    iaCompteurInterval = null;
+  }
+}
+
 function openIaPanel() {
   const selection = window.getSelection();
   if (selection && !selection.isCollapsed) {
@@ -113,6 +174,7 @@ async function handleGenerateIa() {
   iaLoading.value = true;
   iaError.value = "";
   iaResult.value = null;
+  demarrerCompteurIa(contenu);
 
   try {
     const result = await iaService.generer(documentId.value, {
@@ -127,6 +189,7 @@ async function handleGenerateIa() {
       err.response?.data?.error ?? "L'assistant IA n'a pas pu répondre.";
   } finally {
     iaLoading.value = false;
+    arreterCompteurIa();
   }
 }
 
@@ -191,6 +254,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (savedNoticeTimeout) clearTimeout(savedNoticeTimeout);
   if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+  arreterCompteurIa();
 });
 
 function buildPayload() {
@@ -558,6 +622,29 @@ function handleCancel() {
             >
               {{ iaLoading ? "Génération en cours…" : "Générer" }}
             </button>
+
+            <!--
+              Compteur de génération. L'inférence n'est plus interrompue par un
+              délai maximum : elle peut durer plus d'une minute sur une machine
+              sans carte graphique. Sans ce compteur, l'utilisateur n'a aucun
+              moyen de distinguer une attente normale d'un blocage.
+            -->
+            <div v-if="iaLoading" class="space-y-2" role="status">
+              <div
+                class="h-1 w-full bg-[#111111]/10 overflow-hidden"
+                aria-hidden="true"
+              >
+                <div
+                  class="h-full bg-[#E0533C] transition-[width] duration-1000 ease-linear"
+                  :style="{ width: `${iaAvancement * 100}%` }"
+                ></div>
+              </div>
+              <p
+                class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/60"
+              >
+                {{ iaTexteProgression }}
+              </p>
+            </div>
 
             <div
               v-if="iaResult"

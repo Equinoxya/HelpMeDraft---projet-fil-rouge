@@ -99,13 +99,21 @@ def test_tu12_call_ollama_traduit_une_connexion_refusee(app, monkeypatch):
             call_ollama("un prompt")
 
 
-def test_tu13_call_ollama_traduit_un_delai_depasse(app, monkeypatch):
-    def _trop_long(*a, **k):
-        raise requests.exceptions.Timeout()
+def test_tu13_call_ollama_traduit_un_delai_de_connexion_depasse(app, monkeypatch):
+    """
+    Un délai dépassé ne désigne plus une génération trop lente — plus aucun
+    délai ne borne la lecture — mais une connexion qui n'aboutit pas. Le
+    message le dit, et l'erreur reste une RuntimeError pour que la route la
+    traduise en 502 plutôt qu'en 500.
+    """
+    def _connexion_trop_longue(*a, **k):
+        raise requests.exceptions.ConnectTimeout()
 
-    monkeypatch.setattr("app.services.ia_service.requests.post", _trop_long)
+    monkeypatch.setattr(
+        "app.services.ia_service.requests.post", _connexion_trop_longue
+    )
     with app.app_context():
-        with pytest.raises(RuntimeError, match="trop de temps"):
+        with pytest.raises(RuntimeError, match="Impossible de joindre Ollama"):
             call_ollama("un prompt")
 
 
@@ -119,11 +127,17 @@ def test_call_ollama_traduit_une_erreur_http(app, monkeypatch):
             call_ollama("un prompt")
 
 
-def test_call_ollama_envoie_un_delai_maximum(app, monkeypatch):
+def test_call_ollama_borne_la_connexion_mais_pas_la_lecture(app, monkeypatch):
     """
-    Un appel sans délai maximum bloquerait le processus serveur tant
-    qu'Ollama ne répond pas : une panne du modèle deviendrait une panne de
-    l'application entière.
+    Les deux délais ne jouent pas le même rôle, et c'est la raison d'être du
+    couple (connexion, lecture).
+
+    Un délai sur la LECTURE coupait des générations qui aboutissaient :
+    l'utilisateur recevait une erreur alors que rien n'avait échoué, juste
+    parce que la machine était lente. Il est donc retiré.
+
+    Un délai sur la CONNEXION reste indispensable : sans lui, un Ollama non
+    lancé ferait attendre le serveur sur un socket qui ne répondra jamais.
     """
     appels = {}
 
@@ -133,9 +147,14 @@ def test_call_ollama_envoie_un_delai_maximum(app, monkeypatch):
 
     monkeypatch.setattr("app.services.ia_service.requests.post", _capture)
     with app.app_context():
+        delai_connexion = app.config["OLLAMA_CONNECT_TIMEOUT"]
         call_ollama("un prompt")
 
-    assert appels.get("timeout"), "aucun délai maximum n'est passé à requests.post"
+    assert delai_connexion > 0, "le délai de connexion ne doit pas être nul"
+    assert appels.get("timeout") == (delai_connexion, None), (
+        "requests.post doit recevoir un couple (connexion bornée, lecture "
+        f"illimitée), reçu : {appels.get('timeout')!r}"
+    )
 
 
 # ── Température par action ───────────────────────────────────────────────────
@@ -202,7 +221,8 @@ def test_call_ollama_transmet_num_ctx(app, monkeypatch):
 def test_le_modele_et_le_delai_viennent_de_la_configuration(app, monkeypatch):
     """
     Le modèle dépend de la machine, pas du code : une machine sans carte
-    graphique n'exécute pas le même que celle qui en a une.
+    graphique n'exécute pas le même que celle qui en a une. Le délai de
+    connexion suit la même règle.
     """
     envoye = {}
 
@@ -215,7 +235,7 @@ def test_le_modele_et_le_delai_viennent_de_la_configuration(app, monkeypatch):
         call_ollama("un prompt")
 
     assert envoye["json"]["model"] == app.config["OLLAMA_MODEL"]
-    assert envoye["timeout"] == app.config["OLLAMA_TIMEOUT"]
+    assert envoye["timeout"] == (app.config["OLLAMA_CONNECT_TIMEOUT"], None)
 
 
 def test_la_borne_de_contenu_tient_dans_la_fenetre_de_contexte(app):
@@ -239,26 +259,34 @@ JETONS_PAR_SECONDE_PLANCHER = 15
 CARACTERES_PAR_JETON = 3.7
 
 
-def test_la_borne_de_contenu_est_generable_avant_le_delai_maximum(app):
+# Attente maximale qu'on estime acceptable devant un compteur de progression,
+# en secondes. Ce n'est plus un délai technique — aucun délai ne coupe
+# l'inférence — mais une borne d'expérience utilisateur : au-delà, on ne peut
+# plus raisonnablement demander à quelqu'un de patienter.
+ATTENTE_MAX_SECONDES = 90
+
+
+def test_la_borne_de_contenu_reste_une_attente_acceptable(app):
     """
-    Cohérence entre la borne d'entrée et le délai maximum.
+    Cohérence entre la borne d'entrée et le temps d'attente annoncé.
 
-    Reformuler produit à peu près autant de texte qu'il en reçoit. Accepter
-    plus de caractères que la machine ne sait en générer avant OLLAMA_TIMEOUT
-    revient à promettre à l'utilisateur un service qui se terminera en 502 :
-    la validation le laisse passer, et l'inférence dépasse le délai.
+    Reformuler produit à peu près autant de texte qu'il en reçoit. Depuis le
+    retrait du délai de lecture, dépasser la borne ne produit plus un 502 mais
+    une attente : le risque a changé de nature, pas disparu. Accepter
+    10 000 caractères sur une machine sans carte graphique, c'est afficher un
+    compteur de trois minutes.
 
-    Ce test a été ajouté après avoir constaté que la valeur initialement
-    retenue (4 000 caractères) demandait 72 secondes de génération au débit
-    plancher, pour un délai maximum de 60 secondes.
+    Ce test garde donc la même fonction qu'avant — empêcher de relever
+    IA_MAX_CONTENU_LENGTH sans regarder le débit de la machine — en mesurant
+    cette fois l'attente et non le délai dépassé.
     """
     jetons_a_generer = app.config["IA_MAX_CONTENU_LENGTH"] / CARACTERES_PAR_JETON
     secondes = jetons_a_generer / JETONS_PAR_SECONDE_PLANCHER
 
-    assert secondes < app.config["OLLAMA_TIMEOUT"], (
+    assert secondes < ATTENTE_MAX_SECONDES, (
         f"IA_MAX_CONTENU_LENGTH={app.config['IA_MAX_CONTENU_LENGTH']} demande "
         f"~{secondes:.0f} s de génération à {JETONS_PAR_SECONDE_PLANCHER} jetons/s, "
-        f"pour un OLLAMA_TIMEOUT de {app.config['OLLAMA_TIMEOUT']} s"
+        f"au-delà des {ATTENTE_MAX_SECONDES} s d'attente jugées acceptables"
     )
 
 

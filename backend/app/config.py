@@ -64,18 +64,31 @@ class Config:
     # signale.
     OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", 8192))
 
-    # Délai maximum d'un appel d'inférence, en secondes.
-    OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", 60))
+    # Délai maximum pour ÉTABLIR la connexion à Ollama, en secondes.
+    #
+    # Il n'y a volontairement PAS de délai sur la lecture de la réponse : une
+    # inférence sur processeur seul peut dépasser la minute, et la couper
+    # revient à jeter un texte qui était en train d'aboutir. L'utilisateur
+    # voyait alors une erreur alors que rien n'avait échoué.
+    #
+    # Le délai de connexion, lui, reste court : si Ollama n'est pas lancé,
+    # l'échec doit être immédiat et non après une attente inutile.
+    OLLAMA_CONNECT_TIMEOUT = int(os.getenv("OLLAMA_CONNECT_TIMEOUT", 10))
 
     # Taille maximale du texte soumis à l'IA, en caractères.
     #
     # Cette borne n'est pas un garde-fou de sécurité : c'est la traduction d'une
     # contrainte matérielle. Reformuler produit à peu près autant de texte qu'il
-    # en reçoit, donc le plafond réel est donné par ce que la machine peut
-    # générer avant OLLAMA_TIMEOUT. À 15 jetons par seconde sur processeur seul,
-    # 60 secondes donnent environ 900 jetons, soit à peu près 3 300 caractères ;
-    # on retient 3 000 pour garder une marge. Promettre 20 000 caractères sur
-    # une telle machine, c'est promettre un délai dépassé.
+    # en reçoit, donc le temps d'attente croît avec la taille du texte envoyé.
+    # Maintenant qu'aucun délai ne coupe l'inférence, le plafond ne borne plus
+    # un échec technique mais une ATTENTE : à 15 jetons par seconde sur
+    # processeur seul, 3 000 caractères représentent environ 750 jetons à
+    # générer, soit à peu près 50 secondes. C'est le maximum qu'on estime
+    # raisonnable de faire patienter devant un compteur.
+    #
+    # Le frontend calcule et affiche cette estimation avant de lancer l'appel
+    # (voir frontend/src/utils/iaEstimation.ts) : l'attente est annoncée, pas
+    # subie.
     #
     # La valeur se règle donc par machine, dans .env — voir les deux profils
     # documentés dans .env.example.

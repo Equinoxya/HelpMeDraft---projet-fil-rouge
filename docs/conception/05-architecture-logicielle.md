@@ -98,8 +98,8 @@ flowchart TB
 | | |
 |---|---|
 | **Responsabilité** | règles de gestion indépendantes du transport : hachage et jetons (`auth_service`), construction de prompts et appel au modèle (`ia_service`), envoi de mail (`email_service`) |
-| **Sécurité** | bcrypt avec sel ; JWT HS256 ; refresh token de 64 octets issu de `secrets.token_urlsafe`, stocké en empreinte SHA-256, **tourné à chaque usage avec détection de rejeu** ; délai maximum de 60 s sur l'appel au modèle |
-| **Menaces traitées** | vol de base de mots de passe — bcrypt rend l'attaque par dictionnaire coûteuse ; rejeu de session — un jeton réutilisé invalide la session entière ; blocage du serveur — délai maximum puis `502` propre |
+| **Sécurité** | bcrypt avec sel ; JWT HS256 ; refresh token de 64 octets issu de `secrets.token_urlsafe`, stocké en empreinte SHA-256, **tourné à chaque usage avec détection de rejeu** ; délai court sur la connexion à Ollama, aucun délai sur la lecture de sa réponse |
+| **Menaces traitées** | vol de base de mots de passe — bcrypt rend l'attaque par dictionnaire coûteuse ; rejeu de session — un jeton réutilisé invalide la session entière ; Ollama non lancé — délai de connexion court puis `502` propre |
 | **Écart à corriger** | ces services sont des **modules de fonctions**, pas des classes. CP3 évalue « les bonnes pratiques de la POO sont respectées ». À refactorer, ou à assumer explicitement devant le jury comme un choix de style idiomatique en Python pour des services sans état. |
 
 ### Couche accès aux données — `backend/database/db.py`
@@ -117,7 +117,7 @@ flowchart TB
 
 | Indicateur | Mécanismes en place | Reste à faire |
 |---|---|---|
-| **Disponibilité** | rate limiting ; délai maximum sur l'inférence puis `502` explicite ; chargement différé des routes | supervision, sauvegardes |
+| **Disponibilité** | rate limiting ; délai de connexion à Ollama puis `502` explicite ; borne d'entrée dimensionnée sur le débit de la machine, avec temps estimé affiché pendant la génération ; chargement différé des routes | supervision, sauvegardes |
 | **Intégrité** | contraintes de clés étrangères ; validation par liste blanche à chaque entrée ; `updated_at` automatique | transactions explicites sur les écritures composées |
 | **Confidentialité** | bcrypt ; access token en mémoire ; refresh token en cookie `HttpOnly` ; cloisonnement par `user_id` ; **inférence locale : aucune donnée ne quitte l'infrastructure** | chiffrement au repos ; comptes SGBD au moindre privilège |
 | **Preuve** | table `ia` horodatée (qui, quand, quelle action, quel contenu avant et après) ; table `consentement` ; table `user_session` | journal d'audit des actions d'administration |
