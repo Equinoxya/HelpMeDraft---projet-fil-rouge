@@ -199,6 +199,22 @@ pip install -r requirements.txt
 cp ../.env.example .env        # puis renseigner les valeurs (voir ci-dessous)
 ```
 
+> [!IMPORTANT]
+> **Pour un poste de développement, seules `JWT_SECRET_KEY` et `SECRET_KEY` sont à renseigner.**
+> Tout le reste a un défaut qui convient. Le même fichier d'exemple sert aux deux modes de
+> lancement — en local et en conteneur — et les variables dont la bonne valeur dépend du mode y
+> sont **laissées commentées exprès** : `CORS_ORIGINS` et `FRONTEND_URL`. Les décommenter avec la
+> valeur du conteneur (`http://localhost:8080`) fait refuser par le navigateur toutes les requêtes
+> du serveur Vite, qui tourne sur le port 5173 :
+>
+> ```
+> Access to XMLHttpRequest at 'http://localhost:5000/auth/register'
+> from origin 'http://localhost:5173' has been blocked by CORS policy
+> ```
+>
+> Inscription et connexion deviennent alors impossibles. Depuis, le backend **journalise** chaque
+> origine refusée au démarrage et à chaque requête, au lieu de laisser chercher.
+
 Les tables SQLite sont créées automatiquement au premier import de `database/db.py` — aucune migration à lancer en développement.
 
 > [!NOTE]
