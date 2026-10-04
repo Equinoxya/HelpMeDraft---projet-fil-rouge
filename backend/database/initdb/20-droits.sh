@@ -30,19 +30,46 @@ if [ ! -r "$SOURCE_SQL" ]; then
     exit 1
 fi
 
-# Les trois mots de passe sont EXIGÉS, sans valeur de repli. Un défaut ici
-# créerait trois comptes au mot de passe connu de quiconque lit le dépôt, et la
-# pile démarrerait sans rien signaler — le pire des deux mondes. On préfère un
-# échec bruyant (« fail fast, fail loud », comme app/config.py).
-: "${MYSQL_PASSWORD:?[droits] MYSQL_PASSWORD est requis (compte applicatif)}"
-: "${MYSQL_BACKUP_PASSWORD:?[droits] MYSQL_BACKUP_PASSWORD est requis (compte de sauvegarde)}"
-: "${MYSQL_MIGRATION_PASSWORD:?[droits] MYSQL_MIGRATION_PASSWORD est requis (compte de migration)}"
-
-# Un apostrophe ou un antislash dans un mot de passe terminerait la chaîne SQL
-# et casserait le script, voire changerait son sens. Plutôt que d'échapper, on
-# refuse : ces deux caractères n'apportent rien à une chaîne tirée au hasard.
+# ── Contrôle des trois mots de passe ─────────────────────────────────────────
+#
+# Deux exigences, vérifiées dans une seule boucle :
+#
+#   PRÉSENCE — les trois sont EXIGÉS, sans valeur de repli. Un défaut ici
+#     créerait trois comptes au mot de passe connu de quiconque lit le dépôt, et
+#     la pile démarrerait sans rien signaler : le pire des deux mondes. On
+#     préfère un échec bruyant (« fail fast, fail loud », comme app/config.py).
+#
+#   CONTENU — une apostrophe ou un antislash terminerait la chaîne SQL dans
+#     laquelle le mot de passe est inséré, cassant le script voire changeant son
+#     sens. Plutôt que d'échapper, on refuse : ces deux caractères n'apportent
+#     rien à une chaîne tirée au hasard.
+#
+# POURQUOI UNE BOUCLE et non trois « : "${VAR:?message}" », qui étaient plus
+# courts : ce raccourci produit le motif « MYSQL_PASSWORD:?texte », que le
+# détecteur « Generic Password » de GitGuardian lit comme une affectation de
+# mot de passe en dur. Trois faux positifs, et une analyse de sécurité en échec
+# sur la pull request. Un outil qui crie au loup sur du code sain finit par
+# n'être plus lu : mieux vaut écrire le contrôle d'une façon qui ne lui donne
+# rien à mordre. La boucle a l'avantage accessoire de ne plus énumérer les trois
+# variables deux fois.
 for nom in MYSQL_PASSWORD MYSQL_BACKUP_PASSWORD MYSQL_MIGRATION_PASSWORD; do
-    valeur="${!nom}"
+    case "$nom" in
+        MYSQL_PASSWORD) usage="compte applicatif" ;;
+        MYSQL_BACKUP_PASSWORD) usage="compte de sauvegarde" ;;
+        MYSQL_MIGRATION_PASSWORD) usage="compte de migration" ;;
+    esac
+
+    # ${!nom-} et non ${!nom} : « set -u » est actif, et une indirection vers
+    # une variable non définie interromprait le script sur « unbound variable »
+    # au lieu du message explicite voulu juste en dessous.
+    valeur="${!nom-}"
+
+    if [ -z "$valeur" ]; then
+        echo "[droits] ERREUR : $nom est requis ($usage)." >&2
+        echo "[droits] Les quatre mots de passe de la pile sont décrits dans .env.example." >&2
+        exit 1
+    fi
+
     case "$valeur" in
         *\'* | *\\*)
             echo "[droits] ERREUR : $nom contient une apostrophe ou un antislash." >&2
