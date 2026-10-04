@@ -16,16 +16,51 @@ services:
     image: mysql:8.4
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-helpmedraft}
-      MYSQL_USER: ${MYSQL_USER:-helpmedraft}
+      # Le nom de la base est FIXE et non configurable : database/schema_mysql.sql
+      # contient « USE helpmedraft », et ce script est la source de vérité du
+      # schéma. Laisser croire par un ${MYSQL_DATABASE:-...} que le nom se règle
+      # produirait, sur une autre valeur, une base vide à côté d'une base
+      # helpmedraft correctement remplie — et une application qui se plaint de
+      # tables absentes sans dire pourquoi.
+      MYSQL_DATABASE: helpmedraft
+      # Ce compte est créé par l'image avec ALL PRIVILEGES sur toute la base,
+      # DROP TABLE compris. L'application ne s'en sert PAS : database/droits_mysql.sql
+      # le supprime et le remplace par trois comptes au moindre privilège
+      # (applicatif, sauvegarde, migration). Il reste déclaré ici pour que le
+      # DROP USER ait une cible explicite plutôt qu'un compte créé en douce.
+      MYSQL_USER: helpmedraft
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD est requis — voir .env.example}
+      MYSQL_BACKUP_PASSWORD: ${MYSQL_BACKUP_PASSWORD:?MYSQL_BACKUP_PASSWORD est requis — voir .env.example}
+      MYSQL_MIGRATION_PASSWORD: ${MYSQL_MIGRATION_PASSWORD:?MYSQL_MIGRATION_PASSWORD est requis — voir .env.example}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD est requis — voir .env.example}
     volumes:
       - db-data:/var/lib/mysql
+      # Le schéma est la propriété de ce script, et de lui seul.
+      #
+      # Avant, l'application appelait Base.metadata.create_all() sur MySQL comme
+      # sur SQLite : les tables étaient donc créées à partir des classes de
+      # l'ORM, et schema_mysql.sql n'était JAMAIS exécuté. Les cinq contraintes
+      # CHECK, les six index de performance et les clés étrangères nommées du
+      # script étaient absents de la base réelle, alors que le dépôt affichait un
+      # script soigné. L'application ne crée plus rien sur MySQL (voir
+      # database/db.py) ; c'est ce montage qui met le schéma en place.
+      #
+      # Les fichiers de /docker-entrypoint-initdb.d sont joués par ordre
+      # alphabétique, au PREMIER démarrage uniquement : un volume db-data déjà
+      # initialisé ne les rejoue pas. Pour repartir de zéro :
+      #   docker compose down -v && docker compose up --build
+      - ./backend/database/schema_mysql.sql:/docker-entrypoint-initdb.d/10-schema.sql:ro
+      - ./backend/database/initdb/20-droits.sh:/docker-entrypoint-initdb.d/20-droits.sh:ro
+      # Monté hors de initdb.d : ce fichier n'est pas exécuté directement par
+      # l'entrypoint, il est lu par 20-droits.sh, qui y substitue les mots de
+      # passe de l'environnement avant de le passer à MySQL.
+      - ./backend/database/droits_mysql.sql:/opt/helpmedraft/droits_mysql.sql:ro
     # La sonde n'est pas un ornement : MySQL accepte les connexions réseau
     # plusieurs secondes AVANT d'être prêt à servir des requêtes. Sans elle, le
-    # backend démarre trop tôt, échoue à créer ses tables, et la pile paraît
-    # cassée alors qu'il suffisait d'attendre.
+    # backend démarre trop tôt, échoue à lire ses tables, et la pile paraît
+    # cassée alors qu'il suffisait d'attendre. Elle couvre aussi l'initialisation
+    # ci-dessus : pendant celle-ci, le serveur temporaire n'écoute que sur sa
+    # socket, donc le ping sur 127.0.0.1 échoue et le backend attend.
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root",
              "-p$$MYSQL_ROOT_PASSWORD"]
@@ -49,7 +84,13 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY est requis — voir .env.example}
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY est requis, et DISTINCTE de JWT_SECRET_KEY}
 
-      HELPMEDRAFT_DB_URL: mysql+pymysql://${MYSQL_USER:-helpmedraft}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE:-helpmedraft}
+      # helpmedraft_app, et non le compte helpmedraft créé par l'image : il n'a
+      # que SELECT, INSERT, UPDATE et DELETE. Aucun droit de structure — ni
+      # CREATE, ni ALTER, ni DROP. L'application n'en a plus besoin depuis que
+      # le schéma vient de schema_mysql.sql, et une injection SQL qui
+      # aboutirait ne pourrait donc pas supprimer une table. Voir
+      # database/droits_mysql.sql.
+      HELPMEDRAFT_DB_URL: mysql+pymysql://helpmedraft_app:${MYSQL_PASSWORD}@db:3306/helpmedraft
 
       APP_ENV: ${APP_ENV:-development}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
