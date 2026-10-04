@@ -58,3 +58,22 @@ gunicorn==23.0.0
 # conteneur, mais aucun pilote n'était installé : l'application échouait au
 # démarrage dès qu'on la branchait ailleurs que sur SQLite.
 PyMySQL==1.1.2
+
+# Dépendance OBLIGATOIRE de PyMySQL face à MySQL 8, et pas une option.
+#
+# MySQL 8.4 authentifie par défaut avec caching_sha2_password. Deux chemins :
+#
+#   • le serveur a déjà le mot de passe en cache -> échange par empreinte, et
+#     cryptography ne sert à rien ;
+#   • PREMIÈRE connexion, ou cache vidé par un redémarrage du serveur ->
+#     authentification complète. Sur une connexion non chiffrée, le client doit
+#     récupérer la clé publique RSA du serveur et lui chiffrer le mot de passe.
+#     PyMySQL délègue ce calcul à cryptography, et sans elle lève :
+#         RuntimeError: cryptography is required for sha256_password
+#                       or caching_sha2_password
+#
+# C'est donc la PREMIÈRE connexion de la pile qui échouait — « docker compose up »
+# ne pouvait pas fonctionner, et le message n'évoquait ni MySQL ni un paquet
+# manquant. Le cas n'avait pas été vu parce que la suite de tests tourne sur
+# SQLite, qui n'authentifie rien.
+cryptography==46.0.3
