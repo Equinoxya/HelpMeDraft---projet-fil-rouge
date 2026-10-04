@@ -27,6 +27,43 @@ pytestmark = pytest.mark.securite
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
+def _importer_config_isolement(repertoire_vide, **variables):
+    """
+    Importe `app.config` dans un sous-processus VRAIMENT isolé, et rend son résultat.
+
+    POURQUOI UN RÉPERTOIRE VIDE — c'est la correction d'un défaut qui rendait
+    ces tests dépendants de la machine qui les exécute.
+
+    Ils vérifient que l'application REFUSE de démarrer sans ses clés. Ils
+    lançaient le sous-processus avec `cwd=BACKEND_ROOT` et un environnement
+    restreint, en croyant cela suffisant. Mais `app/config.py` appelle
+    `load_dotenv()`, qui cherche un fichier `.env` SUR LE DISQUE en remontant
+    depuis le répertoire courant : l'environnement passé à `subprocess.run` n'y
+    change rien.
+
+    Conséquence : sur un poste de développement — où `backend/.env` existe
+    forcément, le README demande de le créer — `load_dotenv()` trouvait les
+    vraies clés, l'application démarrait, et les deux tests ÉCHOUAIENT. Ils ne
+    passaient qu'en intégration continue, où aucun `.env` n'existe. Un test qui
+    dépend de la machine ne prouve rien, et use la confiance mise dans la suite.
+
+    Le sous-processus tourne donc dans un répertoire temporaire vide, où il n'y a
+    aucun `.env` à trouver, et `app` est atteint par PYTHONPATH.
+    """
+    return subprocess.run(
+        [sys.executable, "-c", "import app.config"],
+        cwd=repertoire_vide,
+        env={
+            "PATH": "/usr/bin:/bin",
+            "PYTHONPATH": str(BACKEND_ROOT),
+            "HELPMEDRAFT_DB_URL": "sqlite://",
+            **variables,
+        },
+        capture_output=True,
+        text=True,
+    )
+
+
 # ── TSEC-06 · Injection SQL ──────────────────────────────────────────────────
 
 
@@ -106,7 +143,7 @@ def test_tsec08_un_jeton_de_rafraichissement_rejoue_invalide_la_session(client, 
 # ── TSEC-09 · Échec sécurisé au démarrage ────────────────────────────────────
 
 
-def test_tsec09_l_application_refuse_de_demarrer_sans_cle_de_signature():
+def test_tsec09_l_application_refuse_de_demarrer_sans_cle_de_signature(tmp_path):
     """
     Sans JWT_SECRET_KEY, l'application doit échouer bruyamment plutôt que de
     se replier sur une clé de secours : une clé en dur dans le dépôt
@@ -116,13 +153,7 @@ def test_tsec09_l_application_refuse_de_demarrer_sans_cle_de_signature():
     Le test s'exécute dans un sous-processus : app/config.py lève à l'import,
     et ce module est déjà chargé dans le processus de test.
     """
-    resultat = subprocess.run(
-        [sys.executable, "-c", "import app.config"],
-        cwd=BACKEND_ROOT,
-        env={"PATH": "/usr/bin:/bin", "HELPMEDRAFT_DB_URL": "sqlite://"},
-        capture_output=True,
-        text=True,
-    )
+    resultat = _importer_config_isolement(tmp_path)
     assert resultat.returncode != 0, "l'application a démarré sans clé de signature"
     assert "JWT_SECRET_KEY" in resultat.stderr
 
@@ -252,23 +283,13 @@ def test_tsec14_le_rafraichissement_est_limite_en_debit(app, client, utilisateur
 # ── TSEC-15 · Clé de session Flask ───────────────────────────────────────────
 
 
-def test_tsec15_l_application_refuse_de_demarrer_sans_cle_de_session():
+def test_tsec15_l_application_refuse_de_demarrer_sans_cle_de_session(tmp_path):
     """
     Pendant du test TSEC-09 pour SECRET_KEY. Flask s'en sert pour signer les
     cookies de session et les messages flash ; une clé absente ferait échouer
     silencieusement le premier usage ajouté.
     """
-    resultat = subprocess.run(
-        [sys.executable, "-c", "import app.config"],
-        cwd=BACKEND_ROOT,
-        env={
-            "PATH": "/usr/bin:/bin",
-            "HELPMEDRAFT_DB_URL": "sqlite://",
-            "JWT_SECRET_KEY": "une-cle-jwt-presente",
-        },
-        capture_output=True,
-        text=True,
-    )
+    resultat = _importer_config_isolement(tmp_path, JWT_SECRET_KEY="une-cle-jwt-presente")
     assert resultat.returncode != 0, "l'application a démarré sans clé de session"
     assert "SECRET_KEY" in resultat.stderr
 
