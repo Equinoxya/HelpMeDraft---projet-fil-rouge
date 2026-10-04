@@ -112,7 +112,7 @@ Côté vitrine : pages publiques **Accueil**, **Fonctionnalités**, **Modèles**
 | 🎨 Front-end | Vue 3 · TypeScript · Vite · Tailwind CSS 4 · daisyUI · Pinia · Vue Router |
 | 📝 Éditeur | CodeMirror 6 (`@codemirror/lang-markdown`) + `marked` + `DOMPurify` |
 | 🐍 Back-end | Python 3.11+ · Flask 3 · SQLAlchemy 2 |
-| 🗄️ Base de données | SQLite en développement (cible MySQL en production) |
+| 🗄️ Base de données | MySQL 8.4 en conteneur (schéma, droits et sauvegarde : [documentation](docs/exploitation-base-de-donnees.md)) — SQLite en développement et pour les tests |
 | 🤖 IA | **Ollama en local** (`qwen2.5:3b`) — aucune donnée envoyée à un service tiers |
 | 🔑 Authentification | JWT HS256 (access 15 min) + refresh token `httpOnly` haché, avec rotation |
 | ✉️ Emailing | Flask-Mail, sandbox Mailtrap en développement |
@@ -199,7 +199,37 @@ pip install -r requirements.txt
 cp ../.env.example .env        # puis renseigner les valeurs (voir ci-dessous)
 ```
 
+> [!IMPORTANT]
+> **Pour un poste de développement, seules `JWT_SECRET_KEY` et `SECRET_KEY` sont à renseigner.**
+> Tout le reste a un défaut qui convient. Le même fichier d'exemple sert aux deux modes de
+> lancement — en local et en conteneur — et les variables dont la bonne valeur dépend du mode y
+> sont **laissées commentées exprès** : `CORS_ORIGINS` et `FRONTEND_URL`. Les décommenter avec la
+> valeur du conteneur (`http://localhost:8080`) fait refuser par le navigateur toutes les requêtes
+> du serveur Vite, qui tourne sur le port 5173 :
+>
+> ```
+> Access to XMLHttpRequest at 'http://localhost:5000/auth/register'
+> from origin 'http://localhost:5173' has been blocked by CORS policy
+> ```
+>
+> Inscription et connexion deviennent alors impossibles. Depuis, le backend **journalise** chaque
+> origine refusée au démarrage et à chaque requête, au lieu de laisser chercher.
+
 Les tables SQLite sont créées automatiquement au premier import de `database/db.py` — aucune migration à lancer en développement.
+
+> [!NOTE]
+> **Cette création automatique ne vaut QUE pour SQLite.** Sur MySQL, le schéma est la propriété de
+> [`backend/database/schema_mysql.sql`](backend/database/schema_mysql.sql), exécuté au premier
+> démarrage du conteneur, et l'application n'y crée rien — elle refuse même de démarrer si les
+> tables manquent. Deux descriptions concurrentes du même schéma ne peuvent pas faire autorité
+> toutes les deux ; voir [l'exploitation de la base](docs/exploitation-base-de-donnees.md).
+
+Pour charger un **jeu d'essai** (4 comptes, 7 documents, 40 appels IA, et les cas limites) :
+
+```bash
+python database/jeu_essai.py          # mot de passe commun affiché en fin d'exécution
+python database/jeu_essai.py --vider  # purge d'abord les 7 tables
+```
 
 ### 3 · Frontend
 
@@ -230,7 +260,7 @@ pnpm dev               # → http://localhost:5173
 ```
 
 > [!IMPORTANT]
-> Le backend doit être lancé **depuis le dossier `backend/`** : les imports (`utilitaires`) et le chemin de la base SQLite sont relatifs au répertoire courant.
+> Le backend doit être lancé **depuis le dossier `backend/`** : les imports (`utilitaires`) sont relatifs au répertoire courant. Le chemin de la base SQLite, lui, ne l'est plus — il est calculé depuis l'emplacement de `database/db.py` et vaut toujours `backend/HelpMeDraft.db`. Avant, lancer l'application depuis la racine ouvrait une **seconde** base, et les comptes créés d'un côté étaient introuvables de l'autre.
 
 Pour promouvoir le premier compte en administrateur, passer son champ `role` à `admin` directement en base (`backend/HelpMeDraft.db`).
 
@@ -430,7 +460,6 @@ Sept entités, identifiants UUID, suppression en cascade depuis `user`.
 ### 🚧 Points ouverts avant une mise en production
 
 - [ ] `SECRET_KEY` Flask non configurée (sans impact actuel : ni session serveur, ni `flash()`)
-- [ ] `ia.id_document` sans `ondelete` côté ORM, alors que `schema_mysql.sql` porte `ON DELETE CASCADE`
 - [ ] Chiffrement des données sensibles au repos
 - [ ] Test XSS de bout en bout à rejouer manuellement dans le navigateur
 - [ ] Audit de sécurité complet et rapport associé
@@ -469,7 +498,7 @@ Sept entités, identifiants UUID, suppression en cascade depuis `user`.
 | Tests automatisés (pytest, Vitest) et plan de test | ⬜ À faire |
 | Conteneurisation Docker | ⬜ À faire (`docker-compose.yml` vide) |
 | Pipeline CI/CD | ⬜ À faire |
-| Migration vers MySQL et scripts SQL | ⬜ À faire |
+| Migration vers MySQL et scripts SQL | ✅ Terminé |
 | Audit accessibilité et sécurité | ⬜ À faire |
 | Documentation utilisateur | ⬜ À faire |
 

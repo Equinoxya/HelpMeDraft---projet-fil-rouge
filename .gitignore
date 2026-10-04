@@ -47,6 +47,12 @@ ENV/
 # (settings.json y est déjà suivi et le reste — .gitignore ne désuit pas.)
 Claude outputs/
 
+# ── Sauvegardes de la base ────────────────────────────────────────────────────
+# backend/database/sauvegarde.sh y dépose des dumps complets : tous les comptes,
+# tous les documents, toutes les empreintes de mots de passe. Un dépôt n'est pas
+# un espace de sauvegarde, et ces fichiers ne doivent jamais y entrer.
+sauvegardes/
+
 # Tests et couverture
 .venv-test/
 .coverage
