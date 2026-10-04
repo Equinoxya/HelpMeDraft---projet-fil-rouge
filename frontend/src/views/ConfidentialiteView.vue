@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from "vue-router";
 const companyEmail = "contact@helpmedraft.fr";
 const dpoContact = "rgpd@helpmedraft.fr";
 </script>
@@ -142,18 +143,48 @@ const dpoContact = "rgpd@helpmedraft.fr";
             class="text-sm sm:text-base leading-relaxed text-[#111111]/90 mb-4"
           >
             HelpMeDraft intègre des modèles de langage pour vous assister dans
-            la rédaction de vos documents professionnels.
+            la rédaction de vos documents professionnels. Les propositions
+            qu'ils produisent peuvent contenir des erreurs ; elles ne sont
+            jamais appliquées à votre document sans votre décision explicite.
+            L'article 05 des
+            <RouterLink to="/cgu" class="underline hover:text-[#C4341C]"
+              >conditions générales d'utilisation</RouterLink
+            >
+            détaille ce que cela implique pour vous.
           </p>
+
+          <!--
+            L'inférence est exécutée localement depuis le changement
+            d'architecture : il n'y a donc plus d'anonymisation avant envoi à un
+            tiers, puisqu'il n'y a plus d'envoi. La garantie est plus forte, et
+            c'est une propriété de l'architecture et non une mesure de
+            filtrage — elle ne peut pas échouer sur un cas particulier.
+          -->
+          <div
+            class="p-4 bg-[#111111] text-[#F4F1EA] font-mono text-xs leading-relaxed border border-[#111111] mb-4"
+          >
+            <strong class="text-[#E0533C] uppercase block mb-1"
+              >Aucun Transfert à un Tiers :</strong
+            >
+            Le modèle de langage est exécuté sur l'infrastructure de LexiCorp.
+            Le contenu de vos documents ne quitte à aucun moment cette
+            infrastructure : il n'est transmis à aucun fournisseur
+            d'intelligence artificielle, et n'est utilisé pour l'entraînement
+            d'aucun modèle.
+          </div>
+
           <div
             class="p-4 bg-[#111111] text-[#F4F1EA] font-mono text-xs leading-relaxed border border-[#111111]"
           >
             <strong class="text-[#E0533C] uppercase block mb-1"
-              >Garantie d'Anonymisation :</strong
+              >Ce Que Nous Conservons :</strong
             >
-            Conformément à notre charte de sécurité, aucune donnée à caractère
-            personnel n'est transmise aux API tierces (OpenAI) sans
-            anonymisation préalable. De plus, vos données ne sont en aucun cas
-            utilisées pour réentraîner les modèles publics d'IA.
+            Chaque appel à l'assistant est journalisé : l'action demandée, le
+            texte soumis, la proposition produite, et le fait que vous l'ayez
+            ou non versée à votre document. Cette conservation répond à deux
+            obligations — la traçabilité des contenus générés (règlement UE
+            2024/1689) et le décompte de votre quota quotidien. Ces extraits
+            sont rattachés à votre compte et supprimés avec lui.
           </div>
         </section>
 

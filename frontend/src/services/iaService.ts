@@ -3,6 +3,7 @@ import type {
   GenererIaPayload,
   GenererIaResponse,
   IaHistoriqueEntry,
+  MarquerInsertionResponse,
 } from "../types/ia";
 
 /**
@@ -33,4 +34,26 @@ async function historique(idDocument: string): Promise<IaHistoriqueEntry[]> {
   return response.data;
 }
 
-export default { generer, historique };
+/**
+ * Marque une proposition comme versée au document (AI Act, art. 50).
+ *
+ * Appelée APRÈS la modification du contenu local, jamais avant : marquer une
+ * insertion qui n'a pas eu lieu produirait une trace fausse, ce qui est pire
+ * qu'une trace absente.
+ *
+ * La route est idempotente côté serveur, donc un rejeu après coupure réseau ne
+ * réécrit pas l'horodatage d'origine.
+ */
+async function marquerInsertion(
+  idDocument: string,
+  idIa: string,
+  positionDebut: number,
+): Promise<MarquerInsertionResponse> {
+  const response = await api.post<MarquerInsertionResponse>(
+    `/documents/${idDocument}/ia/${idIa}/insertion`,
+    { position_debut: positionDebut },
+  );
+  return response.data;
+}
+
+export default { generer, historique, marquerInsertion };

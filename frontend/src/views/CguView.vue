@@ -113,9 +113,76 @@ const lastUpdate = "Aujourd'hui";
           <p class="text-sm sm:text-base leading-relaxed text-[#111111]/90">
             LexiCorp s'efforce d'assurer une disponibilité maximale du service,
             mais ne saurait être tenue pour responsable des interruptions
-            temporaires liées à des maintenances ou à des pannes d'API tierces
-            (OpenAI).
+            temporaires liées à des maintenances ou à une indisponibilité du
+            moteur d'inférence.
           </p>
+        </section>
+
+        <!--
+          5. CONTENUS GÉNÉRÉS PAR IA
+
+          Clause distincte du consentement au traitement des données, et ce
+          n'est pas une subtilité de rédaction : le consentement RGPD porte sur
+          ce que l'application fait des données de l'utilisateur, cette clause
+          sur ce que l'utilisateur doit savoir de ce que l'application PRODUIT.
+          Règlement UE 2024/1689 (AI Act), art. 50, applicable depuis le
+          2 août 2026.
+        -->
+        <section
+          class="bg-[#FAF8F5] border-2 border-[#111111] p-6 sm:p-8 shadow-[8px_8px_0px_0px_rgba(17,17,17,1)]"
+        >
+          <h2
+            class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
+          >
+            <span class="font-mono text-sm text-[#C4341C]">05.</span> Contenus
+            Générés par IA
+          </h2>
+
+          <p
+            class="text-sm sm:text-base leading-relaxed text-[#111111]/90 mb-4"
+          >
+            Les propositions de reformulation, de correction et de complétion
+            sont produites par un modèle de langage. Elles constituent une aide
+            à la rédaction et non un contenu vérifié : un modèle de langage
+            peut produire des formulations inexactes, des affirmations fausses
+            ou des informations qui n'apparaissaient pas dans votre texte
+            d'origine.
+          </p>
+
+          <p
+            class="text-sm sm:text-base leading-relaxed text-[#111111]/90 mb-4"
+          >
+            Aucune proposition n'est appliquée à votre document sans une action
+            explicite de votre part. Vous choisissez de l'insérer, de la
+            substituer au texte d'origine, ou de l'écarter. Les passages que
+            vous avez acceptés sont conservés dans l'historique du document, et
+            consultables depuis l'éditeur.
+          </p>
+
+          <div
+            class="p-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs leading-relaxed text-[#111111] mb-4"
+          >
+            <strong class="text-[#C4341C] uppercase block mb-1"
+              >[ Exécution Locale ]</strong
+            >
+            Le modèle est exécuté sur l'infrastructure de LexiCorp. Le contenu
+            de vos documents n'est transmis à aucun service d'intelligence
+            artificielle tiers, et n'est utilisé pour l'entraînement d'aucun
+            modèle.
+          </div>
+
+          <div
+            class="p-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs leading-relaxed text-[#111111]"
+          >
+            <strong class="text-[#C4341C] uppercase block mb-1"
+              >[ Responsabilité du Contenu Final ]</strong
+            >
+            La responsabilité éditoriale rappelée à l'article 02 s'étend aux
+            contenus générés : accepter une proposition vous en rend
+            responsable au même titre qu'un texte que vous auriez écrit
+            vous-même. Il vous appartient de relire et de vérifier toute
+            proposition avant de la diffuser.
+          </div>
         </section>
       </div>
     </main>

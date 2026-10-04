@@ -275,6 +275,12 @@ class IA(Base):
         CheckConstraint(
             "type_action IN ('reformuler','corriger','completer')", name="ck_ia_action"
         ),
+        # Une insertion sans horodatage serait une trace inexploitable au regard
+        # de l'AI Act. La contrainte est portée par le SGBD plutôt que par
+        # l'application : une écriture faite hors de l'application — script
+        # d'administration, requête directe — ne peut pas créer l'état
+        # incohérent non plus.
+        CheckConstraint("insere = 0 OR insere_at IS NOT NULL", name="ck_ia_insertion"),
     )
 
     id_ia: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
@@ -287,6 +293,31 @@ class IA(Base):
         Integer, nullable=False, default=0
     )  # Utile pour les métriques de back-office !
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now_naive)
+
+    # ── Traçabilité des contenus générés (AI Act, art. 50) ───────────────────
+    #
+    # Le règlement demande que les contenus générés par IA soient identifiables.
+    # Une ligne de cette table atteste qu'une proposition a été PRODUITE ; ces
+    # trois colonnes attestent qu'elle a été ACCEPTÉE et versée au document.
+    # La distinction compte : une proposition rejetée n'est pas un contenu
+    # généré présent dans le document de l'utilisateur.
+    #
+    # On ne stocke PAS de marquage dans le Markdown lui-même. Des balises ou des
+    # commentaires y seraient détruits à la première réécriture manuelle, et
+    # pollueraient un contenu que l'utilisateur exporte. La trace vit donc à
+    # côté du document, et la réconciliation se fait à l'ouverture
+    # (voir DocumentEditorView.vue) : on cherche content_after dans le contenu
+    # courant. Si le passage y est, il vient d'une génération ; s'il n'y est
+    # plus, il a été réécrit depuis. C'est la seule question à laquelle
+    # l'obligation demande de répondre, et elle ne nécessite aucun suivi
+    # continu des décalages — lesquels deviendraient faux à la première frappe
+    # en amont du passage.
+    insere: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # Décalage au MOMENT de l'insertion. Volontairement non maintenu ensuite :
+    # il ne sert qu'à départager deux passages identiques dans un même
+    # document, pas à localiser le texte.
+    position_debut: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    insere_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     user_id: Mapped[str] = mapped_column(
         String(36),

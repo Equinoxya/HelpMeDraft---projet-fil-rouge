@@ -80,6 +80,13 @@ CREATE TABLE ia (
     content_after  TEXT        NULL,
     tokens_used    INT         NOT NULL DEFAULT 0,
     created_at     DATETIME    NOT NULL,
+    -- Traçabilité AI Act (art. 50) : la ligne atteste que la proposition a été
+    -- PRODUITE, ces trois colonnes qu'elle a été ACCEPTÉE et versée au document.
+    -- position_debut n'est pas maintenue après l'insertion : elle départage
+    -- deux passages identiques, elle ne localise pas le texte.
+    insere         BOOLEAN     NOT NULL DEFAULT FALSE,
+    position_debut INT         NULL,
+    insere_at      DATETIME    NULL,
     user_id        CHAR(36)    NOT NULL,
     id_document    CHAR(36)    NOT NULL,
     PRIMARY KEY (id_ia),
@@ -89,7 +96,10 @@ CREATE TABLE ia (
         REFERENCES `user` (user_id) ON DELETE CASCADE,
     CONSTRAINT fk_ia_document FOREIGN KEY (id_document)
         REFERENCES document (id_document) ON DELETE CASCADE,
-    CONSTRAINT ck_ia_action CHECK (type_action IN ('reformuler','corriger','completer'))
+    CONSTRAINT ck_ia_action CHECK (type_action IN ('reformuler','corriger','completer')),
+    -- Une insertion sans horodatage serait une trace inexploitable : le
+    -- SGBD refuse l'état incohérent plutôt que de compter sur l'application.
+    CONSTRAINT ck_ia_insertion CHECK (insere = FALSE OR insere_at IS NOT NULL)
 ) ENGINE=InnoDB;
 
 -- ---------- Consentements RGPD ---------------------------------------------
