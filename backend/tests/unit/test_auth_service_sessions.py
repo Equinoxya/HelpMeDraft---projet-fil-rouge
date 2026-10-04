@@ -84,6 +84,16 @@ def test_verify_refresh_token_refuse_et_purge_un_jeton_expire(utilisateur):
         )
 
 
+def test_verify_refresh_token_refuse_un_jeton_revoque(utilisateur):
+    """Un jeton déjà tourné reste en base pour la détection de rejeu : il ne
+    doit jamais être accepté comme valide."""
+    ancien = create_session(utilisateur)
+    rotate_refresh_token(ancien)
+
+    with pytest.raises(ValueError, match="révoqué"):
+        verify_refresh_token(ancien)
+
+
 # ── Rotation ─────────────────────────────────────────────────────────────────
 
 

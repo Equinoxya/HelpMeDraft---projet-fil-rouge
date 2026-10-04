@@ -134,6 +134,11 @@ def verify_refresh_token(refresh_token: str) -> str:
         session = db_session.execute(stmt).scalar_one_or_none()
         if session is None:
             raise ValueError("Refresh token invalide")
+        # Une session révoquée reste en base jusqu'à l'expiration de son jeton,
+        # pour permettre la détection de rejeu (cf. rotate_refresh_token). Elle
+        # ne doit donc jamais être acceptée comme valide ici.
+        if session.revoke:
+            raise ValueError("Refresh token révoqué")
         if session.refresh_token_exp < utc_now_naive():
             db_session.delete(session)
             db_session.commit()
@@ -197,5 +202,5 @@ def hash_reset_token(plain_token: str) -> str:
     return hashlib.sha256(plain_token.encode()).hexdigest()
 
 
-def is_reset_token_expired(expires_at: datetime) -> bool:
+def is_reset_token_expired(expires_at: datetime.datetime) -> bool:
     return utc_now_naive() > expires_at  # réutilise ton helper existant
