@@ -117,16 +117,62 @@ Hygiène du Jira, relevée au passage :
 - [x] **`npm run build` réparé** : les deux imports inutilisés retirés. Plus rien ne bloque la mise en CI
 - [x] Prettier passé sur les 6 fichiers non formatés — `prettier --check src/` est propre
 
-### 6 · Base de données ⭐ CP 7
-- [ ] `schema_mysql.sql` existe mais l'app tourne sur SQLite → trancher : migrer vers MySQL (recommandé par le CDC) ou argumenter le choix
-- [ ] **Jeu d'essai complet** dans une base de test
-- [ ] **Procédure de sauvegarde / restauration**
-- [ ] **Utilisateurs SGBD et droits d'accès** (critère de performance : sécurité et confidentialité)
-- [ ] Aligner ORM et SQL : `ia.id_document` sans `ondelete` côté ORM alors que le SQL porte `ON DELETE CASCADE`
+### 6 · Base de données ⭐ CP 7 — ✅ l'essentiel est fait
+Voir [`docs/exploitation-base-de-donnees.md`](./docs/exploitation-base-de-donnees.md).
+**13 contrôles passés contre un vrai serveur MySQL** (MariaDB 10.11, faute de démon Docker ici).
+
+> **Trois défauts réels trouvés et corrigés**, tous invisibles depuis l'interface :
+> 1. `create_all()` tournait aussi sur MySQL, donc `schema_mysql.sql` **n'était jamais exécuté** —
+>    la base réelle n'avait ni les 5 `CHECK`, ni les 9 index, ni les clés étrangères nommées, alors
+>    que le dépôt affichait un script soigné ;
+> 2. `ia.id_document` sans `ondelete` côté ORM : tout `DELETE FROM document` exécuté en SQL
+>    échouait (`FOREIGN KEY constraint failed`). Seul le passage par l'ORM fonctionnait, grâce à un
+>    `cascade` Python qui masquait l'absence de la règle côté base ;
+> 3. `cryptography` absente des dépendances : MySQL 8.4 authentifie en `caching_sha2_password`, que
+>    PyMySQL ne sait pas honorer sans elle. **La première connexion de la pile échouait** —
+>    `docker compose up` ne pouvait pas fonctionner. Invisible parce que les tests tournent sur
+>    SQLite, qui n'authentifie rien.
+
+- [x] **MySQL tranché** et argumenté (§2 du document) : MySQL 8.4 en conteneur, SQLite conservé en
+      développement et pour les tests. PostgreSQL écarté pour coût et non pour qualité
+- [x] **`schema_mysql.sql` est la source de vérité unique** : monté en `initdb` dans la
+      composition, `create_all()` ne tourne plus que sur SQLite, et l'application **échoue au
+      démarrage** avec la marche à suivre si les tables manquent
+- [x] **Parité ORM / SQL vérifiée par 36 tests** (`tests/unit/test_schema_parite.py`) : tables,
+      colonnes, longueurs, nullabilité, `CHECK`, index, unicité, clés étrangères et règles
+      `ON DELETE`. Modifier un seul des deux endroits fait échouer la CI
+- [x] **Jeu d'essai** reproductible (`database/jeu_essai.py`) : 4 comptes, 7 documents, 40 appels
+      IA. Couvre les bornes — quota épuisé, quota minimal, les 3 statuts, document sans dossier,
+      appels hors fenêtre de 24 h, jetons expiré et consommé. En Python et non en `.sql` parce que
+      bcrypt sale ses empreintes
+- [x] **Sauvegarde / restauration** : 2 scripts, 3 contrôles d'intégrité, rétention. L'aller-retour
+      a été joué pour de vrai — données détruites puis restituées à l'identique
+- [x] **Utilisateurs SGBD et droits** : 3 comptes au moindre privilège. Le compte applicatif n'a
+      **aucun droit de structure**, vérifié depuis l'application (`CREATE TABLE` et `DROP TABLE`
+      refusés)
+- [x] Aligner ORM et SQL sur `ia.id_document` — fait, et vérifié sur un vrai InnoDB
+- [ ] **Lancer `docker compose up --build` sur une machine avec un démon Docker.** Il reste 4
+      points propres à MySQL 8.4 que MariaDB ne permet pas de confirmer : la collation
+      `utf8mb4_0900_ai_ci`, `--set-gtid-purged=OFF`, l'authentification `caching_sha2_password`, et
+      l'enchaînement des montages `initdb`
+- [ ] Outiller les migrations (Alembic) : les 3 scripts actuels ne sont ni versionnés ni
+      idempotents, et rien n'enregistre ce qui a déjà été appliqué
 
 ### 7 · NoSQL ⭐ CP 8
-- [ ] L'intitulé de CP8 est « SQL **et** NoSQL » et aucun composant NoSQL n'existe → ajouter un usage justifié (cache Redis des réponses IA, journal des appels IA en Mongo) ou préparer un argumentaire solide pour le jury
-- [ ] **Transactions et conflits d'accès** : implémenter ou documenter (critère de performance)
+Voir [`docs/argumentaire-nosql.md`](./docs/argumentaire-nosql.md).
+
+- [x] **Argumentaire NoSQL** : décision de ne rien ajouter, argumentée par l'étude des trois usages
+      candidats (cache Redis des réponses IA, journal Mongo des appels, Redis pour Flask-Limiter),
+      chiffrée là où c'était mesurable, avec les trois conditions de son réexamen.
+      **Le critère reste formellement non couvert par un composant** — le document le dit, plutôt
+      que de brancher un Redis décoratif
+- [x] **Transactions et conflits d'accès** : documenté au §7 du document d'exploitation. Un conflit
+      réel y est analysé — le quota IA est un *time-of-check to time-of-use*, deux appels
+      simultanés à 19/20 passent tous les deux. Portée chiffrée (2 à 3 appels au-delà du quota, et
+      c'est une limite de ressource, pas un contrôle d'accès)
+- [ ] Appliquer la correction du quota concurrent (§7.2 : réserver la ligne `ia` dans une
+      transaction courte, puis appeler le modèle hors transaction). **Non fait** : un verrou naïf
+      serait tenu pendant les 50 s de l'inférence, le remède serait pire que le mal — 2 h
 
 ### 8 · Sécurité — 🔄 l'essentiel est fait
 Voir [`docs/audit-securite.md`](./docs/audit-securite.md). 0 vulnérabilité critique ou élevée,
