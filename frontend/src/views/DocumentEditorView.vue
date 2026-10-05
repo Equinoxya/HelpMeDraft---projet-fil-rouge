@@ -780,9 +780,8 @@ function handleCancel() {
                 Les propositions ci-dessous sont
                 <strong>générées par un modèle de langage</strong> exécuté
                 localement. Elles peuvent contenir des erreurs ou des
-                affirmations fausses :
-                <strong>relisez avant d'insérer</strong>. Vous restez
-                responsable du contenu final de votre document
+                affirmations fausses : <strong>relisez avant d'insérer</strong>.
+                Vous restez responsable du contenu final de votre document
                 (<RouterLink to="/cgu" class="underline hover:text-[#C4341C]"
                   >CGU</RouterLink
                 >).

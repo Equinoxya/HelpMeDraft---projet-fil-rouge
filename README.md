@@ -25,7 +25,7 @@ Emails, notes de service, rapports — un éditeur Markdown augmenté par un mod
 
 > [!NOTE]
 > **Projet en cours.** HelpMeDraft est le projet fil rouge du titre professionnel **Concepteur Développeur d'Applications (CDA)** — CD2IA 2025/2026, Metz Numeric School. Commanditaire fictif : **LexiCorp**, éditeur d'outils de gestion documentaire pour les PME.
-> Le cœur fonctionnel est opérationnel ; tests automatisés, conteneurisation et CI/CD restent à construire — voir [l'état d'avancement](#-état-davancement).
+> Le cœur fonctionnel, la suite de tests (344 tests), la conteneurisation et la CI/CD sont en place. Restent les livrables d'examen, une poignée de corrections RGAA et la validation de la pile Docker sur une machine disposant d'un démon — voir [l'état d'avancement](#-état-davancement).
 
 <details>
 <summary><b>📑 Sommaire</b></summary>
@@ -38,6 +38,7 @@ Emails, notes de service, rapports — un éditeur Markdown augmenté par un mod
 - [Variables d'environnement](#-variables-denvironnement)
 - [API](#-api)
 - [Modèle de données](#%EF%B8%8F-modèle-de-données)
+- [Tests](#-tests)
 - [Sécurité](#-sécurité)
 - [RGPD et accessibilité](#%EF%B8%8F-rgpd-et-accessibilité)
 - [État d'avancement](#-état-davancement)
@@ -76,6 +77,8 @@ Les assistants de rédaction existants envoient le texte de l'utilisateur à une
 - 3 actions IA : **reformuler**, **corriger**, **compléter**
 - Portée au choix : sélection ou document entier
 - Consigne libre transmise au modèle, insertion ou remplacement du résultat
+- Annulation d'une génération en cours, temps restant estimé
+- **Traçabilité AI Act** : les passages acceptés sont tracés et rappelés à l'ouverture du document
 
 </td>
 </tr>
@@ -85,7 +88,7 @@ Les assistants de rédaction existants envoient le texte de l'utilisateur à une
 ### 📁 Gestion documentaire
 - CRUD documents, organisation en dossiers, filtrage
 - Statuts `brouillon` · `a_relire` · `termine`
-- Historique complet de chaque appel IA (avant / après, tokens)
+- Historique complet de chaque appel IA (avant / après, tokens, insertion effective)
 - Statistiques personnelles
 
 </td>
@@ -109,13 +112,16 @@ Côté vitrine : pages publiques **Accueil**, **Fonctionnalités**, **Modèles**
 
 | Domaine | Technologie |
 |---|---|
-| 🎨 Front-end | Vue 3 · TypeScript · Vite · Tailwind CSS 4 · daisyUI · Pinia · Vue Router |
+| 🎨 Front-end | Vue 3 · TypeScript · Vite · Tailwind CSS 4 · Pinia · Vue Router |
 | 📝 Éditeur | CodeMirror 6 (`@codemirror/lang-markdown`) + `marked` + `DOMPurify` |
 | 🐍 Back-end | Python 3.11+ · Flask 3 · SQLAlchemy 2 |
 | 🗄️ Base de données | MySQL 8.4 en conteneur (schéma, droits et sauvegarde : [documentation](docs/exploitation-base-de-donnees.md)) — SQLite en développement et pour les tests |
 | 🤖 IA | **Ollama en local** (`qwen2.5:3b`) — aucune donnée envoyée à un service tiers |
 | 🔑 Authentification | JWT HS256 (access 15 min) + refresh token `httpOnly` haché, avec rotation |
 | ✉️ Emailing | Flask-Mail, sandbox Mailtrap en développement |
+| 🧪 Tests | pytest (+ pytest-cov) côté backend, Vitest côté frontend |
+| 🔁 CI / CD | GitHub Actions — Ruff, ESLint, Prettier, types, tests, build des deux images |
+| 🐳 Conteneurisation | Docker Compose : MySQL 8.4, gunicorn, nginx |
 
 > [!TIP]
 > **Choix technique — IA locale.** Le cahier des charges autorisait OpenAI *ou* un LLM local. Ollama a été retenu : les contenus rédigés ne quittent jamais l'infrastructure, ce qui répond directement à l'exigence RGPD « aucune donnée personnelle envoyée à un tiers sans anonymisation ». Aucune clé API n'est donc nécessaire.
@@ -141,20 +147,30 @@ HelpMeDraft/
 │   │       ├── auth_service.py  # hachage, JWT, rotation des refresh tokens
 │   │       ├── email_service.py
 │   │       └── ia_service.py    # prompt engineering + appel Ollama
-│   ├── database/db.py           # modèles SQLAlchemy et moteur
+│   ├── database/
+│   │   ├── db.py                # modèles SQLAlchemy et moteur
+│   │   ├── schema_mysql.sql     # source de vérité du schéma (monté en initdb)
+│   │   ├── migration_*.sql      # 4 migrations, appliquées à la main
+│   │   ├── jeu_essai.py         # jeu d'essai reproductible
+│   │   └── sauvegarde.sh / restauration.sh
+│   ├── tests/                   # 286 tests : unit/, integration/, security/
+│   ├── Dockerfile               # gunicorn, utilisateur non privilégié
 │   ├── run.py                   # point d'entrée de développement
 │   └── requirements.txt         # versions figées (reproductibilité CI)
 ├── frontend/
-│   └── src/
-│       ├── index.ts             # routeur et guards (auth / guest / admin)
-│       ├── views/               # une vue par route
-│       ├── components/          # MarkdownEditor, Nav, Footer
-│       ├── services/            # clients HTTP (axios) par domaine
-│       ├── stores/auth.ts       # état d'authentification (Pinia)
-│       └── types/               # types partagés front/API
-├── docs/                        # maquettes, captures d'écran, veille, correctifs sécurité
+│   ├── src/
+│   │   ├── index.ts             # routeur et guards (auth / guest / admin)
+│   │   ├── views/               # une vue par route
+│   │   ├── components/          # MarkdownEditor, Nav, Footer
+│   │   ├── services/            # clients HTTP (axios) par domaine
+│   │   ├── stores/auth.ts       # état d'authentification (Pinia)
+│   │   ├── types/               # types partagés front/API
+│   │   └── **/__tests__/        # 58 tests Vitest
+│   └── Dockerfile               # build en deux étapes, image finale nginx
+├── docs/                        # conception, plan de tests, audits, veille, captures
+├── .github/workflows/ci.yml     # backend · frontend · images Docker
 ├── .env.example
-└── docker-compose.yml           # à écrire
+└── docker-compose.yml           # MySQL 8.4 + backend + frontend
 ```
 
 Le backend suit une séparation stricte en trois couches :
@@ -400,7 +416,8 @@ Base : `http://localhost:5000`. Toutes les routes hors `/auth` exigent l'en-têt
 | Méthode | Route | Description |
 |---|---|---|
 | `POST` | `/documents/<id>/ia/generer` | Génération. Corps : `type_action` (`reformuler` \| `corriger` \| `completer`), `scope` (`selection` \| `document`), `contenu`, `instructions` (facultatif). Renvoie `429` si le quota 24 h est atteint, `502` si Ollama est injoignable |
-| `GET` | `/documents/<id>/ia/historique` | Historique des interactions du document |
+| `GET` | `/documents/<id>/ia/historique` | Historique des interactions du document, état d'insertion compris |
+| `POST` | `/documents/<id>/ia/<id_ia>/insertion` | Marque une proposition comme versée au document (AI Act, art. 50). Corps : `position_debut` (entier). Idempotente : un second appel renvoie `200` sans réécrire l'horodatage d'origine |
 
 </details>
 
@@ -427,12 +444,47 @@ Sept entités, identifiants UUID, suppression en cascade depuis `user`.
 | `user` | Compte, rôle, quota IA quotidien (20 par défaut) |
 | `document` | Titre, contenu, format, statut, rattachement à un dossier |
 | `dossier` | Regroupement de documents d'un utilisateur |
-| `ia` | Journal des appels IA : action, contenu avant/après, tokens consommés |
+| `ia` | Journal des appels IA : action, contenu avant/après, tokens consommés, et trace d'insertion (`insere`, `position_debut`, `insere_at`) |
 | `consentement` | Traçabilité des consentements RGPD (type, acceptation, date) |
 | `user_session` | Refresh tokens hachés, expiration, drapeau de révocation |
 | `password_reset` | Tokens de réinitialisation hachés, expiration, usage unique |
 
 > `PRAGMA foreign_keys=ON` est activé à chaque connexion : SQLite n'applique pas les contraintes de clé étrangère par défaut, et sans lui le `ondelete="SET NULL"` de `document.id_dossier` ne serait jamais exécuté.
+
+---
+
+## 🧪 Tests
+
+**344 tests, tous au vert** — 286 pytest, 58 Vitest. Couverture backend **96 %** hors
+`database/jeu_essai.py`, script de peuplement non destiné à être couvert (89 % en le comptant).
+
+```bash
+# Backend — depuis backend/, venv activé
+pytest                                   # toute la suite
+pytest -m securite                       # la campagne de sécurité seule
+pytest --cov=app --cov=database --cov-report=term-missing
+
+# Frontend — depuis frontend/
+npm test                                 # vitest run
+npm run test:coverage
+```
+
+| Niveau | Où |
+|---|---|
+| Unitaires (métier, accès aux données) | `backend/tests/unit/` |
+| Intégration (routes HTTP, flux Ollama, traçabilité IA) | `backend/tests/integration/` |
+| Sécurité (17 non-régressions, `-m securite`) | `backend/tests/security/` |
+| Parité ORM / `schema_mysql.sql` (36 contrôles) | `backend/tests/unit/test_schema_parite.py` |
+| Interface et utilitaires | `frontend/src/**/__tests__/` |
+
+L'environnement de test est hermétique : base en mémoire, aucun appel réseau. Le
+[plan de tests](docs/plan-de-tests.md) détaille les 7 niveaux, la traçabilité des règles de gestion
+et le compte rendu d'exécution.
+
+> [!TIP]
+> **Les doubles de test mentent.** Trois bugs de la chaîne IA sont passés sous un faux
+> `requests.post` qui acceptait `json()` à tout moment. Il a fallu un vrai serveur HTTP —
+> `tests/integration/test_ia_flux_ollama.py` — pour les voir.
 
 ---
 
@@ -446,7 +498,8 @@ Sept entités, identifiants UUID, suppression en cascade depuis `user`.
 | ⏱️ | **Access token** JWT HS256, durée de vie 15 minutes, en-tête `Authorization` |
 | 🔄 | **Refresh token** en cookie `httpOnly`, `SameSite=Strict`, limité au chemin `/auth`, **stocké haché** et **tourné à chaque usage** — la réutilisation d'un token consommé est traitée comme un vol et révoque toutes les sessions |
 | 🧼 | **XSS** : la prévisualisation Markdown passe par `DOMPurify.sanitize()` entre `marked.parse()` et `v-html` ([détail du correctif](docs/securite-correctifs-2026-09-27.md)) |
-| 🚨 | **Fail fast** : absence de `JWT_SECRET_KEY` → `RuntimeError` au démarrage, aucune clé de repli dans le code |
+| 🚨 | **Fail fast** : absence de `JWT_SECRET_KEY` ou de `SECRET_KEY` → `RuntimeError` au démarrage, aucune clé de repli dans le code |
+| 🚫 | **Jetons révoqués** : une session révoquée reste en base jusqu'à expiration pour la détection de rejeu — `verify_refresh_token()` contrôle le drapeau `revoke` et la refuse |
 | 🔐 | **Cookie `Secure`** piloté par `APP_ENV` : désactivé en dev (localhost HTTP), obligatoire ailleurs |
 | 📧 | **Réinitialisation** : seul le hash SHA-256 du token est stocké, expiration 1 h, usage unique, révocation de toutes les sessions après changement |
 | 🕵️ | **Anti-énumération** : `/auth/forgot-password` répond à l'identique que l'email existe ou non |
@@ -459,28 +512,46 @@ Sept entités, identifiants UUID, suppression en cascade depuis `user`.
 
 ### 🚧 Points ouverts avant une mise en production
 
-- [ ] `SECRET_KEY` Flask non configurée (sans impact actuel : ni session serveur, ni `flash()`)
-- [ ] Chiffrement des données sensibles au repos
-- [ ] Test XSS de bout en bout à rejouer manuellement dans le navigateur
-- [ ] Audit de sécurité complet et rapport associé
+L'[audit de sécurité](docs/audit-securite.md) est rédigé : **0 vulnérabilité critique ou élevée**,
+17 tests de non-régression. Restent :
+
+- [ ] Chiffrement des données sensibles au repos (3 options chiffrées au § 5.1 de l'audit)
+- [ ] Restreindre l'écoute d'Ollama à `127.0.0.1` (`OLLAMA_HOST=127.0.0.1:11434`)
+- [ ] Épingler les dépendances transitives (Werkzeug non épinglée)
+- [ ] Remplacer le stockage mémoire de Flask-Limiter par Redis — les seuils comptent **par worker**
+- [ ] Corriger le quota IA concurrent : contrôle et usage ne sont pas atomiques (§ 7.2 de
+      [l'exploitation de la base](docs/exploitation-base-de-donnees.md))
 
 ---
 
 ## ⚖️ RGPD et accessibilité
 
-**RGPD**
+**RGPD et AI Act**
 
 - ✅ Consentement explicite recueilli à l'inscription et tracé en base (table `consentement`)
 - ✅ Inférence IA entièrement locale : aucun contenu utilisateur transmis à un tiers
-- ✅ Pages Mentions légales, CGU et Politique de confidentialité intégrées
+- ✅ Pages Mentions légales, CGU et Politique de confidentialité intégrées, article dédié aux
+  contenus générés et à la responsabilité éditoriale de l'utilisateur
+- ✅ **Traçabilité des contenus générés** (règlement UE 2024/1689, art. 50) : la table `ia`
+  distingue une proposition *produite* d'une proposition *acceptée*, et l'éditeur rappelle à
+  l'ouverture les passages issus d'une génération
 - 🚧 Consentement distinct dédié à l'usage de l'IA
 - 🚧 Export des données et suppression de compte à l'initiative de l'utilisateur
 
 **Accessibilité (RGAA)**
 
+[Audit réel sur les 16 écrans](docs/audit-accessibilite.md), axe-core sur l'application démarrée
+(écrans publics **et** authentifiés) complété par des contrôles manuels.
+
+- ✅ **15 écrans, 0 violation axe-core** (WCAG 2.0 et 2.1, niveaux A et AA)
+- ✅ Contrastes corrigés : `#E0533C` assombri en `#C4341C` — 64 violations avant, 0 après
+- ✅ Étiquettes sur les champs de quota du back-office et sur la zone CodeMirror
 - ✅ Chargement différé des routes, navigation cohérente
-- 🚧 Couverture ARIA complète, contrastes, navigation clavier
-- 🚧 Audit Lighthouse / WAVE et rapport associé
+- 🚧 Contrôles manuels restants (~3 h 30) : titre de page par route, lien d'évitement,
+  `:focus-visible` global, saut de niveau du pied de page, cibles sous 24 px
+
+> Un « 0 violation » automatisé ne vaut pas conformité RGAA : l'audit le dit, et liste ce qu'axe-core
+> ne détecte pas.
 
 ---
 
@@ -490,17 +561,24 @@ Sept entités, identifiants UUID, suppression en cascade depuis `user`.
 |---|:---:|
 | Authentification et gestion de compte | ✅ Terminé |
 | CRUD documents et dossiers | ✅ Terminé |
-| Intégration IA (Ollama) et quotas | ✅ Terminé |
+| Intégration IA (Ollama), quotas et performance | ✅ Terminé |
+| Traçabilité des contenus générés (AI Act) | ✅ Terminé |
 | Back-office administrateur | ✅ Terminé |
 | Pages légales et vitrine | ✅ Terminé |
 | Correctifs de sécurité (XSS, tokens, CSRF) | ✅ Terminé |
-| Maquettes, captures et veille | 🔄 En cours |
-| Tests automatisés (pytest, Vitest) et plan de test | ⬜ À faire |
-| Conteneurisation Docker | ⬜ À faire (`docker-compose.yml` vide) |
-| Pipeline CI/CD | ⬜ À faire |
-| Migration vers MySQL et scripts SQL | ✅ Terminé |
-| Audit accessibilité et sécurité | ⬜ À faire |
-| Documentation utilisateur | ⬜ À faire |
+| Maquettes, captures et veille | ✅ Terminé |
+| Documents de conception (11 diagrammes) | ✅ Terminé |
+| Tests automatisés (344) et plan de tests | ✅ Terminé |
+| Migration vers MySQL, droits, sauvegarde et jeu d'essai | ✅ Terminé |
+| Conteneurisation Docker | 🔄 Écrite, reste à valider sur une machine avec un démon Docker |
+| Pipeline CI/CD (GitHub Actions, Ruff, ESLint) | ✅ Terminé |
+| Audit de sécurité | ✅ Terminé |
+| Audit d'accessibilité | 🔄 Audité, quelques corrections manuelles restantes |
+| Tests système, de charge et d'acceptation | ⬜ À faire (dépendent de la pile Docker) |
+| Procédure et scripts de déploiement | ⬜ À faire |
+| Dossier de projet, diaporama, documentation utilisateur | ⬜ À faire |
+
+Le détail, lot par lot, est dans [`TODO.md`](TODO.md).
 
 ---
 

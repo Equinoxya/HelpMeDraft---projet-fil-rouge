@@ -17,6 +17,7 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 | Rôles utilisateur / administrateur | `admin_route.py`, `AdminView.vue` | 3 |
 | Éditeur Markdown + commandes IA | `MarkdownEditor.vue`, `DocumentEditorView.vue` | 2 |
 | CRUD documents, dossiers, historique IA | `document_route.py`, `dossier_route.py`, `ia_route.py` | 3, 8 |
+| Traçabilité des contenus générés par IA (AI Act, art. 50) | `ia_route.py` (`POST …/insertion`), colonnes `insere` / `position_debut` / `insere_at`, `DocumentEditorView.vue` | 2, 3, 7 |
 | IA locale (Ollama) + prompt engineering | `services/ia_service.py` | 3 |
 | Quota IA journalier | `ia_route.py` (fenêtre 24 h) | 3 |
 | Stats d'usage admin | `admin_route.py` (`/stats`) | 3 |
@@ -24,10 +25,10 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 | Modèle de données (7 entités) + script MySQL | `database/db.py`, `schema_mysql.sql` | 7 |
 | ORM SQLAlchemy, requêtes paramétrées, validation des entrées | `db.py`, routes | 8 |
 | Protection XSS (DOMPurify) + 13 tests | `MarkdownEditor.vue`, `markdown-sanitization.spec.ts` | 2 |
-| Suite de tests automatisés (282 tests) | `backend/tests/`, `frontend/src/**/__tests__/` | 2, 3, 8, 9 |
+| Suite de tests automatisés (344 tests) | `backend/tests/`, `frontend/src/**/__tests__/` | 2, 3, 8, 9 |
 | Performance de la génération IA : modèle, fenêtre de contexte et maintien en mémoire dimensionnés sur mesures | `config.py`, `ia_service.py` | 3, 11 |
 | Annulation d'une génération en cours + temps estimé affiché | `DocumentEditorView.vue`, `utils/iaEstimation.ts` | 2 |
-| Tokens hashés, rotation, anti-rejeu, cookie HttpOnly/SameSite | `auth_routes.py`, `test_securite.py` | 3 |
+| Tokens hashés, rotation, anti-rejeu, révocation contrôlée, cookie HttpOnly/SameSite | `auth_routes.py`, `auth_service.py`, `test_securite.py` | 3 |
 | Consentement RGPD tracé en base | table `consentement` | 5, 7 |
 | Maquettes et captures | `docs/maquettes/`, `docs/captures/` | 5 |
 | Journal de veille (3 périmètres, avril → octobre 2026) | `docs/veille/journal-de-veille.md` | transversale |
@@ -55,7 +56,9 @@ Reste à faire sur ce lot :
 - [ ] Vérifier avec lui si le plan « formation » ou le plan « entreprise » du dossier est attendu
 
 ### 2 · Tests automatisés et plan de tests ⭐ CP 2, 3, 8, 9 — 🔄 l'essentiel est fait
-**282 tests, tous au vert** (228 pytest, 54 Vitest), 95 % de couverture backend.
+**344 tests, tous au vert** (286 pytest, 58 Vitest), **96 % de couverture backend** hors
+`database/jeu_essai.py`, script de peuplement non destiné à être couvert (89 % en le comptant).
+Chiffres mesurés le 05/10/2026 (`pytest --cov=app --cov=database`, `vitest run`).
 Voir [`docs/plan-de-tests.md`](./docs/plan-de-tests.md), [`backend/tests/README.md`](./backend/tests/README.md), [`frontend/TESTS.md`](./frontend/TESTS.md).
 
 - [x] **pytest** côté backend : unitaires, intégration, sécurité
@@ -155,8 +158,9 @@ Voir [`docs/exploitation-base-de-donnees.md`](./docs/exploitation-base-de-donnee
       points propres à MySQL 8.4 que MariaDB ne permet pas de confirmer : la collation
       `utf8mb4_0900_ai_ci`, `--set-gtid-purged=OFF`, l'authentification `caching_sha2_password`, et
       l'enchaînement des montages `initdb`
-- [ ] Outiller les migrations (Alembic) : les 3 scripts actuels ne sont ni versionnés ni
-      idempotents, et rien n'enregistre ce qui a déjà été appliqué
+- [ ] Outiller les migrations (Alembic) : les 4 scripts actuels (dont
+      `migration_tracabilite_ia.sql`) ne sont ni versionnés ni idempotents, et rien n'enregistre
+      ce qui a déjà été appliqué
 
 ### 7 · NoSQL ⭐ CP 8
 Voir [`docs/argumentaire-nosql.md`](./docs/argumentaire-nosql.md).
@@ -188,6 +192,10 @@ Voir [`docs/audit-securite.md`](./docs/audit-securite.md). 0 vulnérabilité cri
 - [x] Configurer `SECRET_KEY` Flask, distincte de `JWT_SECRET_KEY`
 - [x] `KAN-95` limitation de débit sur `/auth/refresh`
 - [x] `KAN-96` purge des sessions expirées
+- [x] **Jeton de rafraîchissement révoqué accepté** : `verify_refresh_token()` ne lisait pas le
+      drapeau `revoke`. Une session révoquée restant en base jusqu'à expiration — c'est elle qui
+      permet la détection de rejeu — un jeton déjà tourné passait le contrôle. Corrigé et
+      couvert par un test unitaire dédié
 - [x] `KAN-98` contrainte SQL du quota alignée sur l'API + script de migration
 - [x] `KAN-94` énumération à l'inscription : **risque accepté**, argumenté au §4.1 du rapport
 - [x] Test XSS rejoué, et transformé en 13 tests automatisés
@@ -221,6 +229,9 @@ Voir [`docs/audit-accessibilite.md`](./docs/audit-accessibilite.md). Audit réel
 **Total estimé : ~3 h 30**, dont 1 h pour 97 % du volume.
 
 ### 10 · RGPD
+- [x] **CGU et politique de confidentialité** mises à jour sur les contenus générés : article 5
+      dédié, responsabilité éditoriale de l'utilisateur rappelée, et mention explicite qu'aucun
+      contenu n'est transmis à un service tiers
 - [ ] Consentement **distinct** dédié à l'usage de l'IA
 - [ ] Export des données et suppression de compte par l'utilisateur (art. 15 et 17)
 
@@ -280,8 +291,41 @@ Piège de méthode rencontré, à garder en tête :
 - La **première** exécution après un `ollama pull` lit les poids depuis le disque *pendant* la génération et donne un débit trompeur : 1,96 jetons/s à froid contre 38,47 à chaud, même machine et même modèle. Toujours mesurer deux fois
 
 ### 15 · Hygiène du dépôt
-- [ ] Supprimer les branches obsolètes : `claude/beautiful-clarke-6znlbn`, `claude/capacites-concretes-y1w66f`, `claude/gracious-goldberg-0o31o8` (tout leur contenu utile est dans `main`)
+- [ ] Supprimer les 4 branches obsolètes encore sur le dépôt distant :
+      `claude/beautiful-clarke-6znlbn`, `claude/capacites-concretes-y1w66f`,
+      `claude/clever-maxwell-r7sk09`, `claude/gracious-goldberg-0o31o8` (tout leur contenu utile
+      est dans `main`)
 - [x] Ajouter `Claude outputs/` au `.gitignore` — fait avec le lot sécurité du §8
+
+### 16 · Traçabilité des contenus générés par IA — ✅ fait
+
+Règlement (UE) 2024/1689 (AI Act), art. 50 : les contenus générés par une IA doivent rester
+identifiables. Une ligne de la table `ia` attestait qu'une proposition avait été **produite** ;
+rien n'attestait qu'elle avait été **acceptée**. Une proposition rejetée et une proposition versée
+au document étaient indiscernables en base — la trace ne valait donc rien.
+
+- [x] **Trois colonnes sur `ia`** : `insere`, `position_debut`, `insere_at`, plus le `CHECK`
+      `ck_ia_insertion` qui interdit une insertion sans horodatage. La contrainte est portée par le
+      SGBD, pas par l'application : une écriture directe ne peut pas créer l'état incohérent
+- [x] **`POST /documents/<id>/ia/<id_ia>/insertion`**, idempotente : un double clic ou un rejeu de
+      requête ne réécrit pas l'horodatage d'origine, qui est la donnée que la trace conserve.
+      Propriété du document **et** de l'interaction vérifiées dans le `WHERE`, `404` et non `403`
+      pour ne pas confirmer l'existence d'un identifiant
+- [x] **Aucun marquage dans le Markdown** : des balises seraient détruites à la première réécriture
+      et pollueraient l'export. La trace vit à côté du document, et la réconciliation se fait à
+      l'ouverture en cherchant `content_after` dans le contenu courant
+- [x] **Historique enrichi** : `/historique` expose `insere`, `position_debut` et `insere_at`
+- [x] **CGU et politique de confidentialité** complétées (voir §10)
+- [x] **10 tests d'intégration** (`test_ia_tracabilite.py`, TI-60 à TI-69) : pose de la trace,
+      idempotence, interaction d'un tiers, document d'un autre compte, `position_debut` mal typée
+      ou booléenne
+- [x] **Migration SQL** livrée (`migration_tracabilite_ia.sql`) et `schema_mysql.sql` aligné
+
+Reste à faire sur ce lot :
+- [ ] Rejouer la migration contre un vrai MySQL 8.4 (bloqué par le même manque de démon Docker que
+      le §4 et le §6 — elle n'a été vérifiée que sur SQLite)
+- [ ] Décider si la trace doit être exposée à l'export du document ou rester interne à
+      l'application
 
 ---
 
@@ -291,7 +335,9 @@ Piège de méthode rencontré, à garder en tête :
 2. ~~Gestion de projet (§3)~~ — ✅ fait, sauf les comptes rendus réels
 3. ~~Tests + plan de tests (§2)~~ — ✅ fait, sauf tests système et acceptation
 4. ~~Clés commitées, build cassé, contraste AA (§5, §8, §9)~~ — ✅ fait
-5. **Docker + CI/CD** (§4, §5) — prochaine étape : rapides, les suites de tests sont prêtes à être branchées, `npm run build` ne bloque plus, et ça nourrit CP1, CP10, CP11 à l'entretien technique
+5. **Valider la pile Docker sur une machine avec un démon** (§4) — c'est le verrou : il débloque
+   d'un coup les tests système (§2), les tests de charge (§2), les 4 contrôles MySQL 8.4 (§6) et la
+   migration de traçabilité (§16)
 6. **Le reste de l'accessibilité** (§9) — une poignée de corrections courtes, le gros du volume est déjà levé
 7. **BDD, NoSQL, sécurité** (§6 à §8)
-8. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste. Les §14 et §15 fournissent la démarche de résolution de problème attendue
+8. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste. Les §2 et §14 fournissent la démarche de résolution de problème attendue

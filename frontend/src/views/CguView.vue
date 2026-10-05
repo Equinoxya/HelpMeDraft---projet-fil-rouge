@@ -143,10 +143,9 @@ const lastUpdate = "Aujourd'hui";
           >
             Les propositions de reformulation, de correction et de complétion
             sont produites par un modèle de langage. Elles constituent une aide
-            à la rédaction et non un contenu vérifié : un modèle de langage
-            peut produire des formulations inexactes, des affirmations fausses
-            ou des informations qui n'apparaissaient pas dans votre texte
-            d'origine.
+            à la rédaction et non un contenu vérifié : un modèle de langage peut
+            produire des formulations inexactes, des affirmations fausses ou des
+            informations qui n'apparaissaient pas dans votre texte d'origine.
           </p>
 
           <p
@@ -178,10 +177,10 @@ const lastUpdate = "Aujourd'hui";
               >[ Responsabilité du Contenu Final ]</strong
             >
             La responsabilité éditoriale rappelée à l'article 02 s'étend aux
-            contenus générés : accepter une proposition vous en rend
-            responsable au même titre qu'un texte que vous auriez écrit
-            vous-même. Il vous appartient de relire et de vérifier toute
-            proposition avant de la diffuser.
+            contenus générés : accepter une proposition vous en rend responsable
+            au même titre qu'un texte que vous auriez écrit vous-même. Il vous
+            appartient de relire et de vérifier toute proposition avant de la
+            diffuser.
           </div>
         </section>
       </div>
