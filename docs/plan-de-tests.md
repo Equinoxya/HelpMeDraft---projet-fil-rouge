@@ -296,20 +296,46 @@ frontend/
 > déclenchent dix rotations de jeton, et la détection de rejeu déconnecte l'utilisateur. C'est
 > typiquement le genre de régression qu'une relecture ne rattrape pas.
 
-### 7.8 · Tests système — manuels
+### 7.8 · Tests système — exécutés le 05/10/2026 sur la pile conteneurisée
 
-| ID | Parcours | Résultat attendu |
-|---|---|---|
-| TS-01 | inscription → connexion → tableau de bord | compte créé, session ouverte |
-| TS-02 | mot de passe oublié → mail → réinitialisation → connexion | nouveau mot de passe actif, ancien refusé |
-| TS-03 | créer un document → rédiger → enregistrement automatique → recharger | contenu conservé |
-| TS-04 | sélectionner du texte → reformuler → remplacer | texte remplacé, entrée visible dans l'historique |
-| TS-05 | créer un dossier → y classer un document → supprimer le dossier | document conservé, déclassé |
-| TS-06 | épuiser le quota IA | message explicite, pas d'erreur technique |
-| TS-07 | arrêter Ollama → demander une suggestion | message explicite, éditeur utilisable |
-| TS-08 | connexion en administrateur → back-office | comptes et statistiques affichés |
-| TS-09 | navigation **au clavier seul** sur un parcours complet | tout atteignable, focus visible |
-| TS-10 | restitution par lecteur d'écran de l'éditeur | zones et boutons annoncés |
+Joués sur `docker compose up --build` (MySQL 8.4.11, gunicorn, nginx), jeu d'essai chargé en base,
+Playwright pour les parcours navigateur et appels directs à l'API pour le reste. Script versionné :
+[`audits/tests-systeme.mjs`](./audits/tests-systeme.mjs) ; résultats bruts :
+[`audits/tests-systeme-2026-10-05.json`](./audits/tests-systeme-2026-10-05.json). Le compte rendu
+complet est dans [`validation-docker.md`](./validation-docker.md).
+
+| ID | Parcours | Résultat attendu | Verdict |
+|---|---|---|:---:|
+| TS-01 | inscription → connexion → tableau de bord | compte créé, session ouverte | ✅ |
+| TS-02 | mot de passe oublié → mail → réinitialisation → connexion | nouveau mot de passe actif, ancien refusé | ❌ |
+| TS-03 | créer un document → rédiger → enregistrement automatique → recharger | contenu conservé | ✅ |
+| TS-04 | sélectionner du texte → reformuler → remplacer | texte remplacé, entrée visible dans l'historique | — |
+| TS-05 | créer un dossier → y classer un document → supprimer le dossier | document conservé, déclassé | ✅ |
+| TS-06 | épuiser le quota IA | message explicite, pas d'erreur technique | ✅ |
+| TS-07 | arrêter Ollama → demander une suggestion | message explicite, éditeur utilisable | ✅ |
+| TS-08 | connexion en administrateur → back-office | comptes et statistiques affichés | ✅ |
+| TS-09 | navigation **au clavier seul** sur un parcours complet | tout atteignable, focus visible | ✅ |
+| TS-10 | restitution par lecteur d'écran de l'éditeur | zones et boutons annoncés | — |
+
+**7 au vert, 1 en échec, 2 hors de portée.**
+
+> **TS-02 est le test qui a rapporté le plus.** `POST /auth/forgot-password` envoie le courriel dans
+> le fil de la requête, et Flask-Mail construit son `smtplib.SMTP` **sans délai**. Serveur SMTP
+> injoignable : la requête ne se termine jamais, et comme le backend tourne avec deux workers
+> gunicorn synchrones, **l'API entière cesse de répondre**. La route est publique et non
+> authentifiée. La campagne l'a prouvé deux fois sans le vouloir — placé en tête, ce test rendait
+> tous les suivants rouges. Il est désormais exécuté en dernier, et le script dit pourquoi à cet
+> endroit. Analyse et corrections proposées : §4 de [`validation-docker.md`](./validation-docker.md).
+
+> **TS-04 et TS-10 ne sont pas des oublis.** Le premier exige un serveur Ollama avec le modèle
+> chargé, le second un lecteur d'écran réel (NVDA, VoiceOver) sur une machine graphique. Le chemin
+> applicatif de TS-04 est couvert par `tests/integration/test_ia_flux_ollama.py`, qui dresse un vrai
+> serveur HTTP ; mais la restitution réelle du modèle, non.
+
+> **Effet de bord instructif.** `/auth/login` est limité à 5 requêtes par minute **et par worker** :
+> une campagne de tests épuise le seuil et se voit refuser la connexion. Le script attend la fenêtre
+> suivante. C'est la démonstration vécue du stockage mémoire de Flask-Limiter — les seuils ne sont
+> pas ceux qu'on croit tant qu'ils ne sont pas partagés entre workers.
 
 ### 7.9 · Tests d'acceptation
 
@@ -461,9 +487,9 @@ parce qu'ils n'allaient pas de soi :
 | Couverture de `services/` | ≥ 90 % | 100 % | ✅ |
 | Durée de la suite | < 60 s | 57 s | ✅ |
 | Jeu d'essai JE-01 à JE-10 | exécuté, écarts analysés | 11 cas, 0 écart | ✅ |
-| Tests système TS-01 à TS-10 | exécutés et consignés | **non exécutés** | ⬜ |
+| Tests système TS-01 à TS-10 | exécutés et consignés | 7 ✅, 1 ❌ (constat SMTP), 2 hors de portée | 🔄 |
 | Tests d'acceptation | avec le commanditaire | **non exécutés** | ⬜ |
-| Tests de charge | après conteneurisation | **non exécutés** | ⬜ |
+| Tests de charge | après conteneurisation | **non exécutés** — la pile est désormais exécutable | ⬜ |
 
 ### Défaut trouvé et corrigé pendant la campagne
 

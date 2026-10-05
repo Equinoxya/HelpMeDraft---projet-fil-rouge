@@ -291,6 +291,12 @@ cp .env.example .env     # puis renseigner les mots de passe et les deux clés
 docker compose up --build
 ```
 
+> [!NOTE]
+> **Pile validée sur un démon Docker réel** le 5 octobre 2026 : MySQL 8.4.11, schéma et droits
+> appliqués au premier démarrage, sauvegarde et restauration jouées, 7 des 10 tests système au vert.
+> Compte rendu complet, défauts trouvés compris :
+> [`docs/validation-docker.md`](docs/validation-docker.md).
+
 | Service | Adresse |
 |---|---|
 | Interface | http://localhost:8080 |
@@ -312,7 +318,7 @@ docker compose up --build
 
 - **Gunicorn** remplace le serveur de développement de Flask, avec `--timeout 600`. Ce n'est pas du confort : l'appel à Ollama n'impose aucun délai de lecture, et le défaut de gunicorn (30 s) tuerait le worker en pleine inférence.
 - **Deux workers**, pas davantage : la limitation de débit de Flask-Limiter compte en mémoire, donc **par worker**. Avec N workers, les seuils de `/auth/login` sont multipliés par N. Un stockage Redis partagé est la vraie correction — elle figure dans la TODO.
-- **Image frontend en deux étapes** et **non privilégiée** : Node ne sert qu'à produire les fichiers statiques ; l'image finale (~83 Mo) ne contient que nginx et le résultat du build, et tourne sous l'uid 101. L'image nginx officielle lance son maître en root pour se lier au port 80 — la variante *unprivileged* écoute sur 8080 et s'en passe.
+- **Image frontend en deux étapes** et **non privilégiée** : Node ne sert qu'à produire les fichiers statiques ; l'image finale (**82,9 Mo mesurés**) ne contient que nginx et le résultat du build, et tourne sous l'uid 101 — le maître nginx compris, ce qui a été vérifié dans le conteneur. L'image nginx officielle lance son maître en root pour se lier au port 80 — la variante *unprivileged* écoute sur 8080 et s'en passe.
 - **Repli monopage dans nginx** (`try_files`) : sans lui, recharger `/documents/42` renvoie une 404, l'application ne fonctionnant qu'en navigation interne.
 
 ---
@@ -518,7 +524,13 @@ L'[audit de sécurité](docs/audit-securite.md) est rédigé : **0 vulnérabilit
 - [ ] Chiffrement des données sensibles au repos (3 options chiffrées au § 5.1 de l'audit)
 - [ ] Restreindre l'écoute d'Ollama à `127.0.0.1` (`OLLAMA_HOST=127.0.0.1:11434`)
 - [ ] Épingler les dépendances transitives (Werkzeug non épinglée)
-- [ ] Remplacer le stockage mémoire de Flask-Limiter par Redis — les seuils comptent **par worker**
+- [ ] **`/auth/forgot-password` sans délai sur le serveur de courriel** : le courriel part dans le
+      fil de la requête, et Flask-Mail n'impose aucun délai. SMTP injoignable → la requête ne se
+      termine jamais, et avec deux workers synchrones **l'API entière cesse de répondre**. Route
+      publique et non authentifiée. Mesuré le 05/10/2026, analyse au §4 de
+      [`docs/validation-docker.md`](docs/validation-docker.md)
+- [ ] Remplacer le stockage mémoire de Flask-Limiter par Redis — les seuils comptent **par worker**,
+      ce que la campagne de tests système a vérifié à ses dépens
 - [ ] Corriger le quota IA concurrent : contrôle et usage ne sont pas atomiques (§ 7.2 de
       [l'exploitation de la base](docs/exploitation-base-de-donnees.md))
 
@@ -577,11 +589,12 @@ L'[audit de sécurité](docs/audit-securite.md) est rédigé : **0 vulnérabilit
 | Documents de conception (11 diagrammes) | ✅ Terminé |
 | Tests automatisés (344) et plan de tests | ✅ Terminé |
 | Migration vers MySQL, droits, sauvegarde et jeu d'essai | ✅ Terminé |
-| Conteneurisation Docker | 🔄 Écrite, reste à valider sur une machine avec un démon Docker |
+| Conteneurisation Docker | ✅ Terminée et validée sur un démon réel |
 | Pipeline CI/CD (GitHub Actions, Ruff, ESLint) | ✅ Terminé |
 | Audit de sécurité | ✅ Terminé |
 | Audit d'accessibilité et correctifs RGAA | ✅ Terminé |
-| Tests système, de charge et d'acceptation | ⬜ À faire (dépendent de la pile Docker) |
+| Tests système TS-01 à TS-10 | 🔄 7 au vert, 1 défaut trouvé, 2 hors de portée (Ollama, lecteur d'écran) |
+| Tests de charge et d'acceptation | ⬜ À faire |
 | Procédure et scripts de déploiement | ⬜ À faire |
 | Dossier de projet, diaporama, documentation utilisateur | ⬜ À faire |
 

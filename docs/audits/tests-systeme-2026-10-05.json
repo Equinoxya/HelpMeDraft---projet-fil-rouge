@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-05T10:00:54.835Z",
+  "front": "http://localhost:8080",
+  "api": "http://localhost:5000",
+  "resultats": [
+    {
+      "id": "TS-01",
+      "intitule": "inscription → connexion → tableau de bord",
+      "verdict": "ok",
+      "detail": "compte ts01.1791194308200@exemple.fr créé (redirection vers /login), session ouverte, titre « Tableau de bord — HelpMeDraft »"
+    },
+    {
+      "id": "TS-03",
+      "intitule": "rédaction → enregistrement automatique → rechargement",
+      "verdict": "ok",
+      "detail": "document /documents/310e6e5a-f969-4737-bac5-c7190602b04f rechargé, contenu conservé"
+    },
+    {
+      "id": "TS-05",
+      "intitule": "créer un dossier → y classer un document → supprimer le dossier",
+      "verdict": "ok",
+      "detail": "document conservé après suppression du dossier, id_dossier = null (ON DELETE SET NULL)"
+    },
+    {
+      "id": "TS-06",
+      "intitule": "épuiser le quota IA",
+      "verdict": "ok",
+      "detail": "compte au quota épuisé → HTTP 429, message « Quota IA quotidien atteint (20 requêtes / 24h). » — refus avant tout appel au modèle"
+    },
+    {
+      "id": "TS-07",
+      "intitule": "Ollama injoignable → message explicite, éditeur utilisable",
+      "verdict": "ok",
+      "detail": "HTTP 502, message « Impossible de joindre Ollama sur http://host.docker.internal:11434. Vérifiez qu'il est lancé sur votre machine. » ; éditeur encore éditable"
+    },
+    {
+      "id": "TS-08",
+      "intitule": "connexion administrateur → back-office",
+      "verdict": "ok",
+      "detail": "7 lignes de comptes, 4/4 comptes du jeu d'essai affichés, statistiques présentes"
+    },
+    {
+      "id": "TS-09",
+      "intitule": "navigation au clavier seul sur un parcours complet",
+      "verdict": "ok",
+      "detail": "3 écrans, 89 prises de focus, 0 sans indication visible"
+    },
+    {
+      "id": "TS-02",
+      "intitule": "mot de passe oublié → mail → réinitialisation",
+      "verdict": "ko",
+      "detail": "AUCUNE réponse après 20 s : la route reste bloquée sur la connexion SMTP. Le serveur de courriel n'est pas joignable depuis ce conteneur, et la requête n'impose aucun délai — elle immobilise un worker gunicorn. Voir le constat « /auth/forgot-password sans délai SMTP » du compte rendu."
+    },
+    {
+      "id": "TS-04",
+      "intitule": "sélection → reformuler → remplacer",
+      "verdict": "bloque",
+      "detail": "exige un serveur Ollama avec le modèle chargé ; aucun n'est joignable depuis ce conteneur. Le chemin applicatif est couvert par les tests d'intégration (faux serveur HTTP)."
+    },
+    {
+      "id": "TS-10",
+      "intitule": "restitution par lecteur d'écran de l'éditeur",
+      "verdict": "bloque",
+      "detail": "exige NVDA ou VoiceOver sur une machine graphique. Les noms accessibles sont posés (aria-label sur CodeMirror), mais la restitution ne se vérifie pas autrement."
+    }
+  ]
+}
