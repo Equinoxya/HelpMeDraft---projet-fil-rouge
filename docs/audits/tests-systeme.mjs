@@ -58,7 +58,11 @@ const navigateur = await lancerNavigateur();
   await page.goto(`${FRONT}/register`, { waitUntil: "networkidle" });
   const champs = await page.$$('input[type="text"], input[type="email"], input[type="password"]');
   // nom, prénom, email, mot de passe, confirmation — dans l'ordre du formulaire
-  const mdpEssai = `${MDP}Ts01`; // dérivé de celui du jeu d'essai, jamais écrit en dur
+  // Mot de passe du compte que ce test crée : dérivé de celui du jeu d'essai et
+  // de l'horodatage, pour qu'aucun littéral ressemblant à un identifiant ne
+  // figure dans ce fichier. MDP apporte déjà majuscule, minuscule et chiffre,
+  // ce que la politique de mot de passe exige.
+  const mdpEssai = MDP + Date.now().toString(36).toUpperCase().slice(-4);
   const valeurs = ["Essai", "Systeme", email, mdpEssai, mdpEssai];
   for (let i = 0; i < champs.length && i < valeurs.length; i++) await champs[i].fill(valeurs[i]);
   await page.check('input[type="checkbox"]');
