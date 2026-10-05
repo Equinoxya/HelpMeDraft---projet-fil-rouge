@@ -341,6 +341,60 @@ class IA(Base):
     document: Mapped[Document] = relationship("Document", back_populates="ias")
 
 
+class JournalAdmin(Base):
+    """
+    Journal des actions d'administration : qui a changé quoi, sur qui, et quand.
+
+    POURQUOI LES EMAILS SONT COPIÉS ICI, et non simplement référencés :
+    l'action la plus importante à tracer est la SUPPRESSION d'un compte. Si
+    l'identité de la cible n'était qu'une clé étrangère, elle disparaîtrait au
+    moment même où la trace devient utile, et le journal dirait « quelqu'un a
+    supprimé quelqu'un ». La dénormalisation est donc volontaire : les deux
+    emails sont figés à l'instant de l'action.
+
+    POURQUOI acteur_id EST EN « SET NULL » ET cible_id SANS CLÉ ÉTRANGÈRE :
+    supprimer un administrateur ne doit pas effacer les actions qu'il a faites,
+    et la cible, par construction, peut ne plus exister. Les identifiants ne
+    servent qu'à relier au compte quand il est encore là.
+
+    POURQUOI avant/apres EN TEXTE : « user » → « admin », « 20 » → « 50 ». Des
+    colonnes typées par action laisseraient trois colonnes vides sur quatre à
+    chaque ligne.
+
+    CE QUI N'Y ENTRE PAS : aucun contenu rédigé par l'utilisateur. Un journal
+    d'administration n'a pas à conserver de documents.
+    """
+
+    __tablename__ = "journal_admin"
+    __table_args__ = (
+        CheckConstraint("action IN ('role','quota','suppression')", name="ck_journal_action"),
+        # La lecture se fait toujours du plus récent au plus ancien, et la purge
+        # de rétention balaie par date : c'est le même index qui sert aux deux.
+        Index("ix_journal_date", "created_at"),
+        Index("ix_journal_acteur", "acteur_id"),
+        Index("ix_journal_cible", "cible_id"),
+    )
+
+    id_action: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
+
+    acteur_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("user.user_id", ondelete="SET NULL", name="fk_journal_acteur"),
+        nullable=True,
+    )
+    # Même longueur que user.email : une copie tronquée serait une copie fausse.
+    acteur_email: Mapped[str] = mapped_column(String(326), nullable=False)
+
+    cible_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    cible_email: Mapped[str] = mapped_column(String(326), nullable=False)
+
+    action: Mapped[str] = mapped_column(String(32), nullable=False)
+    avant: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    apres: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now_naive)
+
+
 # ── Mise à disposition du schéma ─────────────────────────────────────────────
 
 TABLES_ATTENDUES = frozenset(Base.metadata.tables)
