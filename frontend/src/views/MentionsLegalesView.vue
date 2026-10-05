@@ -112,7 +112,7 @@ const companyInfo = {
               >
               <a
                 :href="`mailto:${companyInfo.email}`"
-                class="text-[#C4341C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1"
+                class="text-[#C4341C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 inline-block py-2"
               >
                 {{ companyInfo.email }}
               </a>

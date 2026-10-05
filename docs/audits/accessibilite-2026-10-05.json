@@ -1,0 +1,526 @@
+{
+  "date": "2026-10-05T08:40:48.530Z",
+  "base": "http://localhost:4173",
+  "ecrans": [
+    {
+      "id": "E01",
+      "nom": "Accueil",
+      "url": "/",
+      "auth": false,
+      "axe": [],
+      "titre": "Accueil — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 12,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 2,
+        "footer": 1
+      },
+      "interactifs": 17,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 38,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E02",
+      "nom": "Fonctionnalités",
+      "url": "/fonctionnalites",
+      "auth": false,
+      "axe": [],
+      "titre": "Fonctionnalités — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 8,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 2,
+        "footer": 1
+      },
+      "interactifs": 15,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E03",
+      "nom": "Tarifs",
+      "url": "/tarifs",
+      "auth": false,
+      "axe": [],
+      "titre": "Tarifs — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 8,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 2,
+        "footer": 1
+      },
+      "interactifs": 18,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 38,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E04",
+      "nom": "Modèles",
+      "url": "/modeles",
+      "auth": false,
+      "axe": [],
+      "titre": "Modèles de documents — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 25,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 2,
+        "footer": 1
+      },
+      "interactifs": 31,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E05",
+      "nom": "Mentions légales",
+      "url": "/mentions-legales",
+      "auth": false,
+      "axe": [],
+      "titre": "Mentions légales — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 7,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 2,
+        "footer": 1
+      },
+      "interactifs": 15,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E06",
+      "nom": "CGU",
+      "url": "/cgu",
+      "auth": false,
+      "axe": [],
+      "titre": "Conditions générales d'utilisation — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 9,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 2,
+        "footer": 1
+      },
+      "interactifs": 14,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 38,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E07",
+      "nom": "Confidentialité",
+      "url": "/confidentialite",
+      "auth": false,
+      "axe": [],
+      "titre": "Politique de confidentialité — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 9,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 2,
+        "footer": 2
+      },
+      "interactifs": 18,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [
+        {
+          "balise": "a",
+          "l": 145,
+          "h": 14,
+          "texte": "rgpd@helpmedraft.fr"
+        },
+        {
+          "balise": "a",
+          "l": 166,
+          "h": 14,
+          "texte": "contact@helpmedraft.fr"
+        },
+        {
+          "balise": "a",
+          "l": 230,
+          "h": 17,
+          "texte": "conditions générales d'utilisation"
+        },
+        {
+          "balise": "a",
+          "l": 166,
+          "h": 14,
+          "texte": "contact@helpmedraft.fr"
+        }
+      ],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E08",
+      "nom": "Connexion",
+      "url": "/login",
+      "auth": false,
+      "axe": [],
+      "titre": "Connexion — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 4,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 1,
+        "footer": 1
+      },
+      "interactifs": 20,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E09",
+      "nom": "Inscription",
+      "url": "/register",
+      "auth": false,
+      "axe": [],
+      "titre": "Inscription — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 4,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 1,
+        "footer": 1
+      },
+      "interactifs": 24,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E10",
+      "nom": "Mot de passe oublié",
+      "url": "/forgot-password",
+      "auth": false,
+      "axe": [],
+      "titre": "Mot de passe oublié — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 4,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 1,
+        "footer": 1
+      },
+      "interactifs": 17,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E11",
+      "nom": "Nouveau mot de passe",
+      "url": "/reset-password?token=factice",
+      "auth": false,
+      "axe": [],
+      "titre": "Nouveau mot de passe — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 4,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 1,
+        "footer": 1
+      },
+      "interactifs": 20,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E12",
+      "nom": "Tableau de bord",
+      "url": "/dashboard",
+      "auth": true,
+      "axe": [],
+      "titre": "Tableau de bord — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 8,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 2,
+        "footer": 1
+      },
+      "interactifs": 21,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E13",
+      "nom": "Mes documents",
+      "url": "/documents",
+      "auth": true,
+      "axe": [],
+      "titre": "Mes documents — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 5,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 1,
+        "footer": 1
+      },
+      "interactifs": 21,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E14",
+      "nom": "Nouveau document",
+      "url": "/documents/nouveau",
+      "auth": true,
+      "axe": [],
+      "titre": "Nouveau document — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 4,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 1,
+        "footer": 1
+      },
+      "interactifs": 35,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    },
+    {
+      "id": "E16",
+      "nom": "Back-office",
+      "url": "/admin",
+      "auth": true,
+      "axe": [],
+      "titre": "Administration — HelpMeDraft",
+      "langue": "fr",
+      "h1": 1,
+      "titres": 4,
+      "sautsDeNiveau": [],
+      "lienEvitement": true,
+      "lienEvitementTexte": "Aller au contenu principal",
+      "reperes": {
+        "main": 1,
+        "nav": 4,
+        "header": 2,
+        "footer": 1
+      },
+      "interactifs": 19,
+      "ciblesTropPetites": [],
+      "ciblesEnLigneExemptees": [],
+      "lienEvitementFocalise": {
+        "texte": "Aller au contenu principal",
+        "l": 235,
+        "h": 40
+      },
+      "clavier": {
+        "atteints": 39,
+        "sansFocusVisible": 0,
+        "exemplesSansFocus": []
+      }
+    }
+  ]
+}

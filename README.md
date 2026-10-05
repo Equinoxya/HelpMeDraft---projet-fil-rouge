@@ -543,15 +543,22 @@ L'[audit de sécurité](docs/audit-securite.md) est rédigé : **0 vulnérabilit
 [Audit réel sur les 16 écrans](docs/audit-accessibilite.md), axe-core sur l'application démarrée
 (écrans publics **et** authentifiés) complété par des contrôles manuels.
 
-- ✅ **15 écrans, 0 violation axe-core** (WCAG 2.0 et 2.1, niveaux A et AA)
+- ✅ **15 écrans, 0 violation axe-core** (WCAG 2.0, 2.1 et 2.2, niveaux A et AA)
 - ✅ Contrastes corrigés : `#E0533C` assombri en `#C4341C` — 64 violations avant, 0 après
 - ✅ Étiquettes sur les champs de quota du back-office et sur la zone CodeMirror
+- ✅ **Titre de page distinct par route** (15 titres sur 15 écrans) et **lien d'évitement** sur
+  chaque écran
+- ✅ **Focus visible partout** : règle `:focus-visible` globale, et retrait des `focus:outline-none`
+  qui l'emportaient sur elle
+- ✅ **Structure de titres sans saut de niveau**, `<main>` et `h1` sur les 15 écrans
+- ✅ **Cibles de 24 px minimum** (WCAG 2.2 · 2.5.8), hors liens en ligne dans une phrase, couverts
+  par l'exception du critère
 - ✅ Chargement différé des routes, navigation cohérente
-- 🚧 Contrôles manuels restants (~3 h 30) : titre de page par route, lien d'évitement,
-  `:focus-visible` global, saut de niveau du pied de page, cibles sous 24 px
+- 🚧 Ce qu'aucun outil ne fait : lecteur d'écran réel, zoom à 200 %, déclaration d'accessibilité
 
 > Un « 0 violation » automatisé ne vaut pas conformité RGAA : l'audit le dit, et liste ce qu'axe-core
-> ne détecte pas.
+> ne détecte pas. Le script de mesure est versionné
+> ([`audit-accessibilite.mjs`](docs/audits/audit-accessibilite.mjs)), l'audit est donc rejouable.
 
 ---
 
@@ -573,7 +580,7 @@ L'[audit de sécurité](docs/audit-securite.md) est rédigé : **0 vulnérabilit
 | Conteneurisation Docker | 🔄 Écrite, reste à valider sur une machine avec un démon Docker |
 | Pipeline CI/CD (GitHub Actions, Ruff, ESLint) | ✅ Terminé |
 | Audit de sécurité | ✅ Terminé |
-| Audit d'accessibilité | 🔄 Audité, quelques corrections manuelles restantes |
+| Audit d'accessibilité et correctifs RGAA | ✅ Terminé |
 | Tests système, de charge et d'acceptation | ⬜ À faire (dépendent de la pile Docker) |
 | Procédure et scripts de déploiement | ⬜ À faire |
 | Dossier de projet, diaporama, documentation utilisateur | ⬜ À faire |

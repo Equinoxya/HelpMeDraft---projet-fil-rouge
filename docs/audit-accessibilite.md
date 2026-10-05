@@ -8,12 +8,13 @@
 
 | | |
 |---|---|
-| **Date** | 3 octobre 2026 |
+| **Date** | 3 octobre 2026 — **contre-audit le 5 octobre 2026, voir §9** |
 | **Référentiel** | **RGAA 4.1.2**, fondé sur WCAG 2.1 niveau AA |
 | **Périmètre** | 16 écrans, zones publique, invité, authentifiée et administration |
 | **Méthode** | axe-core piloté par Playwright sur l'application réellement démarrée, complété par des contrôles manuels sur le DOM |
 | **Version auditée** | branche `claude/gracious-goldberg-0o31o8`, commit du 3 octobre 2026 |
-| **Données brutes** | [`audits/accessibilite-2026-10-03.json`](./audits/accessibilite-2026-10-03.json) |
+| **Données brutes** | [`audits/accessibilite-2026-10-03.json`](./audits/accessibilite-2026-10-03.json), puis [`accessibilite-2026-10-05.json`](./audits/accessibilite-2026-10-05.json) |
+| **Script de mesure** | [`audits/audit-accessibilite.mjs`](./audits/audit-accessibilite.mjs) |
 
 > **Nature de cet audit.** Il est **automatisé et instrumenté**, pas manuel au sens du RGAA. Un
 > audit RGAA officiel exige le passage des 106 critères par un auditeur, dont beaucoup ne sont
@@ -174,7 +175,7 @@ EditorView.contentAttributes.of({
 Ces points échappent aux outils automatiques : un titre de page existe, donc axe ne dit rien,
 même s'il est identique sur toutes les pages.
 
-### 4.1 🟠 Titre de page identique sur les 16 écrans
+### 4.1 🟠 Titre de page identique sur les 16 écrans — ✅ corrigé le 05/10/2026
 
 **Critère RGAA 8.6** — *« Pour chaque page web ayant un titre de page, ce titre est-il
 pertinent ? »*
@@ -194,7 +195,7 @@ router.afterEach((to) => {
 });
 ```
 
-### 4.2 🟠 Aucun lien d'évitement — 0 écran sur 15
+### 4.2 🟠 Aucun lien d'évitement — 0 écran sur 15 — ✅ corrigé le 05/10/2026
 
 **Critère RGAA 12.7** — *« Dans chaque page web, un lien d'évitement ou d'accès rapide à la zone
 de contenu principal est-il présent ? »*
@@ -213,7 +214,7 @@ en en-tête.
 
 avec `id="contenu"` sur le `<main>`.
 
-### 4.3 🟠 Focus non visible — 22 éléments sur 4 écrans
+### 4.3 🟠 Focus non visible — 22 éléments sur 4 écrans — ✅ corrigé le 05/10/2026
 
 **Critère RGAA 10.7** — *« Pour chaque élément recevant le focus, la prise de focus est-elle
 visible ? »*
@@ -236,7 +237,20 @@ visible ? »*
 :focus-visible { outline: 2px solid #111111; outline-offset: 2px; }
 ```
 
-### 4.4 🟡 Sauts de niveau de titre — 6 écrans
+> **Ce que la correction a appris.** Les 22 éléments n'avaient pas une cause, mais deux, et la
+> seconde est invisible à la lecture du code :
+>
+> 1. **Les cinq boutons « Afficher le mot de passe »** portaient un `focus:outline-none` **sans
+>    style de remplacement**. Une règle globale ne les aurait pas sauvés : en Tailwind, un
+>    sélecteur de classe l'emporte sur `:focus-visible`. Il a fallu retirer la classe.
+> 2. **Les 16 cartes de l'écran Modèles** avaient bien un contour — `transition-all` le faisait
+>    simplement **monter de 0 à 2 px en 150 ms**. La mesure, prise à l'instant du `Tab`, lisait
+>    `outline-width: 0px`. Le contour existait donc, mais apparaissait en fondu, ce qui est un
+>    vrai défaut pour qui navigue vite au clavier. Les transitions ont été restreintes aux
+>    propriétés réellement animées (`transform`, `box-shadow`, `color`), et le script de mesure
+>    attend désormais la fin des transitions avant de conclure.
+
+### 4.4 🟡 Sauts de niveau de titre — 6 écrans — ✅ corrigé le 05/10/2026
 
 **Critère RGAA 9.1** — *« Dans chaque page web, l'information est-elle structurée par
 l'utilisation appropriée de titres ? »*
@@ -249,7 +263,7 @@ l'utilisation appropriée de titres ? »*
 Le `h3` du pied de page est la cause de cinq des six cas : un seul correctif à cet endroit en
 règle la majorité.
 
-### 4.5 🟡 Deux repères manquants
+### 4.5 🟡 Deux repères manquants — ✅ corrigé le 05/10/2026
 
 | Écran | Manque | Critère |
 |---|---|---|
@@ -285,6 +299,18 @@ mesuré à la main.
 **Correctif recommandé** — augmenter le remplissage vertical plutôt que la taille de police, pour
 ne pas toucher à la mise en page : `py-2` sur ces liens porte la hauteur de cible à 28–32 px.
 
+**✅ Corrigé le 05/10/2026**, avec une exception assumée et vérifiable. Dix cibles ont été
+agrandies (`inline-block py-2`, ou `h-6 w-6 shrink-0` pour la case de consentement, dont les
+classes annonçaient 24 px mais qui rétrécissait dans son conteneur `flex` : 20 × 24 px mesurés).
+**Quatre liens de la politique de confidentialité restent sous 24 px** : ils sont au milieu d'une
+phrase, et l'exception « lien en ligne dans un bloc de texte » de WCAG 2.5.8 s'y applique — les
+rembourrer ferait chevaucher les lignes voisines. Le script de mesure les compte à part, sous
+`ciblesEnLigneExemptees`, pour que l'exception reste visible et non oubliée.
+
+Une onzième cible, absente de l'audit du 3 octobre, a été trouvée au contre-audit : le lien
+« Créer votre premier document » de l'écran *Mes documents*, qui ne s'affiche que **si la liste
+est vide** — le compte de test du premier audit avait des documents.
+
 ---
 
 ## 6 · Plan de correction priorisé
@@ -294,15 +320,15 @@ ne pas toucher à la mise en page : `py-2` sur ces liens porte la hauteur de cib
 | 1 | Assombrir `#E0533C` en `#C4341C` | **117** | ~1 h | 3.2 |
 | 2 | Étiquette sur le champ de quota du back-office | 1 | 5 min | 11.1 |
 | 3 | `aria-label` sur la zone CodeMirror | 2 | 15 min | 11.1 |
-| 4 | Titre de page par route | 16 écrans | 30 min | 8.6 |
-| 5 | Lien d'évitement dans `App.vue` | 16 écrans | 20 min | 12.7 |
-| 6 | Règle `:focus-visible` globale | 22 éléments | 30 min | 10.7 |
-| 7 | Corriger le `h3` du pied de page | 5 écrans | 10 min | 9.1 |
-| 8 | `<main>` sur l'accueil, `h1` sur Nouveau document | 2 écrans | 10 min | 12.6, 9.1 |
-| 9 | Remplissage vertical des petites cibles | 13 cibles | 30 min | WCAG 2.2 · 2.5.8 |
+| 4 | Titre de page par route | 16 écrans | ~30 min | 8.6 |
+| 5 | Lien d'évitement dans `App.vue` | 16 écrans | ~20 min | 12.7 |
+| 6 | Règle `:focus-visible` globale | 22 éléments | ~30 min | 10.7 |
+| 7 | Corriger le `h3` du pied de page | 5 écrans | ~10 min | 9.1 |
+| 8 | `<main>` sur l'accueil, `h1` sur Nouveau document | 2 écrans | ~10 min | 12.6, 9.1 |
+| 9 | Remplissage vertical des petites cibles | 13 cibles | ~30 min | WCAG 2.2 · 2.5.8 |
 
-**Environ 3 h 30 de travail** pour lever l'intégralité des non-conformités automatiquement
-détectables, dont **une heure pour 97 % du volume**.
+**Les neuf correctifs sont faits.** Les trois premiers le 3 octobre, les six suivants le
+5 octobre ; le §9 donne le résultat de la mesure qui le vérifie.
 
 ---
 
@@ -331,3 +357,71 @@ Les scripts et les résultats bruts sont dans
 [`audits/accessibilite-2026-10-03.json`](./audits/accessibilite-2026-10-03.json). Une fois la
 conteneurisation faite (`KAN-15`), l'audit a vocation à être rejoué dans la CI pour détecter
 toute régression d'accessibilité.
+
+---
+
+## 9 · Contre-audit du 5 octobre 2026
+
+Les six correctifs restants du §6 ont été appliqués, puis **mesurés** : même méthode que l'audit
+initial, même script, application réellement démarrée (backend Flask sur SQLite, frontend construit
+et servi), connexion par l'interface et compte promu administrateur en base pour atteindre le
+back-office.
+
+| | |
+|---|---|
+| **Date** | 5 octobre 2026 |
+| **Écrans** | 15 (E15, l'éditeur d'un document existant, partage son composant avec E14) |
+| **Règles axe** | `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa` |
+| **Données brutes** | [`audits/accessibilite-2026-10-05.json`](./audits/accessibilite-2026-10-05.json) |
+| **Script** | [`audits/audit-accessibilite.mjs`](./audits/audit-accessibilite.mjs) |
+
+### Résultat
+
+| Contrôle | Avant (03/10) | Après (05/10) |
+|---|---|---|
+| Violations axe-core | 120 → 0 après le lot contraste | **0** sur 15 écrans |
+| Titres de page distincts | 1 pour 16 écrans | **15 titres distincts sur 15** |
+| Lien d'évitement | 0 écran sur 15 | **15 sur 15**, 235 × 40 px une fois focalisé |
+| Repère `<main>` | 14 sur 15 | **15 sur 15** |
+| `h1` unique | 14 sur 15 | **15 sur 15** |
+| Sauts de niveau de titre | 6 écrans | **0** |
+| Éléments sans focus visible | 22 sur 4 écrans | **0** |
+| Cibles sous 24 px | 13 | **0**, plus 4 liens en ligne couverts par l'exception 2.5.8 |
+
+### Comment les correctifs ont été posés
+
+- **Titre de page** — `meta.titre` par route et un `router.afterEach` dans `index.ts`, plutôt
+  qu'un appel dans chaque vue : une vue qui oublierait de le faire laisserait le titre de la page
+  précédente, et l'oubli ne se verrait pas. L'interface `RouteMeta` de `vue-router` est augmentée,
+  pour qu'une faute de frappe échoue à la compilation et non à l'exécution.
+- **Lien d'évitement** — dans `App.vue`, premier élément focalisable du document, avec la cible
+  `#contenu` posée **une seule fois** autour de `<router-view>`. Un `id` par vue aurait rendu le
+  lien muet sur l'écran qui l'oublie, sans que rien ne le signale.
+- **Focus visible** — règle `:focus-visible` globale dans `style.css`, **et** retrait des cinq
+  `focus:outline-none` qui l'auraient emportée sur elle (§4.3).
+- **Niveaux de titre** — les trois intitulés du pied de page passent en `h2` : ce sont des frères
+  des sections de page, pas leurs enfants. Sur l'écran *Modèles*, le nom de catégorie devient un
+  `h2`, ce qui rétablit le chaînage vers le `h3` des cartes.
+- **Repères manquants** — la racine de l'accueil devient `<main>`, et l'intitulé de mode de
+  l'éditeur (`[ Nouveau Brouillon ]`) devient le `h1` de l'écran : c'est bien le titre de la page.
+- **Taille des cibles** — remplissage vertical, jamais de police agrandie, pour ne pas toucher à
+  la mise en page (§5).
+
+### Deux faux positifs du script, corrigés dans le script
+
+Ils valent d'être notés : ils montrent que l'outil de mesure se vérifie comme le reste.
+
+1. **Le lien d'évitement était compté comme une cible de 1 × 1 px.** C'est sa taille en `sr-only`,
+   état dans lequel il n'est pas une cible. Le script écarte désormais les éléments masqués par
+   `clip-path`, et mesure ce lien **à l'état focalisé** — où il fait 235 × 40 px.
+2. **Les contours animés étaient lus avant la fin de leur transition** (§4.3). Le script attend
+   maintenant 250 ms après chaque `Tab`, et remonte la chaîne des ascendants, parce qu'un contour
+   peut être porté par un parent : c'est le cas de CodeMirror, qui focalise `.cm-content` et dessine
+   le contour sur `.cm-editor`. L'« absence de focus » relevée sur l'écran *Nouveau document* au
+   premier audit était cela, et non un défaut.
+
+### Ce que ce contre-audit ne change pas
+
+Les limites du §7 tiennent toujours : **0 violation automatisée ne vaut pas conformité RGAA**. La
+restitution par un lecteur d'écran réel, la pertinence des alternatives textuelles, le zoom à
+200 % et la déclaration d'accessibilité restent à faire, et aucun outil ne les remplacera.

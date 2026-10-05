@@ -99,7 +99,7 @@ async function handleSubmit() {
               </label>
               <RouterLink
                 to="/forgot-password"
-                class="font-mono text-xs text-[#111111]/60 hover:text-[#C4341C] underline decoration-1 underline-offset-4"
+                class="font-mono text-xs text-[#111111]/60 hover:text-[#C4341C] underline decoration-1 underline-offset-4 inline-block py-2"
               >
                 Oublié ?
               </RouterLink>
@@ -117,7 +117,7 @@ async function handleSubmit() {
               />
               <button
                 type="button"
-                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors focus:outline-none"
+                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors"
                 :aria-label="
                   showPassword
                     ? 'Masquer le mot de passe'
@@ -178,7 +178,7 @@ async function handleSubmit() {
           Pas encore de compte ?
           <RouterLink
             :to="{ name: 'register' }"
-            class="font-sans font-bold text-[#111111] hover:text-[#C4341C] underline ml-1"
+            class="font-sans font-bold text-[#111111] hover:text-[#C4341C] underline ml-1 inline-block py-2"
           >
             Créer un compte
           </RouterLink>

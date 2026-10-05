@@ -566,7 +566,7 @@ function handleCancel() {
       <div class="flex items-center justify-between gap-4 mb-8">
         <RouterLink
           to="/documents"
-          class="font-mono text-xs uppercase tracking-wider text-[#111111] hover:text-[#C4341C] transition-colors font-bold inline-flex items-center gap-2"
+          class="font-mono text-xs uppercase tracking-wider text-[#111111] hover:text-[#C4341C] transition-colors font-bold inline-flex items-center gap-2 py-2"
         >
           ← Retour aux documents
         </RouterLink>
@@ -586,11 +586,16 @@ function handleCancel() {
       <div
         class="bg-[#FAF8F5] border-2 border-[#111111] p-6 sm:p-10 shadow-[8px_8px_0px_0px_rgba(17,17,17,1)]"
       >
-        <span
+        <!--
+          h1 et non span : l'écran « Nouveau document » était le seul sans
+          titre de premier niveau (RGAA 9.1). L'intitulé de mode est bien le
+          titre de la page, et les classes gardent son apparence.
+        -->
+        <h1
           class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-4"
         >
           [ {{ isEditMode ? "Mode Édition" : "Nouveau Brouillon" }} ]
-        </span>
+        </h1>
 
         <!-- CHARGEMENT -->
         <div

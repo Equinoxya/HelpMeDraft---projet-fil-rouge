@@ -70,13 +70,18 @@ const contactEmail = "contact@helpmedraft.fr";
         </div>
       </aside>
 
-      <!-- BLOC NAVIGATION (3 cols) -->
+      <!--
+        BLOC NAVIGATION (3 cols)
+        Les trois intitulés du pied de page sont des h2 et non des h3 : sur une
+        page dont le contenu s'arrête au h1, un h3 ici créait un saut de niveau
+        (RGAA 9.1) — c'était la cause de cinq des six sauts relevés à l'audit.
+      -->
       <nav class="md:col-span-3 p-8 lg:p-12 space-y-6">
-        <h3
+        <h2
           class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C]"
         >
           [ Navigation ]
-        </h3>
+        </h2>
 
         <ul class="space-y-3 font-mono text-xs uppercase tracking-wider">
           <li v-for="link in navLinks" :key="link.to">
@@ -92,11 +97,11 @@ const contactEmail = "contact@helpmedraft.fr";
 
       <!-- BLOC LÉGAL (3 cols) -->
       <nav class="md:col-span-3 p-8 lg:p-12 space-y-6">
-        <h3
+        <h2
           class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C]"
         >
           [ Informations légales ]
-        </h3>
+        </h2>
 
         <ul class="space-y-3 font-mono text-xs uppercase tracking-wider">
           <li v-for="link in legalLinks" :key="link.to">
@@ -115,11 +120,11 @@ const contactEmail = "contact@helpmedraft.fr";
         class="md:col-span-2 p-8 lg:p-12 space-y-6 flex flex-col justify-between"
       >
         <div class="space-y-6">
-          <h3
+          <h2
             class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C]"
           >
             [ Contact ]
-          </h3>
+          </h2>
 
           <a
             :href="`mailto:${contactEmail}`"

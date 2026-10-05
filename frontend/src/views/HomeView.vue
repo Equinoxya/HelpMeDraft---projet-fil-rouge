@@ -72,7 +72,8 @@ const steps = [
 </script>
 
 <template>
-  <div
+  <!-- <main> et non <div> : l'accueil était le seul écran sans repère principal (RGAA 12.6). -->
+  <main
     class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA]"
   >
     <!-- HERO SECTION : STYLE ÉDITORIAL MONUMENTAL -->
@@ -258,7 +259,7 @@ const steps = [
         </div>
       </div>
     </section>
-  </div>
+  </main>
 </template>
 
 <style scoped>

@@ -15,3 +15,26 @@
  *
  * Mesure après retrait : 32,6 Ko brut / 6,3 Ko gzip.
  */
+
+/* ── Prise de focus visible, partout ─────────────────────────────────────────
+ *
+ * RGAA 10.7 : « pour chaque élément recevant le focus, la prise de focus est-elle
+ * visible ? ». L'audit du 03/10/2026 a relevé 22 éléments sans aucune indication
+ * de focus, dont 16 sur l'écran Modèles — un utilisateur au clavier y navigue à
+ * l'aveugle.
+ *
+ * La règle est posée ici, et non écran par écran, parce qu'un style de focus
+ * oublié ne se voit pas : il faut qu'il soit acquis par défaut, et non ajouté par
+ * discipline. `:focus-visible` et non `:focus` : le navigateur ne la déclenche
+ * pas au clic de souris, donc elle ne fait apparaître de contour que lorsqu'il
+ * sert à quelque chose.
+ *
+ * Attention : un `focus:outline-none` Tailwind posé sur un élément gagne contre
+ * cette règle (sélecteur de classe contre pseudo-classe). Il n'en reste donc
+ * aucun sans style de remplacement — les cinq boutons « Afficher le mot de
+ * passe » ont été corrigés avec cette règle, pas seulement masqués par elle.
+ */
+:focus-visible {
+  outline: 2px solid #111111;
+  outline-offset: 2px;
+}
