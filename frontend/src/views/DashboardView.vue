@@ -224,7 +224,7 @@ onMounted(fetchDashboardData);
               v-for="action in quickActions"
               :key="action.title"
               :to="action.to"
-              class="group relative flex flex-col justify-between p-8 bg-[#FAF8F5] border-2 border-[#111111] shadow-[6px_6px_0px_0px_#111111] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0px_0px_#111111] transition-all focus-visible:outline-2 focus-visible:outline-black"
+              class="group relative flex flex-col justify-between p-8 bg-[#FAF8F5] border-2 border-[#111111] shadow-[6px_6px_0px_0px_#111111] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0px_0px_#111111] transition-[transform,box-shadow,color] focus-visible:outline-2 focus-visible:outline-black"
             >
               <div>
                 <div

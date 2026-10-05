@@ -490,7 +490,7 @@ onMounted(() => {
               <RouterLink
                 v-if="!searchQuery"
                 to="/documents/nouveau"
-                class="inline-block font-mono text-xs uppercase tracking-widest text-[#C4341C] hover:underline underline-offset-4 font-bold"
+                class="inline-block py-2 font-mono text-xs uppercase tracking-widest text-[#C4341C] hover:underline underline-offset-4 font-bold"
               >
                 Créer votre premier document →
               </RouterLink>

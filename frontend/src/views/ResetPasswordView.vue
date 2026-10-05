@@ -164,7 +164,7 @@ async function handleSubmit() {
               />
               <button
                 type="button"
-                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors focus:outline-none"
+                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors"
                 :aria-label="
                   showNewPassword
                     ? 'Masquer le mot de passe'
@@ -234,7 +234,7 @@ async function handleSubmit() {
               />
               <button
                 type="button"
-                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors focus:outline-none"
+                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors"
                 :aria-label="
                   showConfirmPassword
                     ? 'Masquer la confirmation'
@@ -325,7 +325,7 @@ async function handleSubmit() {
         <div class="mt-8 pt-6 border-t border-[#111111]/20 text-center">
           <RouterLink
             to="/login"
-            class="font-mono text-xs uppercase tracking-wider text-[#111111] hover:text-[#C4341C] transition-colors underline decoration-1 underline-offset-4"
+            class="font-mono text-xs uppercase tracking-wider text-[#111111] hover:text-[#C4341C] transition-colors underline decoration-1 underline-offset-4 inline-block py-2"
           >
             ← Retour à la connexion
           </RouterLink>

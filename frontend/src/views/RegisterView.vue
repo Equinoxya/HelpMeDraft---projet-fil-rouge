@@ -187,7 +187,7 @@ const isFormValid = computed(
               />
               <button
                 type="button"
-                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors focus:outline-none"
+                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors"
                 :aria-label="
                   showPassword
                     ? 'Masquer le mot de passe'
@@ -279,7 +279,7 @@ const isFormValid = computed(
               />
               <button
                 type="button"
-                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors focus:outline-none"
+                class="absolute right-3 p-1 text-[#111111]/60 hover:text-[#111111] transition-colors"
                 :aria-label="
                   showConfirmPassword
                     ? 'Masquer la confirmation'
@@ -335,7 +335,7 @@ const isFormValid = computed(
               v-model="rgpdConsent"
               type="checkbox"
               required
-              class="mt-1 h-4 w-4 rounded-none border-[#111111] accent-[#C4341C]"
+              class="mt-0.5 h-6 w-6 shrink-0 rounded-none border-[#111111] accent-[#C4341C]"
             />
             <span class="font-serif text-sm text-[#111111]/80 leading-snug">
               J’accepte la politique de confidentialité et le traitement de mes
@@ -359,7 +359,7 @@ const isFormValid = computed(
           Déjà un compte ?
           <RouterLink
             :to="{ name: 'login' }"
-            class="font-sans font-bold text-[#111111] hover:text-[#C4341C] underline ml-1"
+            class="font-sans font-bold text-[#111111] hover:text-[#C4341C] underline ml-1 inline-block py-2"
           >
             Se connecter
           </RouterLink>

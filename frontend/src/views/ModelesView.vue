@@ -168,11 +168,16 @@ const iconMap: Record<string, string> = {
       <section class="space-y-12">
         <div v-for="category in categories" :key="category.name">
           <div class="flex items-center gap-4 mb-6">
-            <span
+            <!--
+              Le nom de catégorie porte un h2 : le titre des cartes est un h3,
+              et sans niveau intermédiaire le document passait de h1 à h3
+              (RGAA 9.1). L'apparence de badge est conservée par les classes.
+            -->
+            <h2
               class="font-mono text-xs font-bold bg-[#111111] text-[#F4F1EA] px-2.5 py-1"
             >
               {{ category.name }}
-            </span>
+            </h2>
             <p class="font-mono text-sm text-[#111111]/60">
               {{ category.description }}
             </p>
@@ -183,7 +188,7 @@ const iconMap: Record<string, string> = {
               v-for="template in category.templates"
               :key="template.name"
               :to="`/documents/nouveau?template=${encodeURIComponent(template.name)}`"
-              class="group bg-[#FAF8F5] border-2 border-[#111111] p-6 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_#111111] transition-all"
+              class="group bg-[#FAF8F5] border-2 border-[#111111] p-6 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_#111111] transition-[transform,box-shadow,color]"
             >
               <div class="flex items-start gap-4">
                 <div

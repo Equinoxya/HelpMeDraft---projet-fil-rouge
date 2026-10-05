@@ -229,7 +229,7 @@ onMounted(fetchAll);
                     :disabled="
                       savingUserId === user.id || user.id === authStore.user?.id
                     "
-                    class="font-mono text-[10px] uppercase font-bold px-3 py-1 tracking-wider transition-colors disabled:opacity-50"
+                    class="font-mono text-[10px] uppercase font-bold px-3 py-2 tracking-wider transition-colors disabled:opacity-50"
                     :class="
                       user.role === 'admin'
                         ? 'bg-[#111111] text-[#F4F1EA]'

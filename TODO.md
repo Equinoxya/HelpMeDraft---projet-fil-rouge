@@ -31,6 +31,7 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 | Tokens hashés, rotation, anti-rejeu, révocation contrôlée, cookie HttpOnly/SameSite | `auth_routes.py`, `auth_service.py`, `test_securite.py` | 3 |
 | Consentement RGPD tracé en base | table `consentement` | 5, 7 |
 | Maquettes et captures | `docs/maquettes/`, `docs/captures/` | 5 |
+| Accessibilité RGAA : 15 écrans, 0 violation axe-core, 6 contrôles manuels au vert | `docs/audit-accessibilite.md`, `docs/audits/audit-accessibilite.mjs` | 2, 5 |
 | Journal de veille (3 périmètres, avril → octobre 2026) | `docs/veille/journal-de-veille.md` | transversale |
 | Suivi de projet sur données Jira réelles | `docs/gestion-de-projet.md` | 4 |
 | Git / GitHub, branches, PR | — | 1, 4 |
@@ -207,7 +208,7 @@ Voir [`docs/audit-securite.md`](./docs/audit-securite.md). 0 vulnérabilité cri
 - [ ] **Chiffrement des données au repos** — 3 options chiffrées au §5.1 du rapport, à arbitrer
 - [ ] `KAN-102` épingler les dépendances transitives (Werkzeug non épinglée)
 
-### 9 · Accessibilité RGAA CP 2, 5 — 🔄 le gros du volume est traité
+### 9 · Accessibilité RGAA CP 2, 5 — ✅ les 9 correctifs sont faits et mesurés
 Voir [`docs/audit-accessibilite.md`](./docs/audit-accessibilite.md). Audit réel sur les 16 écrans : **120 occurrences sur 3 règles**, dont 117 dues à une seule couleur.
 
 - [x] **Rapport d'audit d'accessibilité** : axe-core sur l'application démarrée + contrôles manuels
@@ -219,14 +220,46 @@ Voir [`docs/audit-accessibilite.md`](./docs/audit-accessibilite.md). Audit réel
 > **Bilan axe-core : 15 écrans, 0 violation** (WCAG 2.0 et 2.1, niveaux A et AA).
 > Ce qui suit relève du **contrôle manuel**, qu'axe-core ne détecte pas : un
 > « 0 violation » automatisé ne vaut pas conformité RGAA.
-- [ ] Titre de page distinct par route (les 16 écrans partagent le même)
-- [ ] Lien d'évitement (absent des 16 écrans)
-- [ ] Règle `:focus-visible` globale (22 éléments sans focus visible, dont 16 sur Modèles)
-- [ ] Corriger le `h3` du pied de page (saut de niveau sur 5 écrans)
-- [ ] `<main>` sur l'accueil, `h1` sur Nouveau document
-- [ ] Remplissage vertical des 13 cibles sous 24 px (WCAG 2.2, anticipation RGAA 5)
+- [x] **Titre de page distinct par route** — `meta.titre` et un `router.afterEach`, plutôt qu'un
+      appel par vue : une vue qui l'oublierait laisserait le titre de la page précédente, et
+      l'oubli ne se verrait pas. `RouteMeta` augmentée, pour qu'une faute de frappe échoue à la
+      compilation. **15 titres distincts sur 15 écrans**
+- [x] **Lien d'évitement** — dans `App.vue`, premier élément focalisable, cible `#contenu` posée
+      une seule fois autour de `<router-view>` et non vue par vue. **15 écrans sur 15**,
+      235 × 40 px une fois focalisé
+- [x] **Règle `:focus-visible` globale** — et surtout **retrait des 5 `focus:outline-none`** qui
+      l'auraient emportée sur elle : en Tailwind, un sélecteur de classe bat une pseudo-classe.
+      **0 élément sans focus visible**
+- [x] **`h3` du pied de page → `h2`**, et nom de catégorie en `h2` sur l'écran Modèles.
+      **0 saut de niveau sur les 15 écrans**
+- [x] **`<main>` sur l'accueil, `h1` sur Nouveau document** — 15 sur 15 pour les deux
+- [x] **Cibles sous 24 px** — 11 agrandies par remplissage vertical, **4 liens en ligne dans une
+      phrase laissés tels quels** sous l'exception WCAG 2.5.8, comptés à part par le script pour
+      que l'exception reste visible
 
-**Total estimé : ~3 h 30**, dont 1 h pour 97 % du volume.
+> **Contre-audit du 05/10/2026**, même méthode et même script que l'audit initial : **15 écrans,
+> 0 violation axe-core** (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`), et les six
+> contrôles manuels au vert. Résultats bruts dans
+> [`docs/audits/accessibilite-2026-10-05.json`](./docs/audits/accessibilite-2026-10-05.json), et
+> le script est désormais **versionné** ([`audit-accessibilite.mjs`](./docs/audits/audit-accessibilite.mjs)),
+> ce qui rend la §8 du rapport vraie et prépare son passage en CI.
+
+Deux défauts trouvés en corrigeant, qu'aucune lecture du code n'aurait donnés :
+- [x] Les 16 cartes de l'écran Modèles **avaient** un contour de focus : `transition-all` le
+      faisait monter de 0 à 2 px en 150 ms. Il existait donc, mais en fondu — un vrai défaut au
+      clavier rapide, et la cause du « focus invisible » relevé à l'audit. Transitions restreintes
+      aux propriétés réellement animées
+- [x] La case de consentement RGPD **rétrécissait dans son conteneur `flex`** : 20 × 24 px mesurés
+      là où ses classes annonçaient 24 × 24. `shrink-0` ajouté
+- [x] Une 12ᵉ cible trop petite, absente du premier audit : le lien « Créer votre premier
+      document », qui ne s'affiche **que si la liste est vide** — le compte de test d'alors avait
+      des documents
+
+Reste à faire sur ce lot, et aucun outil ne le fera :
+- [ ] Restitution par un lecteur d'écran réel (NVDA, VoiceOver)
+- [ ] Comportement au zoom à 200 % et en orientation portrait
+- [ ] **Déclaration d'accessibilité** — obligation légale distincte de la conformité technique
+- [ ] Brancher le script d'audit dans la CI, une fois la pile Docker validée
 
 ### 10 · RGPD
 - [x] **CGU et politique de confidentialité** mises à jour sur les contenus générés : article 5
@@ -338,6 +371,6 @@ Reste à faire sur ce lot :
 5. **Valider la pile Docker sur une machine avec un démon** (§4) — c'est le verrou : il débloque
    d'un coup les tests système (§2), les tests de charge (§2), les 4 contrôles MySQL 8.4 (§6) et la
    migration de traçabilité (§16)
-6. **Le reste de l'accessibilité** (§9) — une poignée de corrections courtes, le gros du volume est déjà levé
+6. ~~Le reste de l'accessibilité (§9)~~ — ✅ fait et mesuré, ne restent que les contrôles qu'aucun outil ne fait (lecteur d'écran, zoom 200 %, déclaration d'accessibilité)
 7. **BDD, NoSQL, sécurité** (§6 à §8)
 8. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste. Les §2 et §14 fournissent la démarche de résolution de problème attendue
