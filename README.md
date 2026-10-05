@@ -152,6 +152,7 @@ HelpMeDraft/
 │   │   ├── schema_mysql.sql     # source de vérité du schéma (monté en initdb)
 │   │   ├── migration_*.sql      # 4 migrations, appliquées à la main
 │   │   ├── jeu_essai.py         # jeu d'essai reproductible
+│   │   ├── promouvoir.py        # désigne le premier administrateur
 │   │   └── sauvegarde.sh / restauration.sh
 │   ├── tests/                   # 286 tests : unit/, integration/, security/
 │   ├── Dockerfile               # gunicorn, utilisateur non privilégié
@@ -278,7 +279,38 @@ pnpm dev               # → http://localhost:5173
 > [!IMPORTANT]
 > Le backend doit être lancé **depuis le dossier `backend/`** : les imports (`utilitaires`) sont relatifs au répertoire courant. Le chemin de la base SQLite, lui, ne l'est plus — il est calculé depuis l'emplacement de `database/db.py` et vaut toujours `backend/HelpMeDraft.db`. Avant, lancer l'application depuis la racine ouvrait une **seconde** base, et les comptes créés d'un côté étaient introuvables de l'autre.
 
-Pour promouvoir le premier compte en administrateur, passer son champ `role` à `admin` directement en base (`backend/HelpMeDraft.db`).
+### 6 · Désigner le premier administrateur
+
+Le back-office sait changer le rôle d'un compte, mais il faut déjà être administrateur pour y entrer :
+sur une base neuve, personne ne l'est. Le premier administrateur vient donc de la ligne de commande.
+
+```bash
+# depuis backend/
+python database/promouvoir.py ophelie@exemple.fr    # attribue le rôle admin
+python database/promouvoir.py --lister              # qui est administrateur ?
+python database/promouvoir.py ophelie@exemple.fr --role user   # rétrograder
+```
+
+Sur la pile conteneurisée, la base n'est pas publiée sur l'hôte : il faut passer par le conteneur,
+avec le **compte applicatif** — un changement de rôle est un `UPDATE`, il n'exige aucun droit de
+structure.
+
+```bash
+set -a && . ./.env && set +a
+URL="mysql+pymysql://helpmedraft_app"
+URL="$URL:$MYSQL_PASSWORD@db:3306/helpmedraft"
+docker compose run --rm --no-deps -e HELPMEDRAFT_DB_URL="$URL" \
+    backend python database/promouvoir.py ophelie@exemple.fr
+```
+
+> [!TIP]
+> Le script **refuse de retirer le dernier rôle administrateur** sans `--forcer` : sans ce garde-fou,
+> le back-office deviendrait inaccessible à tout le monde. Un email inconnu fait échouer le script et
+> affiche les comptes dont l'email ressemble, plutôt que de ne rien faire en silence — une promotion
+> qui ne promeut rien est pire qu'une erreur, on croit l'avoir faite.
+>
+> Le rôle est relu **en base à chaque appel** : l'API l'applique immédiatement, sans se reconnecter.
+> Seul le menu *Administration* de l'interface attend le rechargement du profil.
 
 ---
 
@@ -433,7 +465,7 @@ Base : `http://localhost:5000`. Toutes les routes hors `/auth` exigent l'en-têt
 | Méthode | Route | Description |
 |---|---|---|
 | `GET` | `/admin/users` | Liste paginée avec compteurs d'usage |
-| `PATCH` | `/admin/users/<id>` | Modification de `role` et `quota_daily_limit` |
+| `PATCH` | `/admin/users/<id>` | Modification de `role` et `quota_daily_limit`. Le **premier** administrateur se désigne hors de l'API, voir [Désigner le premier administrateur](#6--désigner-le-premier-administrateur) |
 | `DELETE` | `/admin/users/<id>` | Suppression d'un compte |
 | `GET` | `/admin/stats` | Statistiques globales |
 

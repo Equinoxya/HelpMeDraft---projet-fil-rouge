@@ -15,6 +15,7 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 |---|---|---|
 | Inscription / connexion / déconnexion / reset mot de passe | `auth_routes.py`, 4 vues dédiées | 2, 3 |
 | Rôles utilisateur / administrateur | `admin_route.py`, `AdminView.vue` | 3 |
+| Désignation du **premier** administrateur en ligne de commande | `database/promouvoir.py`, 8 tests | 3, 10 |
 | Éditeur Markdown + commandes IA | `MarkdownEditor.vue`, `DocumentEditorView.vue` | 2 |
 | CRUD documents, dossiers, historique IA | `document_route.py`, `dossier_route.py`, `ia_route.py` | 3, 8 |
 | Traçabilité des contenus générés par IA (AI Act, art. 50) | `ia_route.py` (`POST …/insertion`), colonnes `insere` / `position_debut` / `insere_at`, `DocumentEditorView.vue` | 2, 3, 7 |
@@ -313,6 +314,16 @@ Reste à faire sur ce lot, et aucun outil ne le fera :
 - [ ] Le bundle JavaScript dépasse 500 Ko : `vite build` le signale à chaque construction. Découpage en morceaux à envisager
 
 ### 12 · Déploiement CP 10
+- [x] **Désigner le premier administrateur** — `database/promouvoir.py`. Le back-office sait changer
+      un rôle, mais il faut déjà être administrateur pour y entrer : sur une base neuve, personne ne
+      l'est, et la seule marche à suivre était « modifier le champ `role` à la main en base ». Un
+      `UPDATE` tapé à la main sur une base réelle est exactement ce qui part de travers — faute de
+      frappe dans l'email, `WHERE` oublié. Le script refuse un email inconnu (et affiche les emails
+      proches), est idempotent, et **refuse de retirer le dernier rôle administrateur** sans
+      `--forcer`. 8 tests, vérifiés par mutation, et éprouvé contre le vrai MySQL 8.4 de la pile avec
+      le compte applicatif — un changement de rôle est un `UPDATE`, il n'exige aucun droit de
+      structure. Vérifié de bout en bout : `/admin/users` passe de `403` à `200` **avec le même
+      jeton**, le rôle étant relu en base à chaque appel
 - [ ] **Procédure de déploiement** rédigée (environnements test / acceptation / production)
 - [ ] **Scripts de déploiement** écrits et documentés
 - [ ] ⚠️ **Délai côté serveur WSGI** : `ia_service.py` n'impose plus aucun délai de lecture à l'inférence, volontairement — un délai coupait des générations qui aboutissaient. Acceptable en local mono-utilisateur, mais en production un Ollama qui se bloque après avoir accepté la connexion occuperait un worker indéfiniment. Prévoir `gunicorn --timeout`
