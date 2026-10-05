@@ -180,8 +180,8 @@ const dpoContact = "rgpd@helpmedraft.fr";
               >Ce Que Nous Conservons :</strong
             >
             Chaque appel à l'assistant est journalisé : l'action demandée, le
-            texte soumis, la proposition produite, et le fait que vous l'ayez
-            ou non versée à votre document. Cette conservation répond à deux
+            texte soumis, la proposition produite, et le fait que vous l'ayez ou
+            non versée à votre document. Cette conservation répond à deux
             obligations — la traçabilité des contenus générés (règlement UE
             2024/1689) et le décompte de votre quota quotidien. Ces extraits
             sont rattachés à votre compte et supprimés avec lui.
