@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-05T08:40:48.530Z",
-  "base": "http://localhost:4173",
+  "date": "2026-10-05T09:51:05.133Z",
+  "base": "http://localhost:8080",
   "ecrans": [
     {
       "id": "E01",
@@ -508,7 +508,7 @@
         "header": 2,
         "footer": 1
       },
-      "interactifs": 19,
+      "interactifs": 34,
       "ciblesTropPetites": [],
       "ciblesEnLigneExemptees": [],
       "lienEvitementFocalise": {
@@ -517,7 +517,7 @@
         "h": 40
       },
       "clavier": {
-        "atteints": 39,
+        "atteints": 40,
         "sansFocusVisible": 0,
         "exemplesSansFocus": []
       }
