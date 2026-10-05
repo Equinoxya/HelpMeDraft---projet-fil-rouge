@@ -74,8 +74,19 @@ Voir [`docs/plan-de-tests.md`](./docs/plan-de-tests.md), [`backend/tests/README.
       **7 au vert**, 1 en échec (constat SMTP du §8), 2 hors de portée — TS-04 exige un Ollama
       joignable, TS-10 un lecteur d'écran réel. Script versionné
       ([`tests-systeme.mjs`](./docs/audits/tests-systeme.mjs)), résultats bruts dans
-      [`tests-systeme-2026-10-05.json`](./docs/audits/tests-systeme-2026-10-05.json)
+      [`tests-systeme-2026-10-05.json`](./docs/audits/tests-systeme-2026-10-05.json). L'outillage
+      partagé avec l'audit d'accessibilité vit dans [`commun.mjs`](./docs/audits/commun.mjs) — mise
+      en commun demandée par SonarCloud, qui a relevé 11,6 % de duplication sur les deux scripts ;
+      les mots de passe des comptes de test y sont désormais lus dans l'environnement plutôt
+      qu'écrits en dur
 - [ ] **Tests d'acceptation** avec le formateur
+- [ ] **`LoginView.vue` impute toute panne au mot de passe.** Son `catch` est sans distinction :
+      une limitation de débit (`429`), un backend arrêté, une panne réseau ou un `500` affichent
+      tous « Identifiants invalides. Vérifiez votre email et mot de passe. » Vu en direct pendant la
+      campagne de tests système du 05/10, sur un compte dont le mot de passe était juste.
+      Distinguer `401`, `429` (avec le délai) et « service indisponible » — `utils/erreurs.ts`
+      fournit déjà le typage. Détail au §4 bis de
+      [`docs/validation-docker.md`](./docs/validation-docker.md)
 - [ ] **Tests de charge** — la pile est maintenant exécutable, plus rien ne les bloque
 - [ ] Brancher les deux suites dans la CI (voir §5)
 

@@ -203,6 +203,32 @@ dans le même lot que cette validation :
 
 ---
 
+## 4 bis · Constat n° 3 — l'écran de connexion impute toute panne au mot de passe · ⬜ à corriger
+
+Trouvé en regardant tourner la campagne : `LoginView.vue` intercepte **n'importe quelle** erreur et
+affiche toujours la même phrase.
+
+```js
+} catch {
+  errorMessage.value = "Identifiants invalides. Vérifiez votre email et mot de passe.";
+}
+```
+
+Conséquence : une limitation de débit atteinte (`429`), un backend arrêté, une panne réseau ou une
+erreur serveur `500` se présentent tous comme **« vérifiez votre mot de passe »**. L'utilisateur part
+chercher un problème qui n'existe pas, et une panne de service passe pour une faute de frappe.
+
+C'est arrivé pendant cette campagne : après plusieurs connexions, `/auth/login` a renvoyé `429`
+(5 requêtes par minute et par worker), et l'écran a annoncé des identifiants invalides pour un
+compte dont le mot de passe était juste.
+
+**Correction** : distinguer au moins trois cas — `401` (identifiants), `429` (trop de tentatives,
+avec le délai), et le reste (service indisponible). Le module `utils/erreurs.ts` écrit pendant le lot
+ESLint fournit déjà le typage nécessaire. Non appliqué ici : c'est une modification de l'interface
+d'authentification, hors du périmètre de cette validation.
+
+---
+
 ## 5 · Tests système TS-01 à TS-10
 
 Exécutés sur la pile conteneurisée avec le jeu d'essai chargé en MySQL, par Playwright pour les
@@ -224,6 +250,10 @@ parcours navigateur et en direct sur l'API pour le reste.
 **7 au vert, 1 en échec, 2 hors de portée de cet environnement.** Les deux derniers ne sont pas des
 oublis : ils demandent respectivement un modèle chargé et un lecteur d'écran réel, et le dire vaut
 mieux que les cocher.
+
+L'audit d'accessibilité a été rejoué sur cette même pile, contre le **bundle servi par nginx** et non
+plus par `vite preview` : **15 écrans, 0 violation axe-core**, les six contrôles manuels au vert. Le
+résultat du lot RGAA tient donc aussi sur l'image livrée.
 
 Un effet de bord instructif de la campagne : `/auth/login` étant limité à **5 requêtes par minute et
 par worker**, une suite de tests épuise le seuil et se voit refuser la connexion. Le script attend

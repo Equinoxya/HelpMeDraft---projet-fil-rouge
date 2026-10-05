@@ -2,7 +2,8 @@
  * Tests système TS-01 à TS-10 du plan de tests, exécutés sur la PILE
  * CONTENEURISÉE (frontend nginx :8080, backend gunicorn :5000, MySQL 8.4).
  *
- * Les comptes viennent de database/jeu_essai.py, mot de passe JeuDEssai1.
+ * Les comptes viennent de database/jeu_essai.py ; leur mot de passe commun est
+ * lu dans MDP_JEU_ESSAI (voir commun.mjs), et non écrit ici.
  *
  * Prérequis — comme audit-accessibilite.mjs, Playwright n'est pas une dépendance
  * du projet :
@@ -11,6 +12,7 @@
  *
  * Puis, la pile démarrée et le jeu d'essai chargé :
  *
+ *   MDP_JEU_ESSAI=<celui qu'affiche jeu_essai.py> \
  *   docker compose up --build -d
  *   docker compose run --rm --no-deps \
  *     -e HELPMEDRAFT_DB_URL="mysql+pymysql://helpmedraft_migration:MDP@db:3306/helpmedraft" \
@@ -19,11 +21,18 @@
  *
  * TS-02 est exécuté EN DERNIER à dessein : voir le commentaire de son bloc.
  */
-import { chromium } from "playwright";
+import {
+  API,
+  ATTENTE_TRANSITION_MS,
+  FRONT,
+  MESURE_FOCUS,
+  connecter,
+  lancerNavigateur,
+  motDePasseJeuEssai,
+  nouvelOnglet,
+} from "./commun.mjs";
 
-const FRONT = "http://localhost:8080";
-const API = "http://localhost:5000";
-const MDP = "JeuDEssai1";
+const MDP = motDePasseJeuEssai();
 const resultats = [];
 
 function noter(id, intitule, verdict, detail) {
@@ -32,52 +41,23 @@ function noter(id, intitule, verdict, detail) {
   console.log(`${marque} ${id}  ${intitule}\n     ${detail}`);
 }
 
-// CHROMIUM_PATH : voir audit-accessibilite.mjs, même raison.
-const navigateur = await chromium.launch(
-  process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {},
-);
-
-async function nouvelOnglet() {
-  const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 } });
-  return { ctx, page: await ctx.newPage() };
-}
-
-async function connecter(page, email, mdp = MDP) {
-  // /auth/login est limité à 5 requêtes par minute ET PAR WORKER (Flask-Limiter
-  // compte en mémoire). Une campagne de tests épuise donc le seuil : on attend
-  // la fenêtre suivante plutôt que de conclure à un échec de connexion.
-  for (const essai of [1, 2]) {
-    await page.goto(`${FRONT}/login`, { waitUntil: "networkidle" });
-    await page.fill('input[type="email"]', email);
-    await page.fill('input[type="password"]', mdp);
-    await page.click('button[type="submit"]');
-    try {
-      await page.waitForURL("**/dashboard", { timeout: 15000 });
-      return;
-    } catch (e) {
-      if (essai === 2) throw e;
-      const message = ((await page.textContent("main").catch(() => "")) || "").slice(0, 120);
-      console.log(`     (connexion refusée — « ${message.replace(/\s+/g, " ").trim()} »`);
-      console.log(`      attente de la fenêtre de limitation de débit…)`);
-      await page.waitForTimeout(62000);
-    }
-  }
-}
+const navigateur = await lancerNavigateur();
 
 // ── TS-01 inscription → connexion → tableau de bord ──────────────────────────
 {
-  const { ctx, page } = await nouvelOnglet();
+  const { ctx, page } = await nouvelOnglet(navigateur);
   const email = `ts01.${Date.now()}@exemple.fr`;
   await page.goto(`${FRONT}/register`, { waitUntil: "networkidle" });
   const champs = await page.$$('input[type="text"], input[type="email"], input[type="password"]');
   // nom, prénom, email, mot de passe, confirmation — dans l'ordre du formulaire
-  const valeurs = ["Essai", "Systeme", email, "TestSysteme2026", "TestSysteme2026"];
+  const mdpEssai = `${MDP}Ts01`; // dérivé de celui du jeu d'essai, jamais écrit en dur
+  const valeurs = ["Essai", "Systeme", email, mdpEssai, mdpEssai];
   for (let i = 0; i < champs.length && i < valeurs.length; i++) await champs[i].fill(valeurs[i]);
   await page.check('input[type="checkbox"]');
   await page.click('button[type="submit"]');
   await page.waitForTimeout(2500);
   const urlApres = page.url();
-  await connecter(page, email, "TestSysteme2026").catch(() => {});
+  await connecter(page, email, mdpEssai).catch(() => {});
   const surTableauDeBord = page.url().includes("/dashboard");
   const titre = await page.title();
   noter(
@@ -92,7 +72,7 @@ async function connecter(page, email, mdp = MDP) {
 
 // ── TS-03 créer un document → rédiger → enregistrement automatique → recharger ──
 {
-  const { ctx, page } = await nouvelOnglet();
+  const { ctx, page } = await nouvelOnglet(navigateur);
   await connecter(page, "camille@helpmedraft.test");
   await page.goto(`${FRONT}/documents/nouveau`, { waitUntil: "networkidle" });
   const marqueur = `Contenu de contrôle ${Date.now()}`;
@@ -208,7 +188,7 @@ async function connecter(page, email, mdp = MDP) {
   const corps = await gen.json();
 
   // L'éditeur doit rester utilisable après l'échec.
-  const { ctx, page } = await nouvelOnglet();
+  const { ctx, page } = await nouvelOnglet(navigateur);
   await connecter(page, "camille@helpmedraft.test");
   await page.goto(`${FRONT}/documents/${id}`, { waitUntil: "networkidle" });
   await page.waitForTimeout(1200);
@@ -230,7 +210,7 @@ async function connecter(page, email, mdp = MDP) {
 
 // ── TS-08 back-office administrateur ────────────────────────────────────────
 {
-  const { ctx, page } = await nouvelOnglet();
+  const { ctx, page } = await nouvelOnglet(navigateur);
   await connecter(page, "admin@helpmedraft.test");
   await page.goto(`${FRONT}/admin`, { waitUntil: "networkidle" });
   await page.waitForTimeout(1500);
@@ -251,7 +231,7 @@ async function connecter(page, email, mdp = MDP) {
 
 // ── TS-09 navigation au clavier seul ───────────────────────────────────────
 {
-  const { ctx, page } = await nouvelOnglet();
+  const { ctx, page } = await nouvelOnglet(navigateur);
   await connecter(page, "camille@helpmedraft.test");
   const parcours = ["/dashboard", "/documents", "/documents/nouveau"];
   let totalAtteints = 0;
@@ -261,20 +241,11 @@ async function connecter(page, email, mdp = MDP) {
     await page.waitForTimeout(800);
     for (let i = 0; i < 30; i++) {
       await page.keyboard.press("Tab");
-      await page.waitForTimeout(220);
-      const etat = await page.evaluate(() => {
-        const el = document.activeElement;
-        if (!el || el === document.body) return null;
-        for (let n = el; n && n !== document.body; n = n.parentElement) {
-          const s = getComputedStyle(n);
-          if (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) return { visible: true };
-          if (s.boxShadow && s.boxShadow !== "none") return { visible: true };
-        }
-        return { visible: false, balise: el.tagName.toLowerCase() };
-      });
+      await page.waitForTimeout(ATTENTE_TRANSITION_MS);
+      const etat = await page.evaluate(MESURE_FOCUS);
       if (!etat) continue;
       totalAtteints++;
-      if (!etat.visible) sansFocus++;
+      if (!etat.focusVisible) sansFocus++;
     }
   }
   noter(

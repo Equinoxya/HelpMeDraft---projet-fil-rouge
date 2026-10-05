@@ -420,6 +420,18 @@ Ils valent d'être notés : ils montrent que l'outil de mesure se vérifie comme
    le contour sur `.cm-editor`. L'« absence de focus » relevée sur l'écran *Nouveau document* au
    premier audit était cela, et non un défaut.
 
+### Rejoué sur la pile conteneurisée
+
+Le 5 octobre également, une fois la pile Docker validée, le même script a été repassé contre le
+**bundle servi par nginx** et non plus par `vite preview` : **15 écrans, 0 violation axe-core**, et
+les six contrôles manuels au vert. Le résultat tient donc aussi sur l'image livrée, et pas seulement
+sur une construction locale. Voir [`validation-docker.md`](./validation-docker.md).
+
+L'outillage partagé entre ce script et les tests système a été réuni dans
+[`audits/commun.mjs`](./audits/commun.mjs) : SonarCloud relevait 11,6 % de duplication entre les
+deux, et il avait raison — la règle « le contour de focus peut être porté par un ascendant » est un
+raisonnement, pas un détail de script, et elle n'a pas à être écrite deux fois.
+
 ### Ce que ce contre-audit ne change pas
 
 Les limites du §7 tiennent toujours : **0 violation automatisée ne vaut pas conformité RGAA**. La

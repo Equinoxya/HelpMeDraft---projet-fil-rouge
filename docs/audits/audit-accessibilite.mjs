@@ -15,28 +15,57 @@
  *   npm install playwright axe-core        # dans un dossier à part
  *   npx playwright install chromium        # ou CHROMIUM_PATH=/chemin/vers/chrome
  *
- * Puis, l'application démarrée :
+ * Puis, l'application démarrée. Deux façons, l'une et l'autre vérifiées :
  *
- *   1. backend  : JWT_SECRET_KEY=… SECRET_KEY=… HELPMEDRAFT_DB_URL=sqlite:///… \
- *                 CORS_ORIGINS=http://localhost:4173 python run.py
- *   2. frontend : VITE_API_URL=http://localhost:5000 npm run build
- *                 npx vite preview --port 4173
- *   3. un compte créé via POST /auth/register, promu `admin` en base pour
- *      atteindre le back-office (E16)
- *   4. node audit-accessibilite.mjs
+ *   • sur la pile conteneurisée, qui audite le bundle tel que nginx le sert :
+ *       docker compose up --build -d
+ *       BASE_URL=http://localhost:8080
  *
- * Le résultat est écrit dans resultat-a11y.json, à verser ici sous
- * accessibilite-AAAA-MM-JJ.json.
+ *   • ou sur un lancement local, en servant le frontend CONSTRUIT (et non le
+ *     serveur de développement, dont le code n'est pas celui qui est livré) :
+ *       JWT_SECRET_KEY=… SECRET_KEY=… HELPMEDRAFT_DB_URL=sqlite:///… \
+ *         CORS_ORIGINS=http://localhost:4173 python run.py
+ *       VITE_API_URL=http://localhost:5000 npm run build && npx vite preview --port 4173
+ *
+ * Enfin, un compte créé via POST /auth/register et promu `admin` en base pour
+ * atteindre le back-office (E16), puis :
+ *
+ *   COMPTE_AUDIT_MDP=<son mot de passe> node audit-accessibilite.mjs
+ *
+ * Variables lues : BASE_URL, COMPTE_AUDIT_EMAIL, COMPTE_AUDIT_MDP (requise),
+ * CHROMIUM_PATH. Le résultat est écrit dans resultat-a11y.json, à verser ici
+ * sous accessibilite-AAAA-MM-JJ.json.
  */
-import { chromium } from "playwright";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import {
+  ATTENTE_TRANSITION_MS,
+  MESURE_FOCUS,
+  lancerNavigateur,
+  nouvelOnglet,
+} from "./commun.mjs";
 
 const require = createRequire(import.meta.url);
 const AXE = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
-const BASE = "http://localhost:4173";
-const COMPTE = { email: "audit.a11y@exemple.fr", mdp: "AuditA11y2026" };
+// L'audit tourne contre le frontend CONSTRUIT (vite preview, port 4173) et non
+// le serveur de développement : c'est le bundle livré qu'on audite.
+const BASE = process.env.BASE_URL || "http://localhost:4173";
+
+// Compte dédié à l'audit, créé par l'opérateur avant de lancer le script (voir
+// les prérequis en tête de fichier). Le mot de passe vient de l'environnement :
+// un identifiant en dur dans un fichier versionné est un constat de sécurité,
+// même sur un compte de test.
+const COMPTE = {
+  email: process.env.COMPTE_AUDIT_EMAIL || "audit.a11y@exemple.fr",
+  mdp: process.env.COMPTE_AUDIT_MDP,
+};
+if (!COMPTE.mdp) {
+  throw new Error(
+    "COMPTE_AUDIT_MDP est requis : mot de passe du compte créé pour l'audit " +
+      `(${COMPTE.email}). Voir les prérequis en tête de ce fichier.`,
+  );
+}
 
 const ECRANS = [
   { id: "E01", nom: "Accueil", url: "/", auth: false },
@@ -146,41 +175,10 @@ const MESURES = () => {
   };
 };
 
-/**
- * Focus : on tabule dans la page et on regarde si l'élément actif montre une
- * indication. Le contour peut être porté par un ascendant — c'est le cas de
- * CodeMirror, qui focalise `.cm-content` et dessine le contour sur
- * `.cm-editor`. Le mesurer sur le seul élément actif produirait un faux positif.
- */
-const MESURE_FOCUS = () => {
-  const indique = (el) => {
-    for (let n = el; n && n !== document.body; n = n.parentElement) {
-      const s = getComputedStyle(n);
-      if (s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0) return true;
-      if (s.boxShadow && s.boxShadow !== "none") return true;
-    }
-    return false;
-  };
-  const el = document.activeElement;
-  if (!el || el === document.body) return null;
-  return {
-    balise: el.tagName.toLowerCase(),
-    texte: (el.textContent || "").trim().slice(0, 30) || el.getAttribute("aria-label") || "",
-    focusVisible: indique(el),
-  };
-};
-
-// CHROMIUM_PATH permet de pointer un Chromium déjà présent sur la machine,
-// quand le numéro de build attendu par Playwright n'y est pas — c'est le cas
-// des conteneurs qui embarquent leur propre navigateur. Sans cette variable,
-// Playwright utilise celui qu'il a téléchargé.
-const navigateur = await chromium.launch(
-  process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {},
-);
+const navigateur = await lancerNavigateur();
 
 async function contexte(authentifie) {
-  const ctx = await navigateur.newContext({ viewport: { width: 1280, height: 900 } });
-  const page = await ctx.newPage();
+  const { ctx, page } = await nouvelOnglet(navigateur);
   if (authentifie) {
     await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
     await page.fill('input[type="email"]', COMPTE.email);
@@ -220,7 +218,7 @@ for (const authentifie of [false, true]) {
 
     // Taille du lien d'évitement une fois focalisé — le seul état où il est une cible.
     await page.keyboard.press("Tab");
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(ATTENTE_TRANSITION_MS);
     mesures.lienEvitementFocalise = await page.evaluate(() => {
       const el = document.activeElement;
       const r = el.getBoundingClientRect();
@@ -232,7 +230,7 @@ for (const authentifie of [false, true]) {
     await page.evaluate(() => document.body.focus());
     for (let i = 0; i < 40; i++) {
       await page.keyboard.press("Tab");
-      await page.waitForTimeout(250);
+      await page.waitForTimeout(ATTENTE_TRANSITION_MS);
       const actif = await page.evaluate(MESURE_FOCUS);
       if (!actif) continue;
       clavier.atteints++;
