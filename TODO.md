@@ -32,6 +32,7 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 | Annulation d'une génération en cours + temps estimé affiché | `DocumentEditorView.vue`, `utils/iaEstimation.ts` | 2 |
 | Tokens hashés, rotation, anti-rejeu, révocation contrôlée, cookie HttpOnly/SameSite | `auth_routes.py`, `auth_service.py`, `test_securite.py` | 3 |
 | Consentement RGPD tracé en base | table `consentement` | 5, 7 |
+| Export des données personnelles (art. 15 et 20), 19 tests | `services/export_service.py`, `GET /auth/export`, `DashboardView.vue` | 3, 5 |
 | Maquettes et captures | `docs/maquettes/`, `docs/captures/` | 5 |
 | Accessibilité RGAA : 15 écrans, 0 violation axe-core, 6 contrôles manuels au vert | `docs/audit-accessibilite.md`, `docs/audits/audit-accessibilite.mjs` | 2, 5 |
 | Journal de veille (3 périmètres, avril → octobre 2026) | `docs/veille/journal-de-veille.md` | transversale |
@@ -302,12 +303,32 @@ Reste à faire sur ce lot, et aucun outil ne le fera :
 - [ ] **Déclaration d'accessibilité** — obligation légale distincte de la conformité technique
 - [ ] Brancher le script d'audit dans la CI, une fois la pile Docker validée
 
-### 10 · RGPD
+### 10 · RGPD — 🔄 l'export est fait, la suppression reste
 - [x] **CGU et politique de confidentialité** mises à jour sur les contenus générés : article 5
       dédié, responsabilité éditoriale de l'utilisateur rappelée, et mention explicite qu'aucun
       contenu n'est transmis à un service tiers
+- [x] **Export des données personnelles** (art. 15 et 20) — `GET /auth/export`, archive ZIP
+      téléchargeable depuis le tableau de bord : `donnees.json`, un `LISEZ-MOI.txt` qui dit ce que
+      l'archive contient **et ce qu'elle ne contient pas**, et un fichier Markdown par document.
+      Fait **avant** la suppression, et dans cet ordre à dessein : on ne supprime pas ce qu'on n'a
+      pas pu emporter
+- [x] **Trois exclusions, décidées et vérifiées** : l'empreinte du mot de passe (un tel fichier
+      circule par courriel ou clé USB), les empreintes de jetons de session — les sessions sortent
+      en métadonnées seules — et **l'email de l'administrateur** dans le journal, qui est la donnée
+      d'un **tiers**. Exporter naïvement « toutes les lignes qui me concernent » le divulguerait.
+      Les tests cherchent les valeurs réelles dans l'archive décompressée, pas l'absence d'une clé
+- [x] **Assainissement des noms de fichiers** : le titre d'un document est écrit par l'utilisateur
+      et devient un nom d'entrée dans l'archive. Un titre valant `../../.bashrc` produirait une
+      entrée qui s'écrit **hors** du dossier à l'extraction — la faille dite « zip slip ». Le nom
+      est reconstruit par liste blanche, jamais nettoyé par soustraction, avec les noms réservés de
+      Windows et un rang en préfixe contre les collisions
+- [x] **19 tests** (TIE-01 à TIE-12), **vérifiés par mutation** : exporter l'empreinte du mot de
+      passe fait tomber TIE-06, exporter l'email de l'administrateur fait tomber TIE-09, et utiliser
+      le titre brut comme nom de fichier en fait tomber 7
+- [x] Éprouvé **de bout en bout sur la pile** : archive téléchargée depuis le navigateur, ouverte,
+      11 documents avec leur fichier Markdown, 0 secret trouvé dedans
+- [ ] **Suppression de compte par l'utilisateur** (art. 17) — lot suivant
 - [ ] Consentement **distinct** dédié à l'usage de l'IA
-- [ ] Export des données et suppression de compte par l'utilisateur (art. 15 et 17)
 
 ### 11 · Éco-conception CP 6
 - [x] **Alléger le CSS** : daisyUI retiré (45,6 Ko pour cinq classes utilisées), `legal-style.css` mort supprimé. **79,9 Ko → 34,4 Ko bruts (−57 %)**, 13,7 → 7,0 Ko gzip. Le menu mobile, seule mécanique qui en dépendait, est désormais piloté par l'état du composant — ce qui lui apporte au passage `aria-expanded`, la fermeture par Échap et au clic extérieur
@@ -352,8 +373,10 @@ Deux défauts de ma propre boîte de dialogue, trouvés au navigateur et qu'axe-
       a le focus. L'écoute est passée au document, comme pour le menu mobile de `Nav.vue`
 
 Reste sur ce lot :
-- [ ] **Anonymiser plutôt que supprimer** un compte — relève du RGPD art. 17 (§10), change le
-      modèle de données, et mérite son propre lot
+- [ ] **Anonymiser plutôt que supprimer** un compte — **à écarter, sauf avis contraire** : garder
+      les brouillons de quelqu'un en les détachant de son nom n'est pas effacer, c'est conserver ses
+      écrits sans lui. Ce qui est rattaché au compte ici, c'est du contenu rédigé, pas de la donnée
+      statistique. L'arbitrage est à écrire dans le dossier plutôt qu'à coder
 - [ ] Piéger le focus dans la boîte de dialogue (`focus trap`) : le focus y entre, `Échap` la ferme
       et il revient au bouton d'origine, mais `Tab` peut encore en sortir
 

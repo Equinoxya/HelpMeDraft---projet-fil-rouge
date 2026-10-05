@@ -280,7 +280,12 @@ const dpoContact = "rgpd@helpmedraft.fr";
               >
               <span class="text-[#111111]/80">
                 Vous pouvez consulter et modifier vos informations directement
-                depuis votre profil.</span
+                depuis votre profil, et
+                <strong
+                  >télécharger une copie complète de vos données depuis votre
+                  tableau de bord</strong
+                >
+                — sans avoir à nous écrire ni à attendre.</span
               >
             </li>
             <li class="leading-relaxed">
@@ -297,7 +302,12 @@ const dpoContact = "rgpd@helpmedraft.fr";
                 >Droit à la limitation et à la portabilité :</strong
               >
               <span class="text-[#111111]/80">
-                Vous pouvez demander une copie exportable de vos données
+                L'archive téléchargeable depuis votre tableau de bord contient
+                un fichier JSON lisible par machine et un fichier Markdown par
+                document, afin que vos contenus soient réutilisables ailleurs.
+                Elle ne contient aucun mot de passe, aucun jeton de connexion,
+                et aucune donnée concernant une autre personne. Vous pouvez
+                aussi demander une copie exportable de vos données
                 documentaires.</span
               >
             </li>
