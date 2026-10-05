@@ -144,3 +144,35 @@ CREATE TABLE password_reset (
     CONSTRAINT fk_reset_user FOREIGN KEY (user_id)
         REFERENCES `user` (user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- ---------- Journal des actions d'administration ---------------------------
+--
+-- Qui a changé quoi, sur qui, et quand. Les deux emails sont COPIÉS et non
+-- seulement référencés : l'action la plus importante à tracer est la
+-- suppression d'un compte, et une clé étrangère disparaîtrait au moment même où
+-- la trace devient utile.
+--
+-- acteur_id en ON DELETE SET NULL, et cible_id SANS clé étrangère : supprimer
+-- un administrateur ne doit pas effacer ses actions, et la cible peut ne plus
+-- exister. Les identifiants ne servent qu'à relier au compte quand il est là.
+--
+-- Rétention : un an, appliquée par purge_journal_admin() côté application. Le
+-- journal contient des données personnelles, il n'a pas à grossir sans fin.
+CREATE TABLE journal_admin (
+    id_action    CHAR(36)     NOT NULL,
+    acteur_id    CHAR(36)     NULL,
+    acteur_email VARCHAR(326) NOT NULL,  -- même longueur que user.email
+    cible_id     CHAR(36)     NULL,      -- volontairement sans clé étrangère
+    cible_email  VARCHAR(326) NOT NULL,
+    action       VARCHAR(32)  NOT NULL,
+    avant        VARCHAR(255) NULL,
+    apres        VARCHAR(255) NULL,
+    created_at   DATETIME     NOT NULL,
+    PRIMARY KEY (id_action),
+    KEY ix_journal_date (created_at),  -- lecture décroissante et purge
+    KEY ix_journal_acteur (acteur_id),
+    KEY ix_journal_cible (cible_id),
+    CONSTRAINT fk_journal_acteur FOREIGN KEY (acteur_id)
+        REFERENCES `user` (user_id) ON DELETE SET NULL,
+    CONSTRAINT ck_journal_action CHECK (action IN ('role','quota','suppression'))
+) ENGINE=InnoDB;

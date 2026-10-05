@@ -230,6 +230,21 @@ const dpoContact = "rgpd@helpmedraft.fr";
             </li>
             <li class="leading-relaxed">
               <strong class="uppercase text-[#111111]"
+                >Journal d'administration :</strong
+              >
+              <span class="text-[#111111]/80">
+                Les actions de nos administrateurs sur votre compte —
+                modification de votre rôle ou de votre quota, suppression du
+                compte — sont journalisées avec l'adresse e-mail de l'auteur de
+                l'action et la vôtre, afin que nous puissions rendre compte de
+                ces traitements. Ce journal est conservé
+                <strong>un an</strong>, puis purgé automatiquement. Il survit
+                volontairement à la suppression de votre compte : c'est
+                précisément la trace de cette suppression.</span
+              >
+            </li>
+            <li class="leading-relaxed">
+              <strong class="uppercase text-[#111111]"
                 >Logs de sécurité & sessions :</strong
               >
               <span class="text-[#111111]/80">

@@ -119,7 +119,13 @@ def test_modifier_un_compte_inexistant_rend_404(client, auth_admin):
 
 
 def test_l_administrateur_supprime_un_compte(client, auth_admin, utilisateur):
-    assert client.delete(f"/admin/users/{utilisateur}", headers=auth_admin).status_code == 204
+    # La confirmation est l'email du compte visé : une garde qui ne vivrait que
+    # dans le navigateur ne protégerait pas d'un appel direct à l'API.
+    reponse = client.delete(
+        f"/admin/users/{utilisateur}?confirmation=camille@exemple.fr", headers=auth_admin
+    )
+
+    assert reponse.status_code == 204
     with SessionLocal() as session:
         assert session.get(User, utilisateur) is None
 

@@ -22,8 +22,9 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 | IA locale (Ollama) + prompt engineering | `services/ia_service.py` | 3 |
 | Quota IA journalier | `ia_route.py` (fenêtre 24 h) | 3 |
 | Stats d'usage admin | `admin_route.py` (`/stats`) | 3 |
+| Journal des actions d'administration, recherche de comptes, confirmation forte de suppression | `journal_service.py`, table `journal_admin`, `AdminView.vue`, 20 tests | 3, 5, 7 |
 | Architecture en couches effective | `routes/` → `services/` → `database/` + SPA découplée | 6 |
-| Modèle de données (7 entités) + script MySQL | `database/db.py`, `schema_mysql.sql` | 7 |
+| Modèle de données (8 entités) + script MySQL | `database/db.py`, `schema_mysql.sql` | 7 |
 | ORM SQLAlchemy, requêtes paramétrées, validation des entrées | `db.py`, routes | 8 |
 | Protection XSS (DOMPurify) + 13 tests | `MarkdownEditor.vue`, `markdown-sanitization.spec.ts` | 2 |
 | Suite de tests automatisés (344 tests) | `backend/tests/`, `frontend/src/**/__tests__/` | 2, 3, 8, 9 |
@@ -312,6 +313,49 @@ Reste à faire sur ce lot, et aucun outil ne le fera :
 - [x] **Alléger le CSS** : daisyUI retiré (45,6 Ko pour cinq classes utilisées), `legal-style.css` mort supprimé. **79,9 Ko → 34,4 Ko bruts (−57 %)**, 13,7 → 7,0 Ko gzip. Le menu mobile, seule mécanique qui en dépendait, est désormais piloté par l'état du composant — ce qui lui apporte au passage `aria-expanded`, la fermeture par Échap et au clic extérieur
 - [ ] Vérifier le chargement différé, alléger les dépendances JavaScript, activer la compression GZIP
 - [ ] Le bundle JavaScript dépasse 500 Ko : `vite build` le signale à chaque construction. Découpage en morceaux à envisager
+
+### 12 bis · Back-office — ✅ les trois manques comblés
+
+Trois manques relevés en examinant le côté administration, le 05/10/2026.
+
+- [x] **Journal des actions d'administration** (table `journal_admin`) : changement de rôle,
+      changement de quota et suppression de compte sont tracés — acteur, cible, valeur avant et
+      après, horodatage. Écrit **dans la même transaction** que l'action : séparés, les deux
+      rendraient possibles une action sans trace et une trace sans action, et un journal auquel on
+      ne peut pas se fier ne vaut rien. **Lecture seule par l'API** : aucune route ne permet d'y
+      écrire ni d'en supprimer une ligne — un journal que l'administrateur peut retoucher ne prouve
+      rien
+- [x] **Les emails y sont copiés, pas référencés** : l'action la plus importante à tracer est la
+      suppression, et une clé étrangère disparaîtrait au moment même où la trace devient utile.
+      `acteur_id` est en `ON DELETE SET NULL`, `cible_id` sans clé étrangère du tout
+- [x] **Rétention d'un an**, appliquée par `purge_journal_admin()` sur le modèle de la purge des
+      sessions expirées (KAN-96). Le journal contient des données personnelles : il n'a pas à
+      grossir sans fin, et la durée est annoncée dans l'écran
+- [x] **Recherche de comptes** sur email, prénom et nom, insensible à la casse, temporisée côté
+      interface. Les jokers `%` et `_` saisis par l'utilisateur sont **échappés** : sans cela, une
+      recherche sur « % » ramenait toute la table — trouvé par le test TI-J20, pas par relecture
+- [x] **Confirmation forte de suppression** : l'email doit être recopié, et il est envoyé au
+      serveur qui le **compare en base**. Un `window.confirm` où « OK » est la réponse par défaut
+      se valide par réflexe, et une garde qui ne vit que dans le navigateur ne protège pas d'un
+      appel direct à l'API sur le mauvais identifiant
+- [x] **20 tests d'intégration** (TI-J01 à TI-J20), dont les deux cas de survie de la trace, et
+      **vérifiés par mutation** : retirer le contrôle de confirmation fait tomber TI-J06, ne plus
+      tracer la suppression fait tomber TI-J04
+- [x] Migration livrée pour **MySQL et SQLite**, appliquée contre le vrai MySQL 8.4 de la pile avec
+      le compte de migration. Le garde-fou de `db.py` a joué son rôle au passage : le backend a
+      **refusé de démarrer** en nommant la table absente, avant migration
+
+Deux défauts de ma propre boîte de dialogue, trouvés au navigateur et qu'axe-core ne détecte pas :
+- [x] le focus n'entrait pas dans la boîte à son ouverture — un lecteur d'écran n'annonçait donc
+      pas son apparition, et il fallait tabuler tout l'écran pour atteindre le champ
+- [x] `Échap` ne la fermait pas : un `@keydown.esc` posé sur un `div` n'est déclenché que si ce div
+      a le focus. L'écoute est passée au document, comme pour le menu mobile de `Nav.vue`
+
+Reste sur ce lot :
+- [ ] **Anonymiser plutôt que supprimer** un compte — relève du RGPD art. 17 (§10), change le
+      modèle de données, et mérite son propre lot
+- [ ] Piéger le focus dans la boîte de dialogue (`focus trap`) : le focus y entre, `Échap` la ferme
+      et il revient au bouton d'origine, mais `Tab` peut encore en sortir
 
 ### 12 · Déploiement CP 10
 - [x] **Désigner le premier administrateur** — `database/promouvoir.py`. Le back-office sait changer

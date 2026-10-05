@@ -95,9 +95,10 @@ Les assistants de rédaction existants envoient le texte de l'utilisateur à une
 <td width="50%" valign="top">
 
 ### 🛠️ Back-office admin
-- Liste paginée des utilisateurs avec compteurs d'usage
+- Liste paginée des utilisateurs, **avec recherche** sur email, prénom et nom
 - Modification du rôle et du quota IA quotidien
-- Suppression de compte, avec garde-fous
+- Suppression de compte : **l'email doit être recopié**, et le serveur le vérifie
+- **Journal des actions d'administration** — qui a changé quoi, sur qui, quand
 - Statistiques globales : comptes, documents par statut, appels IA sur 24 h et 7 jours
 
 </td>
@@ -464,9 +465,10 @@ Base : `http://localhost:5000`. Toutes les routes hors `/auth` exigent l'en-têt
 
 | Méthode | Route | Description |
 |---|---|---|
-| `GET` | `/admin/users` | Liste paginée avec compteurs d'usage |
-| `PATCH` | `/admin/users/<id>` | Modification de `role` et `quota_daily_limit`. Le **premier** administrateur se désigne hors de l'API, voir [Désigner le premier administrateur](#6--désigner-le-premier-administrateur) |
-| `DELETE` | `/admin/users/<id>` | Suppression d'un compte |
+| `GET` | `/admin/users` | Liste paginée avec compteurs d'usage. `recherche` filtre sur email, prénom et nom (128 caractères max) |
+| `PATCH` | `/admin/users/<id>` | Modification de `role` et `quota_daily_limit`. Chaque changement est tracé au journal. Le **premier** administrateur se désigne hors de l'API, voir [Désigner le premier administrateur](#6--désigner-le-premier-administrateur) |
+| `DELETE` | `/admin/users/<id>` | Suppression d'un compte. **Exige `?confirmation=<email>`**, comparé en base : un appel direct sur le mauvais identifiant échoue |
+| `GET` | `/admin/journal` | Journal des actions d'administration, du plus récent au plus ancien. `action` filtre sur `role`, `quota` ou `suppression`. **Lecture seule** |
 | `GET` | `/admin/stats` | Statistiques globales |
 
 </details>
@@ -475,7 +477,7 @@ Base : `http://localhost:5000`. Toutes les routes hors `/auth` exigent l'en-têt
 
 ## 🗃️ Modèle de données
 
-Sept entités, identifiants UUID, suppression en cascade depuis `user`.
+Huit entités, identifiants UUID, suppression en cascade depuis `user` — sauf le journal d'administration, qui doit lui survivre.
 
 | Table | Rôle |
 |---|---|
@@ -484,6 +486,7 @@ Sept entités, identifiants UUID, suppression en cascade depuis `user`.
 | `dossier` | Regroupement de documents d'un utilisateur |
 | `ia` | Journal des appels IA : action, contenu avant/après, tokens consommés, et trace d'insertion (`insere`, `position_debut`, `insere_at`) |
 | `consentement` | Traçabilité des consentements RGPD (type, acceptation, date) |
+| `journal_admin` | Actions d'administration : acteur, cible, type, valeur avant/après. Les emails y sont **copiés** pour survivre à la suppression du compte |
 | `user_session` | Refresh tokens hachés, expiration, drapeau de révocation |
 | `password_reset` | Tokens de réinitialisation hachés, expiration, usage unique |
 
