@@ -5,6 +5,8 @@ import { useAuthStore } from "../stores/auth";
 import documentService from "../services/documentService";
 import type { DocumentItem, DocumentStatsResponse } from "../types/document";
 import { statusLabels, getStatusStyle } from "../utils/documentStatus";
+import donneesPersonnellesService from "../services/donneesPersonnellesService";
+import { messageErreur } from "../utils/erreurs";
 
 const authStore = useAuthStore();
 const searchQuery = ref("");
@@ -15,6 +17,30 @@ const userFirstname = computed(() => {
 
 const isLoading = ref(false);
 const errorMessage = ref("");
+
+// ── Export des données personnelles (RGPD art. 15 et 20) ────────────────────
+const exportEnCours = ref(false);
+const exportMessage = ref("");
+const exportErreur = ref("");
+
+async function exporterMesDonnees() {
+  exportEnCours.value = true;
+  exportMessage.value = "";
+  exportErreur.value = "";
+  try {
+    const nom = await donneesPersonnellesService.telechargerMesDonnees();
+    exportMessage.value = `Archive « ${nom} » téléchargée.`;
+  } catch (err) {
+    // Le 429 mérite son propre message : « échec » laisserait croire à une
+    // panne, alors que la limitation est volontaire et temporaire.
+    exportErreur.value = messageErreur(
+      err,
+      "L'export a échoué. Il est limité à 5 demandes par heure ; réessayez plus tard.",
+    );
+  } finally {
+    exportEnCours.value = false;
+  }
+}
 
 const statsData = ref<DocumentStatsResponse | null>(null);
 const recentDocuments = ref<DocumentItem[]>([]);
@@ -445,6 +471,59 @@ onMounted(fetchDashboardData);
               </p>
             </div>
           </div>
+        </section>
+
+        <!-- MES DONNÉES PERSONNELLES (RGPD art. 15 et 20) -->
+        <section
+          class="mt-12 bg-[#FAF8F5] border-2 border-[#111111] shadow-[8px_8px_0px_0px_rgba(17,17,17,1)] p-6 sm:p-8"
+        >
+          <h2
+            class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C] mb-4"
+          >
+            [ Mes données personnelles ]
+          </h2>
+
+          <p class="font-serif text-base text-[#111111]/90 mb-3 max-w-2xl">
+            Récupérez une copie de tout ce que HelpMeDraft conserve sur vous :
+            votre compte, vos dossiers, vos documents et leur contenu,
+            l'historique de l'assistant et vos consentements.
+          </p>
+
+          <p class="font-mono text-xs text-[#111111]/70 mb-6 max-w-2xl">
+            L'archive ne contient
+            <strong>aucun mot de passe ni jeton de connexion</strong>, et aucune
+            donnée concernant une autre personne.
+          </p>
+
+          <button
+            type="button"
+            :disabled="exportEnCours"
+            class="font-mono text-xs uppercase tracking-wider px-5 py-3 border-2 border-[#111111] bg-[#111111] text-[#F4F1EA] hover:bg-[#C4341C] hover:border-[#C4341C] disabled:opacity-50 transition-colors"
+            @click="exporterMesDonnees"
+          >
+            {{
+              exportEnCours
+                ? "Préparation de l'archive…"
+                : "Télécharger mes données (ZIP)"
+            }}
+          </button>
+
+          <!-- aria-live : l'issue de l'export doit être annoncée, le
+               téléchargement d'un fichier ne se voyant pas dans la page. -->
+          <p
+            v-if="exportMessage"
+            class="mt-4 font-mono text-xs text-[#111111]/80"
+            aria-live="polite"
+          >
+            {{ exportMessage }}
+          </p>
+          <p
+            v-if="exportErreur"
+            class="mt-4 p-3 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold"
+            role="alert"
+          >
+            {{ exportErreur }}
+          </p>
         </section></template
       >
     </div>

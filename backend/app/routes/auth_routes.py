@@ -2,10 +2,11 @@ import os
 from datetime import timedelta
 from functools import wraps
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, make_response, request
 from sqlalchemy import select
 
 from app.extension import limiter, mail
+from app.services import export_service
 from app.services.auth_service import (
     create_session,
     decode_access_token,
@@ -237,6 +238,44 @@ def me():
                 "role": user.role,
             }
         ), 200
+
+
+@auth_bp.route("/export", methods=["GET"])
+@token_required
+# Cinq par heure : l'export lit six tables et assemble une archive en mémoire,
+# c'est la requête la plus lourde de l'application. Le seuil reste large pour un
+# usage légitime — on n'exporte pas ses données dix fois dans l'heure.
+@limiter.limit("5 per hour")
+def export_donnees_personnelles():
+    """
+    Export des données personnelles du compte appelant — RGPD art. 15 et 20.
+
+    AUCUN IDENTIFIANT EN PARAMÈTRE, et c'est volontaire : le compte exporté est
+    celui du jeton. Un paramètre `user_id` serait une invitation à exporter le
+    compte d'un autre, et il faudrait alors un contrôle d'autorisation de plus —
+    un contrôle qu'on peut oublier. Ici, il n'y a rien à oublier.
+
+    Ce qui n'est PAS exporté (empreinte du mot de passe, jetons, données d'un
+    tiers) est décidé et justifié dans app/services/export_service.py.
+    """
+    donnees = export_service.collecter(request.user_id)
+    if not donnees:
+        return jsonify({"error": "Utilisateur introuvable"}), 404
+
+    archive = export_service.construire_archive(donnees)
+
+    reponse = make_response(archive)
+    reponse.headers["Content-Type"] = "application/zip"
+    # Le nom vient de la date, jamais de l'email : un email dans cet en-tête
+    # ouvrirait la porte à l'injection d'en-tête.
+    reponse.headers["Content-Disposition"] = (
+        f'attachment; filename="{export_service.nom_archive()}"'
+    )
+    # Sans cet en-tête, le navigateur ne laisse pas le code de la page lire le
+    # nom de fichier proposé : la requête étant authentifiée par en-tête, c'est
+    # le script qui déclenche l'enregistrement, pas un lien.
+    reponse.headers["Access-Control-Expose-Headers"] = "Content-Disposition"
+    return reponse
 
 
 # ==========================================RESET PASSWORD====================================================
