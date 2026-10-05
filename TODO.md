@@ -36,6 +36,7 @@ Croisement entre le [cahier des charges LexiCorp](./docs/cahier-des-charges.md),
 | Suivi de projet sur données Jira réelles | `docs/gestion-de-projet.md` | 4 |
 | Git / GitHub, branches, PR | — | 1, 4 |
 | `.env.example` | racine | 10 |
+| Pile Docker validée sur un démon réel : images, MySQL 8.4, droits, sauvegarde, tests système | `docs/validation-docker.md` | 1, 7, 10, 11 |
 
 ---
 
@@ -69,9 +70,13 @@ Voir [`docs/plan-de-tests.md`](./docs/plan-de-tests.md), [`backend/tests/README.
 - [x] **Environnement de tests** hermétique : base en mémoire, aucun appel réseau
 - [x] **Jeu d'essai de la fonctionnalité la plus représentative** : 11 cas exécutés, 0 écart
 - [x] **Compte rendu d'exécution** : plan de tests §11
-- [ ] **Tests système** TS-01 à TS-10 — manuels, attendent la conteneurisation
+- [x] **Tests système TS-01 à TS-10 exécutés** sur la pile conteneurisée (05/10/2026) :
+      **7 au vert**, 1 en échec (constat SMTP du §8), 2 hors de portée — TS-04 exige un Ollama
+      joignable, TS-10 un lecteur d'écran réel. Script versionné
+      ([`tests-systeme.mjs`](./docs/audits/tests-systeme.mjs)), résultats bruts dans
+      [`tests-systeme-2026-10-05.json`](./docs/audits/tests-systeme-2026-10-05.json)
 - [ ] **Tests d'acceptation** avec le formateur
-- [ ] **Tests de charge** — après Docker
+- [ ] **Tests de charge** — la pile est maintenant exécutable, plus rien ne les bloque
 - [ ] Brancher les deux suites dans la CI (voir §5)
 
 Trouvé et corrigé pendant la campagne :
@@ -103,12 +108,21 @@ Hygiène du Jira, relevée au passage :
 - [ ] Rattacher ou supprimer les 10 tickets hors epic (`KAN-1` à `KAN-6`, `KAN-89` à `KAN-92`)
 - [ ] Reporter les échéances des epics (toutes dépassées, de 76 à 129 jours)
 
-### 4 · Conteneurisation CP 1, 11 — ✅ fait
+### 4 · Conteneurisation CP 1, 11 — ✅ fait **et validée sur un vrai démon Docker**
+Voir [`docs/validation-docker.md`](./docs/validation-docker.md) — campagne du 05/10/2026.
 - [x] `docker-compose.yml` : MySQL 8.4, backend, frontend. Sonde de santé sur la base, secrets déclarés avec `${VAR:?message}` pour échouer tout de suite plutôt que d'inventer une valeur
 - [x] `backend/Dockerfile` : gunicorn, utilisateur non privilégié, `--timeout 600` parce que l'inférence n'impose aucun délai de lecture
-- [x] `frontend/Dockerfile` : construction en deux étapes, image finale nginx (~50 Mo), repli monopage
+- [x] `frontend/Dockerfile` : construction en deux étapes, image finale nginx (**82,9 Mo mesurés**, et non ~50 Mo comme annoncé ici jusqu'au 05/10), repli monopage vérifié (`GET /documents/42` → 200)
 - [x] Stack composée : backend + frontend + BDD. **Ollama reste sur l'hôte**, atteint par `host.docker.internal` — son image pèse plusieurs Go et le modèle se télécharge à part
-- [ ] **Valider `docker compose up --build` sur une machine avec un démon Docker.** La syntaxe de la composition, le fonctionnement sous gunicorn et l'injection de `VITE_API_URL` ont été vérifiés, mais la **construction et l'exécution des images ne l'ont pas été** : le conteneur de développement n'a pas de démon Docker
+- [x] **`docker compose up --build` exécuté pour de vrai** : composition valide, les deux images se
+      construisent, MySQL 8.4.11 passe sa sonde, le backend se connecte sous gunicorn, nginx sert le
+      bundle avec le bon `VITE_API_URL`, CORS filtre comme prévu, et la remise à zéro documentée
+      (`down -v` puis `up`) rejoue bien `initdb`
+- [x] **Deux conteneurs non privilégiés vérifiés** : backend `uid=10001`, frontend `uid=101`, maître
+      nginx compris
+- [ ] Rejouer la validation sur la machine de développement avec **Ollama démarré** : TS-04
+      (reformuler → remplacer) est le seul parcours que la campagne n'a pas pu couvrir, faute de
+      modèle joignable depuis l'environnement d'intégration
 - [ ] Remplacer le stockage mémoire de Flask-Limiter par Redis. Les seuils comptent **par worker** : avec 2 workers, ceux de `/auth/login` sont doublés
 
 ### 5 · CI/CD et qualité de code CP 11 — ✅ en place
@@ -155,10 +169,14 @@ Voir [`docs/exploitation-base-de-donnees.md`](./docs/exploitation-base-de-donnee
       **aucun droit de structure**, vérifié depuis l'application (`CREATE TABLE` et `DROP TABLE`
       refusés)
 - [x] Aligner ORM et SQL sur `ia.id_document` — fait, et vérifié sur un vrai InnoDB
-- [ ] **Lancer `docker compose up --build` sur une machine avec un démon Docker.** Il reste 4
-      points propres à MySQL 8.4 que MariaDB ne permet pas de confirmer : la collation
-      `utf8mb4_0900_ai_ci`, `--set-gtid-purged=OFF`, l'authentification `caching_sha2_password`, et
-      l'enchaînement des montages `initdb`
+- [x] **Les 4 points propres à MySQL 8.4 sont confirmés** sur MySQL 8.4.11 réel (05/10/2026) :
+      collation `utf8mb4_0900_ai_ci` sur le schéma et les 7 tables, `mysqldump --set-gtid-purged=OFF`
+      accepté (0 instruction `SET GTID_PURGED` dans l'archive), authentification
+      `caching_sha2_password` honorée par les 3 comptes — donc l'ajout de `cryptography` était le
+      bon correctif — et enchaînement `10-schema.sql` → `20-droits.sh`. Aller-retour
+      sauvegarde / restauration rejoué, jeu d'essai chargé, droits éprouvés (`CREATE`, `DROP` et
+      `ALTER` refusés à l'applicatif), cascade `DELETE FROM document` vérifiée en SQL brut. Détail
+      dans [`docs/validation-docker.md`](./docs/validation-docker.md)
 - [ ] Outiller les migrations (Alembic) : les 4 scripts actuels (dont
       `migration_tracabilite_ia.sql`) ne sont ni versionnés ni idempotents, et rien n'enregistre
       ce qui a déjà été appliqué
@@ -204,6 +222,16 @@ Voir [`docs/audit-securite.md`](./docs/audit-securite.md). 0 vulnérabilité cri
 - [x] **Ajouter `SECRET_KEY` au `backend/.env`** — fait : `config.py` lève une `RuntimeError` au démarrage sans elle, et l'application démarre
 - [x] `KAN-100` **relever la version d'Ollama** — fait : **0.35.1**, au-dessus du seuil de 0.18 fixé au §4.2 du rapport d'audit
 - [x] **Clés commitées** : les deux copies de `.env` retirées du dépôt, clés **régénérées**, et `.gitignore` complété (`.env.*`, `!.env.example`, `Claude outputs/`) — les quatre cas d'exclusion vérifiés
+- [ ] **`/auth/forgot-password` immobilise un worker quand le serveur SMTP ne répond pas.**
+      Trouvé le 05/10/2026 en validant la pile : le courriel est envoyé **dans le fil de la
+      requête**, et Flask-Mail construit son `smtplib.SMTP` sans délai. Mesuré sur la pile réelle —
+      requête toujours en cours après 90 s, et avec 2 workers gunicorn synchrones **l'API entière
+      cesse de répondre** ; il a fallu redémarrer le conteneur. La route est publique et non
+      authentifiée, et la limitation de débit (3/h) compte par IP *et par worker*. Deux corrections,
+      à arbitrer, décrites au §4 de
+      [`docs/validation-docker.md`](./docs/validation-docker.md) : borner le `send()` par un délai
+      de socket (quelques lignes, tout de suite), puis sortir l'envoi du fil de la requête (la vraie
+      correction, à rapprocher du §12)
 - [ ] `KAN-100` Ollama : restreindre l'écoute à `127.0.0.1` (`OLLAMA_HOST=127.0.0.1:11434`)
 - [ ] **Chiffrement des données au repos** — 3 options chiffrées au §5.1 du rapport, à arbitrer
 - [ ] `KAN-102` épingler les dépendances transitives (Werkzeug non épinglée)
@@ -355,8 +383,10 @@ au document étaient indiscernables en base — la trace ne valait donc rien.
 - [x] **Migration SQL** livrée (`migration_tracabilite_ia.sql`) et `schema_mysql.sql` aligné
 
 Reste à faire sur ce lot :
-- [ ] Rejouer la migration contre un vrai MySQL 8.4 (bloqué par le même manque de démon Docker que
-      le §4 et le §6 — elle n'a été vérifiée que sur SQLite)
+- [x] **Migration rejouée contre un vrai MySQL 8.4** (05/10/2026), sur une base dont les colonnes
+      avaient été retirées pour simuler l'état d'avant, et avec le compte `helpmedraft_migration` :
+      colonnes et types conformes, `ck_ia_insertion` recréée, 0 ligne incohérente. La contrainte
+      refuse bien une trace marquée sans horodatage (`ERROR 3819`)
 - [ ] Décider si la trace doit être exposée à l'export du document ou rester interne à
       l'application
 
@@ -368,9 +398,9 @@ Reste à faire sur ce lot :
 2. ~~Gestion de projet (§3)~~ — ✅ fait, sauf les comptes rendus réels
 3. ~~Tests + plan de tests (§2)~~ — ✅ fait, sauf tests système et acceptation
 4. ~~Clés commitées, build cassé, contraste AA (§5, §8, §9)~~ — ✅ fait
-5. **Valider la pile Docker sur une machine avec un démon** (§4) — c'est le verrou : il débloque
-   d'un coup les tests système (§2), les tests de charge (§2), les 4 contrôles MySQL 8.4 (§6) et la
-   migration de traçabilité (§16)
+5. ~~Valider la pile Docker~~ — ✅ fait le 05/10/2026 : tests système (7/10), contrôles MySQL 8.4,
+   sauvegarde, droits et migration de traçabilité sont vérifiés d'un coup. Restent les tests de
+   charge, et TS-04 à jouer avec Ollama démarré
 6. ~~Le reste de l'accessibilité (§9)~~ — ✅ fait et mesuré, ne restent que les contrôles qu'aucun outil ne fait (lecteur d'écran, zoom 200 %, déclaration d'accessibilité)
 7. **BDD, NoSQL, sécurité** (§6 à §8)
 8. **Dossier de projet et diaporama** (§13) — en dernier, ils agrègent tout le reste. Les §2 et §14 fournissent la démarche de résolution de problème attendue
