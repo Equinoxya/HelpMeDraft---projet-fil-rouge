@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-05T09:22:10.092Z",
+  "date": "2026-10-05T10:00:54.835Z",
   "front": "http://localhost:8080",
   "api": "http://localhost:5000",
   "resultats": [
@@ -7,13 +7,13 @@
       "id": "TS-01",
       "intitule": "inscription → connexion → tableau de bord",
       "verdict": "ok",
-      "detail": "compte ts01.1791192063428@exemple.fr créé (redirection vers /login), session ouverte, titre « Tableau de bord — HelpMeDraft »"
+      "detail": "compte ts01.1791194308200@exemple.fr créé (redirection vers /login), session ouverte, titre « Tableau de bord — HelpMeDraft »"
     },
     {
       "id": "TS-03",
       "intitule": "rédaction → enregistrement automatique → rechargement",
       "verdict": "ok",
-      "detail": "document /documents/4e02045b-cb30-4c50-944b-31db47227159 rechargé, contenu conservé"
+      "detail": "document /documents/310e6e5a-f969-4737-bac5-c7190602b04f rechargé, contenu conservé"
     },
     {
       "id": "TS-05",
@@ -37,7 +37,7 @@
       "id": "TS-08",
       "intitule": "connexion administrateur → back-office",
       "verdict": "ok",
-      "detail": "9 lignes de comptes, 4/4 comptes du jeu d'essai affichés, statistiques présentes"
+      "detail": "7 lignes de comptes, 4/4 comptes du jeu d'essai affichés, statistiques présentes"
     },
     {
       "id": "TS-09",

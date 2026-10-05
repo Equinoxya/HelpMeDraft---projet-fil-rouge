@@ -12,12 +12,17 @@
  *
  * Puis, la pile démarrée et le jeu d'essai chargé :
  *
- *   MDP_JEU_ESSAI=<celui qu'affiche jeu_essai.py> \
  *   docker compose up --build -d
- *   docker compose run --rm --no-deps \
- *     -e HELPMEDRAFT_DB_URL="mysql+pymysql://helpmedraft_migration:MDP@db:3306/helpmedraft" \
+ *
+ *   # l'URL de connexion se compose avec le mot de passe du compte de migration,
+ *   # qui est dans le .env de la racine — jamais écrit dans un fichier versionné
+ *   set -a && . ./.env && set +a
+ *   URL_MIGRATION="mysql+pymysql://helpmedraft_migration"
+ *   URL_MIGRATION="$URL_MIGRATION:$MYSQL_MIGRATION_PASSWORD@db:3306/helpmedraft"
+ *   docker compose run --rm --no-deps -e HELPMEDRAFT_DB_URL="$URL_MIGRATION" \
  *     backend python -m database.jeu_essai --vider
- *   node tests-systeme.mjs
+ *
+ *   MDP_JEU_ESSAI=<celui qu'affiche jeu_essai.py> node tests-systeme.mjs
  *
  * TS-02 est exécuté EN DERNIER à dessein : voir le commentaire de son bloc.
  */
@@ -27,9 +32,12 @@ import {
   FRONT,
   MESURE_FOCUS,
   connecter,
+  demanderGeneration,
+  entetesApi,
   lancerNavigateur,
   motDePasseJeuEssai,
   nouvelOnglet,
+  premierDocument,
 } from "./commun.mjs";
 
 const MDP = motDePasseJeuEssai();
@@ -99,15 +107,7 @@ const navigateur = await lancerNavigateur();
 
 // ── TS-05 dossier : créer → classer → supprimer le dossier ──────────────────
 {
-  const jeton = await (async () => {
-    const r = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "camille@helpmedraft.test", mdp: MDP }),
-    });
-    return (await r.json()).access_token;
-  })();
-  const entetes = { "Content-Type": "application/json", Authorization: `Bearer ${jeton}` };
+  const entetes = await entetesApi("camille@helpmedraft.test");
 
   const dossier = await (
     await fetch(`${API}/dossiers`, {
@@ -144,26 +144,13 @@ const navigateur = await lancerNavigateur();
 
 // ── TS-06 quota IA épuisé ───────────────────────────────────────────────────
 {
-  const r = await fetch(`${API}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "karim@helpmedraft.test", mdp: MDP }),
-  });
-  const jeton = (await r.json()).access_token;
-  const entetes = { "Content-Type": "application/json", Authorization: `Bearer ${jeton}` };
-  const docs = await (await fetch(`${API}/documents`, { headers: entetes })).json();
-  const id = docs.items[0]?.id_document;
-  const gen = await fetch(`${API}/documents/${id}/ia/generer`, {
-    method: "POST",
-    headers: entetes,
-    body: JSON.stringify({ type_action: "corriger", scope: "document", contenu: "Un text fautif." }),
-  });
-  const corps = await gen.json();
+  const entetes = await entetesApi("karim@helpmedraft.test");
+  const { code, corps } = await demanderGeneration(entetes, await premierDocument(entetes));
   noter(
     "TS-06",
     "épuiser le quota IA",
-    gen.status === 429 ? "ok" : "ko",
-    `compte au quota épuisé → HTTP ${gen.status}, message « ${
+    code === 429 ? "ok" : "ko",
+    `compte au quota épuisé → HTTP ${code}, message « ${
       corps.error || corps.message || JSON.stringify(corps)
     } » — refus avant tout appel au modèle`,
   );
@@ -171,21 +158,9 @@ const navigateur = await lancerNavigateur();
 
 // ── TS-07 Ollama injoignable ────────────────────────────────────────────────
 {
-  const r = await fetch(`${API}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "camille@helpmedraft.test", mdp: MDP }),
-  });
-  const jeton = (await r.json()).access_token;
-  const entetes = { "Content-Type": "application/json", Authorization: `Bearer ${jeton}` };
-  const docs = await (await fetch(`${API}/documents`, { headers: entetes })).json();
-  const id = docs.items[0]?.id_document;
-  const gen = await fetch(`${API}/documents/${id}/ia/generer`, {
-    method: "POST",
-    headers: entetes,
-    body: JSON.stringify({ type_action: "corriger", scope: "document", contenu: "Un text fautif." }),
-  });
-  const corps = await gen.json();
+  const entetes = await entetesApi("camille@helpmedraft.test");
+  const id = await premierDocument(entetes);
+  const { code, corps } = await demanderGeneration(entetes, id);
 
   // L'éditeur doit rester utilisable après l'échec.
   const { ctx, page } = await nouvelOnglet(navigateur);
@@ -201,8 +176,8 @@ const navigateur = await lancerNavigateur();
   noter(
     "TS-07",
     "Ollama injoignable → message explicite, éditeur utilisable",
-    gen.status === 502 && editable ? "ok" : "ko",
-    `HTTP ${gen.status}, message « ${corps.error} » ; éditeur encore ${
+    code === 502 && editable ? "ok" : "ko",
+    `HTTP ${code}, message « ${corps.error} » ; éditeur encore ${
       editable ? "éditable" : "BLOQUÉ"
     }`,
   );

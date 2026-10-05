@@ -111,3 +111,41 @@ export const MESURE_FOCUS = () => {
 
 /** Délai laissé aux transitions CSS avant de lire l'état de focus. */
 export const ATTENTE_TRANSITION_MS = 250;
+
+/**
+ * Ouvre une session par l'API et renvoie les en-têtes à réutiliser.
+ *
+ * Les trois tests qui passent par l'API refaisaient cette séquence chacun de son
+ * côté — c'est la part de duplication que SonarCloud relevait encore après la
+ * première mise en commun.
+ */
+export async function entetesApi(email, mdp = motDePasseJeuEssai()) {
+  const r = await fetch(`${API}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, mdp }),
+  });
+  const { access_token: jeton } = await r.json();
+  if (!jeton) throw new Error(`connexion refusée pour ${email} (HTTP ${r.status})`);
+  return { "Content-Type": "application/json", Authorization: `Bearer ${jeton}` };
+}
+
+/** Identifiant du premier document du compte — les tests n'ont besoin que d'un. */
+export async function premierDocument(entetes) {
+  const liste = await (await fetch(`${API}/documents`, { headers: entetes })).json();
+  return liste.items[0]?.id_document;
+}
+
+/** Demande une génération IA sur un document, et renvoie le code et le corps. */
+export async function demanderGeneration(entetes, idDocument) {
+  const reponse = await fetch(`${API}/documents/${idDocument}/ia/generer`, {
+    method: "POST",
+    headers: entetes,
+    body: JSON.stringify({
+      type_action: "corriger",
+      scope: "document",
+      contenu: "Un text fautif.",
+    }),
+  });
+  return { code: reponse.status, corps: await reponse.json() };
+}
