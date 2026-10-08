@@ -1,0 +1,174 @@
+<svg viewBox="0 0 980 480" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+<path d="M238,98.5 L308,98.5 L308,170 L378,170" fill="none" stroke="#44525f" stroke-width="1.05"/>
+<circle cx="238" cy="98.5" r="2.6" fill="#44525f"/>
+<circle cx="378" cy="170" r="2.6" fill="#44525f"/>
+<text x="300" y="164" font-size="7.8" fill="#b8341c" font-weight="600">ON DELETE CASCADE</text>
+<path d="M238,224.5 L332,224.5 L332,177 L378,177" fill="none" stroke="#44525f" stroke-width="1.05"/>
+<circle cx="238" cy="224.5" r="2.6" fill="#44525f"/>
+<circle cx="378" cy="177" r="2.6" fill="#44525f"/>
+<text x="300" y="236" font-size="7.8" fill="#b8341c" font-weight="600">ON DELETE CASCADE</text>
+<path d="M238,350.5 L352,350.5 L352,185 L378,185" fill="none" stroke="#44525f" stroke-width="1.05"/>
+<circle cx="238" cy="350.5" r="2.6" fill="#44525f"/>
+<circle cx="378" cy="185" r="2.6" fill="#44525f"/>
+<text x="300" y="362" font-size="7.8" fill="#b8341c" font-weight="600">ON DELETE CASCADE</text>
+<path d="M602,170 L662,170 L662,85.5 L742,85.5" fill="none" stroke="#44525f" stroke-width="1.05"/>
+<circle cx="602" cy="170" r="2.6" fill="#44525f"/>
+<circle cx="742" cy="85.5" r="2.6" fill="#44525f"/>
+<text x="664" y="78" font-size="7.8" fill="#b8341c" font-weight="600">ON DELETE CASCADE</text>
+<path d="M602,178 L682,178 L682,260.5 L742,260.5" fill="none" stroke="#44525f" stroke-width="1.05"/>
+<circle cx="602" cy="178" r="2.6" fill="#44525f"/>
+<circle cx="742" cy="260.5" r="2.6" fill="#44525f"/>
+<text x="664" y="272" font-size="7.8" fill="#b8341c" font-weight="600">ON DELETE CASCADE</text>
+<path d="M602,186 L700,186 L700,409.5 L742,409.5" fill="none" stroke="#44525f" stroke-width="1.05"/>
+<circle cx="602" cy="186" r="2.6" fill="#44525f"/>
+<circle cx="742" cy="409.5" r="2.6" fill="#44525f"/>
+<text x="664" y="422" font-size="7.8" fill="#b8341c" font-weight="600">ON DELETE CASCADE</text>
+<path d="M742,46.5 L722,46.5 L722,247.5 L742,247.5" fill="none" stroke="#44525f" stroke-width="1.05"/>
+<circle cx="742" cy="46.5" r="2.6" fill="#44525f"/>
+<circle cx="742" cy="247.5" r="2.6" fill="#44525f"/>
+<text x="624" y="44" font-size="7.8" fill="#b8341c" font-weight="600">ON DELETE SET NULL</text>
+<path d="M742,156.5 L714,156.5 L714,422.5 L742,422.5" fill="none" stroke="#44525f" stroke-width="1.05"/>
+<circle cx="742" cy="156.5" r="2.6" fill="#44525f"/>
+<circle cx="742" cy="422.5" r="2.6" fill="#44525f"/>
+<text x="640" y="152" font-size="7.8" fill="#b8341c" font-weight="600">ON DELETE CASCADE</text>
+<rect x="14" y="20" width="224" height="93" rx="3" fill="#ffffff" stroke="#1f3c56" stroke-width="1.2"/>
+<rect x="14" y="20" width="224" height="20" rx="3" fill="#1f3c56"/>
+<rect x="14" y="32" width="224" height="8" fill="#1f3c56"/>
+<text x="126" y="34" font-size="9.5" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing=".03em">consentement</text>
+<text x="22" y="51" font-size="7.9" fill="#16202b" font-weight="600">id_consentement</text>
+<text x="210" y="51" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="231" y="51" font-size="6.8" font-weight="700" fill="#b8341c" text-anchor="end">PK</text>
+<text x="22" y="64" font-size="7.9" fill="#44525f" font-weight="400">type_consentement</text>
+<text x="210" y="64" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(50)</text>
+<text x="22" y="77" font-size="7.9" fill="#44525f" font-weight="400">accepte</text>
+<text x="210" y="77" font-size="7.3" fill="#8795a1" text-anchor="end">BOOLEAN</text>
+<text x="22" y="90" font-size="7.9" fill="#44525f" font-weight="400">date_consentement</text>
+<text x="210" y="90" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<text x="22" y="103" font-size="7.9" fill="#16202b" font-weight="600">user_id</text>
+<text x="210" y="103" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="231" y="103" font-size="6.8" font-weight="700" fill="#1f5b32" text-anchor="end">FK</text>
+<rect x="14" y="133" width="224" height="106" rx="3" fill="#ffffff" stroke="#1f3c56" stroke-width="1.2"/>
+<rect x="14" y="133" width="224" height="20" rx="3" fill="#1f3c56"/>
+<rect x="14" y="145" width="224" height="8" fill="#1f3c56"/>
+<text x="126" y="147" font-size="9.5" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing=".03em">user_session</text>
+<text x="22" y="164" font-size="7.9" fill="#16202b" font-weight="600">id_session</text>
+<text x="210" y="164" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="231" y="164" font-size="6.8" font-weight="700" fill="#b8341c" text-anchor="end">PK</text>
+<text x="22" y="177" font-size="7.9" fill="#16202b" font-weight="600">refresh_token_hash</text>
+<text x="210" y="177" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(128)</text>
+<text x="231" y="177" font-size="6.8" font-weight="700" fill="#8a5a12" text-anchor="end">UK</text>
+<text x="22" y="190" font-size="7.9" fill="#44525f" font-weight="400">refresh_token_exp</text>
+<text x="210" y="190" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<text x="22" y="203" font-size="7.9" fill="#44525f" font-weight="400">revoke</text>
+<text x="210" y="203" font-size="7.3" fill="#8795a1" text-anchor="end">BOOLEAN</text>
+<text x="22" y="216" font-size="7.9" fill="#44525f" font-weight="400">created_at</text>
+<text x="210" y="216" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<text x="22" y="229" font-size="7.9" fill="#16202b" font-weight="600">user_id</text>
+<text x="210" y="229" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="231" y="229" font-size="6.8" font-weight="700" fill="#1f5b32" text-anchor="end">FK</text>
+<rect x="14" y="259" width="224" height="106" rx="3" fill="#ffffff" stroke="#1f3c56" stroke-width="1.2"/>
+<rect x="14" y="259" width="224" height="20" rx="3" fill="#1f3c56"/>
+<rect x="14" y="271" width="224" height="8" fill="#1f3c56"/>
+<text x="126" y="273" font-size="9.5" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing=".03em">password_reset</text>
+<text x="22" y="290" font-size="7.9" fill="#16202b" font-weight="600">id</text>
+<text x="210" y="290" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="231" y="290" font-size="6.8" font-weight="700" fill="#b8341c" text-anchor="end">PK</text>
+<text x="22" y="303" font-size="7.9" fill="#44525f" font-weight="400">token_hash</text>
+<text x="210" y="303" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(128)</text>
+<text x="22" y="316" font-size="7.9" fill="#44525f" font-weight="400">expires_at</text>
+<text x="210" y="316" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<text x="22" y="329" font-size="7.9" fill="#44525f" font-weight="400">used</text>
+<text x="210" y="329" font-size="7.3" fill="#8795a1" text-anchor="end">BOOLEAN</text>
+<text x="22" y="342" font-size="7.9" fill="#44525f" font-weight="400">created_at</text>
+<text x="210" y="342" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<text x="22" y="355" font-size="7.9" fill="#16202b" font-weight="600">user_id</text>
+<text x="210" y="355" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="231" y="355" font-size="6.8" font-weight="700" fill="#1f5b32" text-anchor="end">FK</text>
+<rect x="378" y="150" width="224" height="145" rx="3" fill="#ffffff" stroke="#1f3c56" stroke-width="1.2"/>
+<rect x="378" y="150" width="224" height="20" rx="3" fill="#1f3c56"/>
+<rect x="378" y="162" width="224" height="8" fill="#1f3c56"/>
+<text x="490" y="164" font-size="9.5" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing=".03em">user</text>
+<text x="386" y="181" font-size="7.9" fill="#16202b" font-weight="600">user_id</text>
+<text x="574" y="181" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="595" y="181" font-size="6.8" font-weight="700" fill="#b8341c" text-anchor="end">PK</text>
+<text x="386" y="194" font-size="7.9" fill="#44525f" font-weight="400">lastname</text>
+<text x="574" y="194" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(50)</text>
+<text x="386" y="207" font-size="7.9" fill="#44525f" font-weight="400">firstname</text>
+<text x="574" y="207" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(50)</text>
+<text x="386" y="220" font-size="7.9" fill="#16202b" font-weight="600">email</text>
+<text x="574" y="220" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(326)</text>
+<text x="595" y="220" font-size="6.8" font-weight="700" fill="#8a5a12" text-anchor="end">UK</text>
+<text x="386" y="233" font-size="7.9" fill="#44525f" font-weight="400">mdp_hash</text>
+<text x="574" y="233" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(255)</text>
+<text x="386" y="246" font-size="7.9" fill="#44525f" font-weight="400">role</text>
+<text x="574" y="246" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(20)</text>
+<text x="386" y="259" font-size="7.9" fill="#44525f" font-weight="400">quota_daily_limit</text>
+<text x="574" y="259" font-size="7.3" fill="#8795a1" text-anchor="end">INT</text>
+<text x="386" y="272" font-size="7.9" fill="#44525f" font-weight="400">created_at</text>
+<text x="574" y="272" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<text x="386" y="285" font-size="7.9" fill="#44525f" font-weight="400">updated_at</text>
+<text x="574" y="285" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<rect x="742" y="20" width="224" height="80" rx="3" fill="#ffffff" stroke="#1f3c56" stroke-width="1.2"/>
+<rect x="742" y="20" width="224" height="20" rx="3" fill="#1f3c56"/>
+<rect x="742" y="32" width="224" height="8" fill="#1f3c56"/>
+<text x="854" y="34" font-size="9.5" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing=".03em">dossier</text>
+<text x="750" y="51" font-size="7.9" fill="#16202b" font-weight="600">id_dossier</text>
+<text x="938" y="51" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="959" y="51" font-size="6.8" font-weight="700" fill="#b8341c" text-anchor="end">PK</text>
+<text x="750" y="64" font-size="7.9" fill="#44525f" font-weight="400">name</text>
+<text x="938" y="64" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(100)</text>
+<text x="750" y="77" font-size="7.9" fill="#44525f" font-weight="400">created_at</text>
+<text x="938" y="77" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<text x="750" y="90" font-size="7.9" fill="#16202b" font-weight="600">user_id</text>
+<text x="938" y="90" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="959" y="90" font-size="6.8" font-weight="700" fill="#1f5b32" text-anchor="end">FK</text>
+<rect x="742" y="130" width="224" height="145" rx="3" fill="#ffffff" stroke="#1f3c56" stroke-width="1.2"/>
+<rect x="742" y="130" width="224" height="20" rx="3" fill="#1f3c56"/>
+<rect x="742" y="142" width="224" height="8" fill="#1f3c56"/>
+<text x="854" y="144" font-size="9.5" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing=".03em">document</text>
+<text x="750" y="161" font-size="7.9" fill="#16202b" font-weight="600">id_document</text>
+<text x="938" y="161" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="959" y="161" font-size="6.8" font-weight="700" fill="#b8341c" text-anchor="end">PK</text>
+<text x="750" y="174" font-size="7.9" fill="#44525f" font-weight="400">titre</text>
+<text x="938" y="174" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(255)</text>
+<text x="750" y="187" font-size="7.9" fill="#44525f" font-weight="400">content</text>
+<text x="938" y="187" font-size="7.3" fill="#8795a1" text-anchor="end">TEXT</text>
+<text x="750" y="200" font-size="7.9" fill="#44525f" font-weight="400">format</text>
+<text x="938" y="200" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(20)</text>
+<text x="750" y="213" font-size="7.9" fill="#44525f" font-weight="400">status</text>
+<text x="938" y="213" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(20)</text>
+<text x="750" y="226" font-size="7.9" fill="#44525f" font-weight="400">created_at</text>
+<text x="938" y="226" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<text x="750" y="239" font-size="7.9" fill="#44525f" font-weight="400">updated_at</text>
+<text x="938" y="239" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<text x="750" y="252" font-size="7.9" fill="#16202b" font-weight="600">id_dossier</text>
+<text x="938" y="252" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="959" y="252" font-size="6.8" font-weight="700" fill="#1f5b32" text-anchor="end">FK</text>
+<text x="750" y="265" font-size="7.9" fill="#16202b" font-weight="600">user_id</text>
+<text x="938" y="265" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="959" y="265" font-size="6.8" font-weight="700" fill="#1f5b32" text-anchor="end">FK</text>
+<rect x="742" y="305" width="224" height="132" rx="3" fill="#ffffff" stroke="#1f3c56" stroke-width="1.2"/>
+<rect x="742" y="305" width="224" height="20" rx="3" fill="#1f3c56"/>
+<rect x="742" y="317" width="224" height="8" fill="#1f3c56"/>
+<text x="854" y="319" font-size="9.5" font-weight="700" fill="#fff" text-anchor="middle" letter-spacing=".03em">ia</text>
+<text x="750" y="336" font-size="7.9" fill="#16202b" font-weight="600">id_ia</text>
+<text x="938" y="336" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="959" y="336" font-size="6.8" font-weight="700" fill="#b8341c" text-anchor="end">PK</text>
+<text x="750" y="349" font-size="7.9" fill="#44525f" font-weight="400">type_action</text>
+<text x="938" y="349" font-size="7.3" fill="#8795a1" text-anchor="end">VARCHAR(50)</text>
+<text x="750" y="362" font-size="7.9" fill="#44525f" font-weight="400">content_before</text>
+<text x="938" y="362" font-size="7.3" fill="#8795a1" text-anchor="end">TEXT</text>
+<text x="750" y="375" font-size="7.9" fill="#44525f" font-weight="400">content_after</text>
+<text x="938" y="375" font-size="7.3" fill="#8795a1" text-anchor="end">TEXT</text>
+<text x="750" y="388" font-size="7.9" fill="#44525f" font-weight="400">tokens_used</text>
+<text x="938" y="388" font-size="7.3" fill="#8795a1" text-anchor="end">INT</text>
+<text x="750" y="401" font-size="7.9" fill="#44525f" font-weight="400">created_at</text>
+<text x="938" y="401" font-size="7.3" fill="#8795a1" text-anchor="end">DATETIME</text>
+<text x="750" y="414" font-size="7.9" fill="#16202b" font-weight="600">user_id</text>
+<text x="938" y="414" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="959" y="414" font-size="6.8" font-weight="700" fill="#1f5b32" text-anchor="end">FK</text>
+<text x="750" y="427" font-size="7.9" fill="#16202b" font-weight="600">id_document</text>
+<text x="938" y="427" font-size="7.3" fill="#8795a1" text-anchor="end">CHAR(36)</text>
+<text x="959" y="427" font-size="6.8" font-weight="700" fill="#1f5b32" text-anchor="end">FK</text>
+<text x="14" y="470" font-size="8.8" fill="#8795a1">PK : clé primaire &#160;·&#160; FK : clé étrangère &#160;·&#160; UK : contrainte d'unicité. Moteur InnoDB, jeu de caractères utf8mb4.</text>
+</svg>
