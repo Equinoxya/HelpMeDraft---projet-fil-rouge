@@ -1,0 +1,91 @@
+<svg viewBox="0 0 980 430" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+  <defs>
+    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#44525f"/>
+    </marker>
+  </defs>
+
+  <!-- groupes -->
+  <rect x="14" y="40" width="286" height="330" rx="6" fill="#f3f7fb" stroke="#c4d4e2"/>
+  <text x="26" y="60" font-size="10.5" font-weight="600" fill="#1f3c56">POSTE CLIENT — navigateur</text>
+
+  <rect x="352" y="40" width="286" height="330" rx="6" fill="#f2f8f3" stroke="#bcd9c3"/>
+  <text x="364" y="60" font-size="10.5" font-weight="600" fill="#1f5b32">SERVEUR APPLICATIF — Flask</text>
+
+  <rect x="690" y="40" width="276" height="330" rx="6" fill="#fdf7ef" stroke="#e8d2ae"/>
+  <text x="702" y="60" font-size="10.5" font-weight="600" fill="#8a5a12">SERVICES</text>
+
+  <!-- client -->
+  <rect x="30" y="76" width="254" height="78" rx="4" fill="#fff" stroke="#9ab5cc"/>
+  <text x="42" y="96" font-size="10.5" font-weight="600" fill="#1f3c56">Couche présentation</text>
+  <text x="42" y="113" font-size="9.3" fill="#44525f">vues et composants — Vue 3, Tailwind CSS</text>
+  <text x="42" y="128" font-size="9.3" fill="#44525f">affichage, saisie, restitution des erreurs</text>
+  <text x="42" y="144" font-size="9.3" fill="#b8341c">assainissement du rendu Markdown</text>
+
+  <rect x="30" y="168" width="254" height="72" rx="4" fill="#fff" stroke="#9ab5cc"/>
+  <text x="42" y="188" font-size="10.5" font-weight="600" fill="#1f3c56">État applicatif</text>
+  <text x="42" y="205" font-size="9.3" fill="#44525f">magasin centralisé — Pinia</text>
+  <text x="42" y="220" font-size="9.3" fill="#b8341c">jeton d'accès conservé en mémoire,</text>
+  <text x="42" y="233" font-size="9.3" fill="#b8341c">jamais dans le stockage du navigateur</text>
+
+  <rect x="30" y="254" width="254" height="72" rx="4" fill="#fff" stroke="#9ab5cc"/>
+  <text x="42" y="274" font-size="10.5" font-weight="600" fill="#1f3c56">Client HTTP</text>
+  <text x="42" y="291" font-size="9.3" fill="#44525f">un module de service par domaine</text>
+  <text x="42" y="306" font-size="9.3" fill="#44525f">intercepteurs : jeton injecté,</text>
+  <text x="42" y="319" font-size="9.3" fill="#44525f">session renouvelée sur réponse 401</text>
+
+  <!-- serveur -->
+  <rect x="368" y="76" width="254" height="78" rx="4" fill="#fff" stroke="#9cc3a8"/>
+  <text x="380" y="96" font-size="10.5" font-weight="600" fill="#1f5b32">Couche contrôleur</text>
+  <text x="380" y="113" font-size="9.3" fill="#44525f">cinq plans d'URL</text>
+  <text x="380" y="128" font-size="9.3" fill="#b8341c">valide, autorise, choisit le code de statut</text>
+  <text x="380" y="144" font-size="9.3" fill="#44525f">seule couche qui connaisse le protocole</text>
+
+  <rect x="368" y="168" width="254" height="72" rx="4" fill="#fff" stroke="#9cc3a8"/>
+  <text x="380" y="188" font-size="10.5" font-weight="600" fill="#1f5b32">Couche métier</text>
+  <text x="380" y="205" font-size="9.3" fill="#44525f">authentification · inférence · messagerie</text>
+  <text x="380" y="220" font-size="9.3" fill="#44525f">règles de gestion indépendantes</text>
+  <text x="380" y="233" font-size="9.3" fill="#44525f">du transport</text>
+
+  <rect x="368" y="254" width="254" height="72" rx="4" fill="#fff" stroke="#9cc3a8"/>
+  <text x="380" y="274" font-size="10.5" font-weight="600" fill="#1f5b32">Couche d'accès aux données</text>
+  <text x="380" y="291" font-size="9.3" fill="#44525f">sept modèles, SQLAlchemy 2.0</text>
+  <text x="380" y="306" font-size="9.3" fill="#b8341c">requêtes paramétrées exclusivement,</text>
+  <text x="380" y="319" font-size="9.3" fill="#b8341c">contraintes d'intégrité portées ici</text>
+
+  <!-- services -->
+  <rect x="706" y="76" width="244" height="62" rx="4" fill="#fff" stroke="#dcc08f"/>
+  <text x="718" y="96" font-size="10.5" font-weight="600" fill="#8a5a12">Base relationnelle</text>
+  <text x="718" y="113" font-size="9.3" fill="#44525f">MySQL 8.4 — InnoDB, utf8mb4</text>
+  <text x="718" y="128" font-size="9.3" fill="#44525f">comptes de service au moindre privilège</text>
+
+  <rect x="706" y="168" width="244" height="62" rx="4" fill="#fff" stroke="#dcc08f"/>
+  <text x="718" y="188" font-size="10.5" font-weight="600" fill="#8a5a12">Service d'inférence</text>
+  <text x="718" y="205" font-size="9.3" fill="#44525f">Ollama, exécuté localement</text>
+  <text x="718" y="220" font-size="9.3" fill="#b8341c">jamais exposé au réseau public</text>
+
+  <rect x="706" y="254" width="244" height="62" rx="4" fill="#fff" stroke="#dcc08f"/>
+  <text x="718" y="274" font-size="10.5" font-weight="600" fill="#8a5a12">Relais de messagerie</text>
+  <text x="718" y="291" font-size="9.3" fill="#44525f">SMTP — réinitialisation de mot de passe</text>
+  <text x="718" y="306" font-size="9.3" fill="#44525f">seul tiers destinataire d'une donnée</text>
+
+  <!-- liens internes client -->
+  <line x1="157" y1="154" x2="157" y2="168" stroke="#44525f" stroke-width="1.1" marker-end="url(#a1)" marker-start="url(#a1)"/>
+  <line x1="157" y1="240" x2="157" y2="254" stroke="#44525f" stroke-width="1.1" marker-end="url(#a1)" marker-start="url(#a1)"/>
+  <!-- liens internes serveur -->
+  <line x1="495" y1="154" x2="495" y2="168" stroke="#44525f" stroke-width="1.1" marker-end="url(#a1)"/>
+  <line x1="495" y1="240" x2="495" y2="254" stroke="#44525f" stroke-width="1.1" marker-end="url(#a1)"/>
+
+  <!-- client -> serveur -->
+  <path d="M284,290 L320,290 L320,118 L368,118" fill="none" stroke="#b8341c" stroke-width="1.5" marker-end="url(#a1)"/>
+  <text x="332" y="206" font-size="8.8" fill="#b8341c" font-weight="600" transform="rotate(-90 332 206)">HTTPS · JSON</text>
+  <text x="344" y="206" font-size="8.4" fill="#b8341c" transform="rotate(-90 344 206)">jeton + témoin HttpOnly</text>
+
+  <!-- serveur -> services -->
+  <line x1="622" y1="107" x2="706" y2="107" stroke="#44525f" stroke-width="1.2" marker-end="url(#a1)"/>
+  <path d="M622,200 L664,200 L664,199 L706,199" fill="none" stroke="#44525f" stroke-width="1.2" marker-end="url(#a1)"/>
+  <path d="M622,215 L664,215 L664,285 L706,285" fill="none" stroke="#44525f" stroke-width="1.2" marker-end="url(#a1)"/>
+  <path d="M622,290 L660,290 L660,122 L706,122" fill="none" stroke="#44525f" stroke-width="1.2" marker-end="url(#a1)"/>
+
+  <text x="14" y="392" font-size="9" fill="#8795a1">Trois processus distincts communiquent par le réseau. Chacun peut être déplacé sur une autre machine sans modification du code des autres : seule la configuration change.</text>
+</svg>
