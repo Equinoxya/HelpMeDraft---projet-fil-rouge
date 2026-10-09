@@ -24,7 +24,7 @@ FIG = f"{RACINE}/docs/dossier/fig"
 CAP = f"{RACINE}/docs/captures"
 PAGES = json.load(open(sys.argv[1])) if len(sys.argv) > 1 else {}
 
-W_FIG = 15.8          # trame : 21 cm - 2 x 2,5 cm = 16 cm utiles
+W_FIG = 15.8          # largeur des figures, inchangée : la rendre plus large coûtait une page
 DECALAGE_NUM = 1000   # pour que les listes de la source n'écrasent pas celles de la trame
 
 cible = docx.Document(TRAME)
@@ -76,11 +76,36 @@ for j, el in enumerate(corps_src):
         k += 1
 fin_corps = len(corps_src) - 1      # le dernier enfant est le sectPr
 
+
+# ───────────────────────── coupes de volume ───────────────────────────────
+# Le corps doit tenir dans les 60 pages du référentiel ; il en faisait 70.
+# Indices de paragraphe du document source écartés du remplissage.
+#
+# 1. Huit blocs de code de la partie 7 reproduits à l'identique dans les
+#    annexes. Sur les 268 lignes significatives de la partie 7, 124 figurent
+#    déjà en annexe ; ces huit blocs le sont de 77 % à 100 %. Le référentiel
+#    attend en partie 7 des extraits commentés, et en annexe le code complet :
+#    rien n'est perdu. Les blocs du front (7.1) ne sont pas dupliqués, ils
+#    restent.
+CODE_DOUBLONS = {334, 341, 347, 352, 363, 397, 403, 406}
+#
+# 2. La veille AI Act : veille réglementaire, là où le référentiel demande la
+#    veille sur les vulnérabilités de sécurité ; et la traçabilité AI Act sort
+#    du cahier des charges.
+VEILLE_AI_ACT = set(range(562, 573))
+#
+# 3. « Lancement en développement » : des instructions d'installation, qui
+#    relèvent du README plutôt que du dossier.
+LANCEMENT_DEV = set(range(282, 287))
+
+EXCLUS = CODE_DOUBLONS | VEILLE_AI_ACT | LANCEMENT_DEV
+
 def blocs(cle):
     deb, fin = BORNES[cle]
     j0 = pos_par[deb]
     j1 = pos_par[fin] if fin is not None else fin_corps
-    return corps_src[j0:j1]
+    ecartes = {pos_par[i] for i in EXCLUS if i in pos_par}
+    return [el for j, el in enumerate(corps_src[j0:j1], start=j0) if j not in ecartes]
 
 # ───────────────────────── 4. remplissage ──────────────────────────────────
 titres = {}
@@ -397,6 +422,13 @@ if PAGES:
             if num:
                 textes[-1].text = str(num)
         break
+
+# ───────────────────────── marges ─────────────────────────────────────────
+# 2 cm au lieu des 2,5 cm de la trame : six pages de corps regagnées sans
+# retirer une ligne de texte.
+for sec in cible.sections:
+    sec.top_margin = sec.bottom_margin = Cm(2)
+    sec.left_margin = sec.right_margin = Cm(2)
 
 cible.save(SORTIE)
 print("rempli :", SORTIE)
