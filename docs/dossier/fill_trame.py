@@ -139,24 +139,27 @@ for cle, debut in ANCRES.items():
 STYLES = {st.name: st for st in cible.styles}
 ensemble = set(id(e) for e in inseres)
 
-# ─────────────────── 5. titres venus de la source ──────────────────────────
-# Dans la source, les sous-sections portent déjà leur numéro dans le texte
-# (« 5.4.1. »). On leur donne le bon niveau et on retire toute numérotation
-# automatique, qui ferait doublon avec celle de la trame.
+# ─────────────────── 5. sous-titres venus de la source ────────────────────
+# La trame ne prévoit de sous-parties qu'en 5, 7 et 12. Les sous-sections du
+# document source ne doivent donc pas devenir des titres : elles créeraient des
+# rubriques absentes de la trame, qui remonteraient dans le sommaire et dans la
+# numérotation. Elles redeviennent du texte courant en gras, sans leur numéro,
+# ce qui conserve les repères de lecture sans ajouter de niveau.
 for par in cible.paragraphs:
     if id(par._p) not in ensemble:
         continue
-    nom = par.style.name or ""
-    if not nom.startswith("Heading"):
+    if not (par.style.name or "").startswith("Heading"):
         continue
-    txt = par.text.strip()
+    texte = re.sub(r"^\s*(\d+(\.\d+)*\.?|[a-z]\.)\s*", "", par.text.strip())
     pPr = par._p.get_or_add_pPr()
     for el in pPr.findall(qn("w:numPr")):
         pPr.remove(el)
-    if re.match(r"^\d+\.\d+\.\d+\.", txt) or re.match(r"^[a-z]\.", txt):
-        par.style = STYLES["Heading 3"]
-    else:
-        par.style = STYLES["Heading 2"]
+    for child in list(par._p):
+        if child.tag != qn("w:pPr"):
+            par._p.remove(child)
+    par.style = STYLES["Body Text"]
+    run = par.add_run(texte)
+    run.bold = True
 
 # ─────────────────── 6. figures ────────────────────────────────────────────
 def para_contenant(fragment, style=None):
