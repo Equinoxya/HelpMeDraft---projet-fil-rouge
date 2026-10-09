@@ -186,6 +186,65 @@ for par in cible.paragraphs:
     run = par.add_run(texte)
     run.bold = True
 
+# ─────────────────── 5 bis. renvois internes ──────────────────────────────
+# Le texte source renvoyait à ses propres sous-sections (« § 8.2 », « § 5.4.5 »).
+# Ces niveaux n'existent plus : la trame ne numérote que les douze parties et
+# les sous-parties de 5, 7 et 12. Chaque renvoi est ramené au niveau le plus
+# profond qui existe réellement — § 5.4.5 devient § 5.4, § 8.2 devient § 8.
+CIBLES_VALIDES = (
+    {str(i) for i in range(1, 13)}
+    | {f"5.{i}" for i in range(1, 8)}
+    | {f"7.{i}" for i in range(1, 5)}
+    | {f"12.{i}" for i in range(1, 6)}
+)
+
+def cible_valide(numero):
+    morceaux = numero.split(".")
+    for n in range(len(morceaux), 0, -1):
+        candidat = ".".join(morceaux[:n])
+        if candidat in CIBLES_VALIDES:
+            return candidat
+    return None
+
+def tous_paragraphes(document):
+    for par in document.paragraphs:
+        yield par
+    for tbl in document.tables:
+        for ligne in tbl.rows:
+            for cellule in ligne.cells:
+                for par in cellule.paragraphs:
+                    yield par
+
+RENVOI = re.compile(r"§\s*(\d+(?:\.\d+)*)")
+tronques = supprimes = 0
+for par in tous_paragraphes(cible):
+    if "§" not in par.text:
+        continue
+    # Les renvois vers la veille AI Act visent une section retirée : les
+    # ramener à « § 11 » enverrait le lecteur vers un texte qui n'en parle
+    # plus. Le renvoi est retiré, la phrase est conservée.
+    ai_act = "AI Act" in par.text
+    for run in par.runs:
+        if "§" not in run.text:
+            continue
+        if ai_act and "11.4" in run.text:
+            avant = run.text
+            run.text = re.sub(r"\s*\(§\s*11\.4\)", "", run.text)
+            run.text = re.sub(r"\s+en\s*§\s*11\.4", "", run.text)
+            run.text = re.sub(r"\s*§\s*11\.4", "", run.text)
+            if run.text != avant:
+                supprimes += 1
+                continue
+        def remplacer(m):
+            global tronques
+            but = cible_valide(m.group(1))
+            if but is None or but == m.group(1):
+                return m.group(0)
+            tronques += 1
+            return "\u00a7 " + but
+        run.text = RENVOI.sub(remplacer, run.text)
+print(f"  renvois ramen\u00e9s \u00e0 un niveau existant : {tronques} | renvois retir\u00e9s : {supprimes}")
+
 # ─────────────────── 6. figures ────────────────────────────────────────────
 def para_contenant(fragment, style=None):
     for par in cible.paragraphs:
