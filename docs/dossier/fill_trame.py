@@ -103,11 +103,13 @@ LANCEMENT_DEV = set(range(282, 287))
 #    lisible. Le dessin faisait doublon avec elle.
 WIREFRAME_EDITEUR = {147}
 #
-# 5. Trois intitulés du référentiel laissés tels quels dans le texte source, à
+# 5. Quatre intitulés du référentiel laissés tels quels dans le texte source, à
 #    la fin de la partie qui précède : « La présentation d'éléments de sécurité
 #    de l'application », « La présentation du plan de tests », « La présentation
-#    d'un jeu d'essai élaboré par le candidat ». La trame porte déjà ces titres.
-TITRES_EN_DOUBLE = {419, 467, 516}
+#    d'un jeu d'essai élaboré par le candidat », « Les réalisations du candidat
+#    comportant les extraits de code les plus significatifs ». La trame porte
+#    déjà ces titres.
+TITRES_EN_DOUBLE = {299, 419, 467, 516}
 
 EXCLUS = (CODE_DOUBLONS | VEILLE_AI_ACT | LANCEMENT_DEV | WIREFRAME_EDITEUR
           | TITRES_EN_DOUBLE)
@@ -454,18 +456,24 @@ if sept is not None:
     image_apres(sept, f"{FIG}/mpd.png", W_FIG,
                 "Mod\u00e8le physique des donn\u00e9es (MPD) \u2014 types, cl\u00e9s, index et r\u00e8gles de suppression sur MySQL 8.")
 
-# captures d'écran
-for debut, fichier, legende in [
-    ("7.1.1.", f"{CAP}/C-05-tableau-de-bord.png", "Capture C-05 \u2014 tableau de bord."),
-    ("7.1.2.", f"{CAP}/C-07-nouveau-document.png", "Capture C-07 \u2014 \u00e9diteur de document, cr\u00e9ation."),
+# captures d'écran du § 7.1 : l'ancre est le repère de lecture de la sous-section,
+# qui a perdu son numéro à l'étape 5 ; on la reconnaît donc au code de la capture.
+# Les largeurs sont calées sur la hauteur rendue : C-05 est presque carrée.
+for repere, fichier, largeur, legende in [
+    ("(capture C-05)", f"{CAP}/C-05-tableau-de-bord.png", 10.5,
+     "Capture C-05 \u2014 tableau de bord."),
+    ("(capture C-07)", f"{CAP}/C-07-nouveau-document.png", 12.0,
+     "Capture C-07 \u2014 \u00e9diteur de document, cr\u00e9ation."),
 ]:
     t = None
     for par in cible.paragraphs:
-        if id(par._p) in ensemble and par.text.strip().startswith(debut):
+        if id(par._p) in ensemble and repere in par.text:
             t = par
             break
-    if t is not None:
-        image_apres(t, fichier, 13.5, legende)
+    if t is None:
+        print("  !! ancre de capture introuvable :", repere)
+    else:
+        image_apres(t, fichier, largeur, legende)
 
 # planches W-01 à W-09 : les paragraphes vides qui précèdent chaque légende
 vides = []
@@ -478,6 +486,45 @@ for i, par in enumerate(paras):
 for n, par in enumerate(vides, start=1):
     poser_image(par, f"{FIG}/planches/image{n}.png", W_FIG)
 print("  planches pos\u00e9es :", len(vides))
+
+# captures C-01 à C-07 : l'annexe 12.2 du référentiel demande les captures
+# d'écrans d'interfaces utilisateurs. Le texte source les désignait seulement
+# par leur fichier dans le dépôt ; elles sont ici réellement reproduites, dans
+# l'ordre du parcours. Les largeurs sont calées sur la hauteur rendue.
+CAPTURES_ANNEXE = [
+    ("C-01-accueil.png",             8.0,  "Capture C-01 \u2014 accueil (/)."),
+    ("C-01b-accueil-mobile.png",     5.0,  "Capture C-01b \u2014 accueil en affichage mobile."),
+    ("C-02-connexion.png",          12.5,  "Capture C-02 \u2014 connexion (/login)."),
+    ("C-03-inscription.png",        12.0,  "Capture C-03 \u2014 inscription (/register)."),
+    ("C-04-mot-de-passe-oublie.png",12.5,  "Capture C-04 \u2014 mot de passe oubli\u00e9 (/forgot-password)."),
+    ("C-05-tableau-de-bord.png",    11.0,  "Capture C-05 \u2014 tableau de bord (/dashboard)."),
+    ("C-06-liste-documents.png",    12.5,  "Capture C-06 \u2014 liste des documents (/documents)."),
+    ("C-07-nouveau-document.png",   12.5,  "Capture C-07 \u2014 nouveau document (/documents/nouveau)."),
+]
+paras = cible.paragraphs
+i122 = next((i for i, p in enumerate(paras)
+             if p.text.strip().startswith("Les captures d\u2019\u00e9crans d\u2019interfaces")), None)
+if i122 is None:
+    print("  !! annexe 12.2 introuvable")
+else:
+    fin = next((p for p in paras[i122 + 1:]
+                if (p.style.name or "").startswith("Heading")), None)
+    for fichier, largeur, legende in CAPTURES_ANNEXE:
+        el = OxmlElement("w:p")
+        if fin is not None:
+            fin._p.addprevious(el)
+        else:
+            cible.element.body.append(el)
+        fp = Paragraph(el, paras[i122]._parent)
+        fp.style = STYLES["Figure"]
+        fp.alignment = 1
+        fp.add_run().add_picture(f"{CAP}/{fichier}", width=Cm(largeur))
+        el2 = OxmlElement("w:p")
+        fp._p.addnext(el2)
+        cap = Paragraph(el2, fp._parent)
+        cap.style = STYLES["Image Caption"]
+        cap.add_run(legende)
+    print("  captures en annexe :", len(CAPTURES_ANNEXE))
 
 # ─────────────────── 7. page de garde ──────────────────────────────────────
 # Les cinq champs de la page de garde sont des contrôles de contenu Word.
@@ -566,7 +613,7 @@ for nom in ("Body Text", "First Paragraph", "Compact"):
     if nom in STYLES:
         pf = STYLES[nom].paragraph_format
         pf.space_before = Pt(0)
-        pf.space_after = Pt(4)
+        pf.space_after = Pt(3)
 STYLES["Source Code"].paragraph_format.line_spacing = Pt(9)
 STYLES["Image Caption"].paragraph_format.space_after = Pt(10)
 # Les sept parties passées en titre ont ramené avec elles l'espacement du style
@@ -574,8 +621,6 @@ STYLES["Image Caption"].paragraph_format.space_after = Pt(10)
 # trame.
 STYLES["Heading 1"].paragraph_format.space_before = Pt(6)
 STYLES["Heading 1"].paragraph_format.space_after = Pt(4)
-STYLES["Figure"].paragraph_format.space_before = Pt(8)
-STYLES["Figure"].paragraph_format.space_after = Pt(2)
 STYLES["Figure"].paragraph_format.space_before = Pt(8)
 STYLES["Figure"].paragraph_format.space_after = Pt(2)
 
@@ -692,6 +737,25 @@ if PAGES:
 for sec in cible.sections:
     sec.top_margin = sec.bottom_margin = Cm(2)
     sec.left_margin = sec.right_margin = Cm(2)
+
+# ───────────────────────── numérotation des pages ─────────────────────────
+# La trame redémarre la numérotation à zéro à chaque section : correct pour un
+# document d'une page par section, mais ici la couverture portait « 0 » et le
+# corps repartait de « 0 » à la page 3, alors que le sommaire renvoie aux pages
+# réelles. Numérotation continue à partir de 1, et aucun numéro sur la
+# couverture.
+for i, sec in enumerate(cible.sections):
+    sp = sec._sectPr
+    for pn in sp.findall(qn("w:pgNumType")):
+        if i == 0:
+            pn.set(qn("w:start"), "1")
+        else:
+            sp.remove(pn)
+pied = cible.sections[0].first_page_footer
+for par in pied.paragraphs:
+    for child in list(par._p):
+        if child.tag != qn("w:pPr"):
+            par._p.remove(child)
 
 cible.save(SORTIE)
 print("rempli :", SORTIE)
