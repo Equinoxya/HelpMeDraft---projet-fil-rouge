@@ -191,6 +191,49 @@ for par in cible.paragraphs:
     run = par.add_run(texte)
     run.bold = True
 
+# ─────────────────── 5 quater. conformité au référentiel ──────────────────
+# a) Sept parties sur douze portent dans la trame le style « List Paragraph »
+#    alors qu'elles appartiennent à la même liste numérotée que les autres.
+#    Le sommaire étant construit sur les styles de titre, elles n'y figuraient
+#    pas : le dossier annonçait cinq parties sur douze. On leur rend le style
+#    de titre en conservant leur numérotation, qui est déjà la bonne.
+for par in cible.paragraphs:
+    if id(par._p) in ensemble:
+        continue
+    pPr = par._p.pPr
+    if (par.style.name or "") == "List Paragraph" and pPr is not None \
+            and pPr.find(qn("w:numPr")) is not None:
+        par.style = STYLES["Heading 1"]
+
+# b) Le référentiel demande, pour le jeu d'essai, « données en entrée, données
+#    attendues, données obtenues ET analyse des écarts éventuels ». Les trois
+#    colonnes existent, l'analyse des écarts manquait — le mot n'apparaissait
+#    nulle part dans la partie 10. Elle est écrite à partir du résultat réel
+#    des quinze cas et des réserves déjà posées par l'autrice.
+ANALYSE_ECARTS = (
+    "Les quinze cas d\u2019essai ont \u00e9t\u00e9 ex\u00e9cut\u00e9s dans les conditions d\u00e9crites ci-dessus : "
+    "aucun \u00e9cart n\u2019est constat\u00e9 entre les donn\u00e9es attendues et les donn\u00e9es obtenues. "
+    "Deux r\u00e9serves rendent ce r\u00e9sultat lisible. Le jeu d\u2019essai valide la m\u00e9canique autour du "
+    "mod\u00e8le \u2014 validation des entr\u00e9es, autorisation, quota, trace, gestion des erreurs \u2014 et "
+    "non la qualit\u00e9 linguistique des suggestions, qui n\u2019est pas d\u00e9terministe et ne peut pas "
+    "faire l\u2019objet d\u2019une assertion. Et JE-12 est le seul cas ex\u00e9cut\u00e9 sans simulation, "
+    "serveur d\u2019inf\u00e9rence r\u00e9ellement arr\u00eat\u00e9 ; les autres s\u2019appuient sur un double de test, ce "
+    "qui est la condition de leur reproductibilit\u00e9."
+)
+for par in cible.paragraphs:
+    if id(par._p) in ensemble and par.text.strip().startswith("Cas limites"):
+        el = OxmlElement("w:p")
+        par._p.addprevious(el)
+        intro = Paragraph(el, par._parent)
+        intro.style = STYLES["Body Text"]
+        intro.add_run("Analyse des \u00e9carts").bold = True
+        el2 = OxmlElement("w:p")
+        intro._p.addnext(el2)
+        corps_ecarts = Paragraph(el2, intro._parent)
+        corps_ecarts.style = STYLES["First Paragraph"]
+        corps_ecarts.add_run(ANALYSE_ECARTS)
+        break
+
 # ─────────────────── 5 ter. veille AI Act, version courte ─────────────────
 # La section AI Act d'origine faisait 1,7 page et a été retirée pour tenir dans
 # les 60 pages. Mais le dossier la cite encore à dix endroits, et la troisième
@@ -513,6 +556,13 @@ for nom in ("Body Text", "First Paragraph", "Compact"):
         pf.space_after = Pt(4)
 STYLES["Source Code"].paragraph_format.line_spacing = Pt(9)
 STYLES["Image Caption"].paragraph_format.space_after = Pt(10)
+# Les sept parties passées en titre ont ramené avec elles l'espacement du style
+# (18 pt avant) : cinq pages de plus. Ramené à 10 pt, l'allure reste celle de la
+# trame.
+STYLES["Heading 1"].paragraph_format.space_before = Pt(6)
+STYLES["Heading 1"].paragraph_format.space_after = Pt(4)
+STYLES["Figure"].paragraph_format.space_before = Pt(8)
+STYLES["Figure"].paragraph_format.space_after = Pt(2)
 STYLES["Figure"].paragraph_format.space_before = Pt(8)
 STYLES["Figure"].paragraph_format.space_after = Pt(2)
 
@@ -525,30 +575,102 @@ if reglages.find(qn("w:updateFields")) is None:
     maj.set(qn("w:val"), "true")
     reglages.append(maj)
 
-# ─────────────────── 12. numéros de page du sommaire ───────────────────────
-# Le sommaire de la trame est un champ dont le résultat est mémorisé ; tant que
-# Word ne l'a pas rafraîchi, il affiche les numéros de la trame vide. On réécrit
-# le résultat mémorisé avec la pagination relevée sur le PDF, en laissant le
-# champ en place pour qu'un rafraîchissement reste possible.
+# ─────────────────── 12. sommaire ─────────────────────────────────────────
+# Le sommaire de la trame est un champ dont le résultat est mémorisé. Il ne
+# listait que les cinq parties portant un style de titre, et ses numéros de
+# page étaient ceux de la trame vide. Le résultat mémorisé est reconstruit :
+# les douze parties, leurs sous-parties, et la pagination relevée sur le PDF.
+# Les délimiteurs du champ sont conservés, pour qu'un rafraîchissement dans
+# Word reste possible.
+SOMMAIRE = [
+ ("1.", "La liste des compétences mises en œuvre dans le cadre du projet"),
+ ("2.", "Le cahier des charges ou l’expression des besoins du projet"),
+ ("3.", "- la présentation de l’entreprise et du service"),
+ ("4.", "La gestion de projet"),
+ ("5.", "Les spécifications fonctionnelles du projet"),
+ ("5.1.", "Les contraintes du projet et livrables attendus"),
+ ("5.2.", "L’architecture logicielle du projet"),
+ ("5.3.", "Les maquettes et enchaînement des maquettes"),
+ ("5.4.", "Le modèle entités-associations et modèle physique de la base de données"),
+ ("5.5.", "Le script de création ou de modification de la base de données"),
+ ("5.6.", "Le diagramme du comportement des fonctionnalités de type cas d’utilisations"),
+ ("5.7.", "Le diagramme du détail des cas d’utilisations les plus significatifs de type diagramme de séquence"),
+ ("6.", "Les spécifications techniques du projet"),
+ ("7.", "Les réalisations du candidat comportant les extraits de code les plus significatifs"),
+ ("7.1.", "Les captures d’écran d’interfaces utilisateur et le code correspondant"),
+ ("7.2.", "Des extraits de code de composants métier"),
+ ("7.3.", "Des extraits de code de composants d’accès aux données"),
+ ("7.4.", "Des extraits de code d’autres composants"),
+ ("8.", "La présentation d’éléments de sécurité de l’application"),
+ ("9.", "La présentation du plan de tests"),
+ ("10.", "La présentation d’un jeu d’essai élaboré par le candidat"),
+ ("11.", "- la description de la veille, effectuée par le candidat"),
+ ("12.", "ANNEXES"),
+ ("12.1.", "Les maquettes des interfaces utilisateur"),
+ ("12.2.", "Les captures d’écrans d’interfaces utilisateurs et le code correspondant"),
+ ("12.3.", "Le code de composants métier les plus significatifs"),
+ ("12.4.", "Le code de composants d’accès aux données les plus significatifs"),
+ ("12.5.", "Le code d’autres composants"),
+]
+
 if PAGES:
-    import unicodedata
-    def cle(t):
-        t = unicodedata.normalize("NFKD", t)
-        t = "".join(c for c in t if not unicodedata.combining(c))
-        return re.sub(r"[^a-z0-9]+", "", t.lower())
-    table = {cle(k): v for k, v in PAGES.items()}
     for sdt in cible.element.body.iter(qn("w:sdt")):
         if not any("TOC" in (t.text or "") for t in sdt.iter(qn("w:instrText"))):
             continue
-        for par in sdt.iter(qn("w:p")):
-            textes = par.findall(".//" + qn("w:t"))
-            if len(textes) < 2:
-                continue
-            libelle = "".join(t.text or "" for t in textes[:-1])
-            libelle = re.sub(r"^\s*\d+(\.\d+)*\.?\s*", "", libelle)
-            num = table.get(cle(libelle))
-            if num:
-                textes[-1].text = str(num)
+        entrees = [e for e in sdt.iter(qn("w:p"))]
+        premiere, derniere = entrees[1], entrees[-1]
+        style_entree = premiere.pPr.find(qn("w:pStyle")).get(qn("w:val"))
+
+        from docx.enum.text import WD_TAB_ALIGNMENT, WD_TAB_LEADER
+
+        def taquets(par):
+            """Un taquet pour le titre, un taquet de droite pointillé pour la
+            page. Les taquets hérités du style placent mal les numéros à cinq
+            caractères comme « 12.1. »."""
+            pf = par.paragraph_format
+            pf.left_indent = Cm(1.3)
+            pf.first_line_indent = Cm(-1.3)
+            for t in list(pf.tab_stops):
+                pass
+            tabs = par._p.get_or_add_pPr().find(qn("w:tabs"))
+            if tabs is not None:
+                par._p.pPr.remove(tabs)
+            pf.tab_stops.add_tab_stop(Cm(1.3), WD_TAB_ALIGNMENT.LEFT)
+            pf.tab_stops.add_tab_stop(Cm(17), WD_TAB_ALIGNMENT.RIGHT, WD_TAB_LEADER.DOTS)
+
+        def ligne(numero, titre, page, modele):
+            el = copy.deepcopy(modele)
+            for enfant in list(el):
+                if enfant.tag != qn("w:pPr"):
+                    el.remove(enfant)
+            par = Paragraph(el, None)
+            taquets(par)
+            par.add_run(f"{numero}\t{titre}\t{page}")
+            return el
+
+        # Les entrées intermédiaires sont remplacées ; la première porte
+        # l'ouverture du champ, la dernière sa fermeture.
+        for e in entrees[2:-1]:
+            e.getparent().remove(e)
+        for enfant in list(premiere):
+            if enfant.tag not in (qn("w:pPr"), qn("w:r")):
+                premiere.remove(enfant)
+
+        modele = copy.deepcopy(premiere)
+        for enfant in list(modele):
+            if enfant.tag != qn("w:pPr"):
+                modele.remove(enfant)
+
+        num0, titre0 = SOMMAIRE[0]
+        par0 = Paragraph(premiere, None)
+        taquets(par0)
+        par0.add_run(f"{num0}\t{titre0}\t{PAGES.get(titre0, '')}")
+        precedent = premiere
+        for numero, titre in SOMMAIRE[1:]:
+            el = ligne(numero, titre, PAGES.get(titre, ""), modele)
+            precedent.addnext(el)
+            precedent = el
+        print(f"  sommaire reconstruit : {len(SOMMAIRE)} entr\u00e9es")
         break
 
 # ───────────────────────── marges ─────────────────────────────────────────
