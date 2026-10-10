@@ -102,8 +102,15 @@ LANCEMENT_DEV = set(range(282, 287))
 #    la planche W-06, reproduite en annexe 12.1 dans une version bien plus
 #    lisible. Le dessin faisait doublon avec elle.
 WIREFRAME_EDITEUR = {147}
+#
+# 5. Trois intitulés du référentiel laissés tels quels dans le texte source, à
+#    la fin de la partie qui précède : « La présentation d'éléments de sécurité
+#    de l'application », « La présentation du plan de tests », « La présentation
+#    d'un jeu d'essai élaboré par le candidat ». La trame porte déjà ces titres.
+TITRES_EN_DOUBLE = {419, 467, 516}
 
-EXCLUS = CODE_DOUBLONS | VEILLE_AI_ACT | LANCEMENT_DEV | WIREFRAME_EDITEUR
+EXCLUS = (CODE_DOUBLONS | VEILLE_AI_ACT | LANCEMENT_DEV | WIREFRAME_EDITEUR
+          | TITRES_EN_DOUBLE)
 
 def blocs(cle):
     deb, fin = BORNES[cle]
@@ -154,9 +161,15 @@ ANCRES = {
     "12.5":"Le code d’autres composants",
 }
 
+# Les ancres sont résolues sur la trame intacte, AVANT toute insertion. Sinon
+# le contenu déjà posé peut contenir un paragraphe commençant par le même
+# intitulé, et c'est lui qui est retenu : les parties 8, 9 et 10 se sont ainsi
+# retrouvées greffées au milieu de la partie 7, leurs titres restant vides.
+ANCRES_RESOLUES = {cle: ancre(debut) for cle, debut in ANCRES.items()}
+
 inseres = []          # tous les éléments venus de la source
-for cle, debut in ANCRES.items():
-    titre = ancre(debut)
+for cle in ANCRES:
+    titre = ANCRES_RESOLUES[cle]
     courant = titre._p
     for el in blocs(cle):
         c = copy.deepcopy(el)
