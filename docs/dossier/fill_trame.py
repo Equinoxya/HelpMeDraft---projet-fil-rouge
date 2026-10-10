@@ -97,8 +97,13 @@ VEILLE_AI_ACT = set(range(562, 573))
 # 3. « Lancement en développement » : des instructions d'installation, qui
 #    relèvent du README plutôt que du dossier.
 LANCEMENT_DEV = set(range(282, 287))
+#
+# 4. Le wireframe ASCII de l'éditeur : le texte qui l'introduit renvoie déjà à
+#    la planche W-06, reproduite en annexe 12.1 dans une version bien plus
+#    lisible. Le dessin faisait doublon avec elle.
+WIREFRAME_EDITEUR = {147}
 
-EXCLUS = CODE_DOUBLONS | VEILLE_AI_ACT | LANCEMENT_DEV
+EXCLUS = CODE_DOUBLONS | VEILLE_AI_ACT | LANCEMENT_DEV | WIREFRAME_EDITEUR
 
 def blocs(cle):
     deb, fin = BORNES[cle]
@@ -185,6 +190,70 @@ for par in cible.paragraphs:
     par.style = STYLES["Body Text"]
     run = par.add_run(texte)
     run.bold = True
+
+# ─────────────────── 5 ter. veille AI Act, version courte ─────────────────
+# La section AI Act d'origine faisait 1,7 page et a été retirée pour tenir dans
+# les 60 pages. Mais le dossier la cite encore à dix endroits, et la troisième
+# conclusion de la veille — « le cadre réglementaire bouge pendant le projet »
+# — n'avait plus d'exemple. On remet une version condensée, écrite à partir du
+# texte d'origine : le constat, ce qui est déjà couvert, les trois compléments
+# tels que l'autrice les avait listés, et ce que l'entrée prouve sur la veille.
+INTRO_AI_ACT = (
+    "Depuis le 2 ao\u00fbt 2026, les obligations de transparence du r\u00e8glement europ\u00e9en sur "
+    "l\u2019intelligence artificielle sont applicables. Deux concernent HelpMeDraft : informer "
+    "clairement l\u2019utilisateur qu\u2019il interagit avec une intelligence artificielle, et marquer "
+    "les contenus g\u00e9n\u00e9r\u00e9s. Le projet en couvre d\u00e9j\u00e0 une partie \u2014 le panneau est intitul\u00e9 "
+    "\u00ab\u00a0Assistant IA \u2014 Ollama\u00a0\u00bb, l\u2019action demand\u00e9e est explicite, et aucune proposition "
+    "n\u2019est appliqu\u00e9e sans d\u00e9cision de l\u2019utilisateur. Trois compl\u00e9ments restent \u00e0 produire :"
+)
+PUCES_AI_ACT = [
+    "une mention d\u2019information non ambigu\u00eb au premier usage de l\u2019assistant, et non seulement "
+    "un titre de panneau\u00a0;",
+    "une trace des passages issus d\u2019une g\u00e9n\u00e9ration dans le document \u2014 la table ia conserve "
+    "d\u00e9j\u00e0 l\u2019information c\u00f4t\u00e9 base (\u00a7\u00a05.4), il reste \u00e0 l\u2019exposer c\u00f4t\u00e9 interface\u00a0;",
+    "une clause d\u00e9di\u00e9e dans les CGU et la politique de confidentialit\u00e9, distincte du "
+    "consentement au traitement des donn\u00e9es.",
+]
+FIN_AI_ACT = (
+    "Cette entr\u00e9e justifie la veille comme livrable : le cahier des charges, r\u00e9dig\u00e9 avant "
+    "l\u2019entr\u00e9e en application du r\u00e8glement, ne mentionne que le RGPD. Sans ce suivi, "
+    "l\u2019application aurait \u00e9t\u00e9 livr\u00e9e non conforme \u00e0 une obligation entr\u00e9e en vigueur trois "
+    "semaines avant la fin du d\u00e9veloppement."
+)
+
+rgaa = None
+for par in cible.paragraphs:
+    if id(par._p) in ensemble and par.text.strip().startswith("RGAA \u2014 la version 5"):
+        rgaa = par
+        break
+if rgaa is None:
+    print("  !! point d\u2019insertion AI Act introuvable")
+else:
+    # Modèle de puce : on reprend la mise en forme d'une liste déjà présente,
+    # pour que les trois points ne détonnent pas dans la partie.
+    modele_puce = None
+    for par in cible.paragraphs:
+        if (id(par._p) in ensemble and (par.style.name or "") == "Compact"
+                and par._p.pPr is not None and par._p.pPr.find(qn("w:numPr")) is not None):
+            modele_puce = copy.deepcopy(par._p.pPr)
+            break
+
+    def inserer_avant(voisin, texte, style="Body Text", gras=False, puce=False):
+        el = OxmlElement("w:p")
+        voisin._p.addprevious(el)
+        nouveau = Paragraph(el, voisin._parent)
+        nouveau.style = STYLES["Compact" if puce else style]
+        if puce and modele_puce is not None:
+            nouveau._p.insert(0, copy.deepcopy(modele_puce))
+        run = nouveau.add_run(texte)
+        run.bold = gras
+        return nouveau
+
+    inserer_avant(rgaa, "AI Act \u2014 une exigence apparue en cours de projet", gras=True)
+    inserer_avant(rgaa, INTRO_AI_ACT)
+    for point in PUCES_AI_ACT:
+        inserer_avant(rgaa, point, puce=True)
+    inserer_avant(rgaa, FIN_AI_ACT)
 
 # ─────────────────── 5 bis. renvois internes ──────────────────────────────
 # Le texte source renvoyait à ses propres sous-sections (« § 8.2 », « § 5.4.5 »).
