@@ -27,13 +27,17 @@ src, out = docx.Document(SRC), docx.Document(OUT)
 
 TITRES_TRAME = {27, 51, 60, 82, 86, 102, 121, 159, 199, 221, 236, 256, 300,
                 331, 360, 394, 539, 581, 582, 604, 609, 614, 623}
-COUPES = ({334, 341, 347, 352, 363, 397, 403, 406}      # code déjà en annexe
+COUPES = ({334, 341, 347, 352, 363}                   # code déjà en annexe
+          | {509}                                     # paragraphe en double du § 9
           | set(range(562, 573))                        # veille AI Act condensée
           | set(range(282, 287))                        # lancement en développement
           | {147}                                       # wireframe ASCII de l'éditeur
           | {299, 419, 467, 516})                       # intitulés déjà portés par la trame
 ASCII_REMPLACES = {105, 139, 164, 226, 239}             # devenus archi, W-09, MCD, UC, séquence
-EXCLUS = set(range(0, 22)) | TITRES_TRAME | COUPES | ASCII_REMPLACES
+# Paragraphes réécrits à la relecture (contradictions internes, renvois d'une
+# section vers elle-même) : présents dans le dossier, sous une autre formulation.
+REECRITS = {156, 261, 280, 457, 575, 585}
+EXCLUS = set(range(0, 22)) | TITRES_TRAME | COUPES | ASCII_REMPLACES | REECRITS
 
 textes = [p.text for p in out.paragraphs if p.text.strip()]
 for t in out.tables:
@@ -59,7 +63,8 @@ for i, p in enumerate(src.paragraphs):
     else:
         manquants.append((i, p.style.name, p.text.strip()[:100]))
 
-print(f"paragraphes de contenu : {exacts + renvois + len(manquants)}")
+print(f"paragraphes de contenu : {exacts + renvois + len(manquants)}"
+      f"  (+ {len(REECRITS)} réécrits à la relecture)")
 print(f"  retrouvés à l'identique      : {exacts}")
 print(f"  retrouvés, renvoi réécrit    : {renvois}")
 print(f"  ABSENTS                      : {len(manquants)}")
@@ -71,8 +76,14 @@ def empreinte(t):
     # dossier, ce qui ne change rien à la présence du tableau.
     return cle(" ".join(c.text for r in t.rows for c in r.cells), True)
 emp_out = [empreinte(t) for t in out.tables]
+# Le tableau 43 (§ 8) porte une cellule reformulée à la relecture : « durée 7
+# jours » y est devenu « session de 7 jours côté serveur », le cookie portant
+# lui un max_age de 30 jours.
+TABLEAUX_RETOUCHES = {43}
 tab_manquants = []
 for i, t in enumerate(src.tables):
+    if i in TABLEAUX_RETOUCHES:
+        continue
     e = empreinte(t)
     if not any(e == o or e in o or o in e for o in emp_out):
         tab_manquants.append((i, " | ".join(c.text.strip()[:18] for c in t.rows[0].cells)))

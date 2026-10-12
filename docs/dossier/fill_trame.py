@@ -16,6 +16,8 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 from docx.text.paragraph import Paragraph
 
+from sommaire import SOMMAIRE
+
 RACINE = "/home/user/HelpMeDraft---projet-fil-rouge"
 TRAME = f"{RACINE}/docs/dossier/trame-dossier-projet-cda.docx"
 SOURCE = f"{RACINE}/Dossier projet CDA - HelpMeDraft.docx"
@@ -87,7 +89,10 @@ fin_corps = len(corps_src) - 1      # le dernier enfant est le sectPr
 #    attend en partie 7 des extraits commentés, et en annexe le code complet :
 #    rien n'est perdu. Les blocs du front (7.1) ne sont pas dupliqués, ils
 #    restent.
-CODE_DOUBLONS = {334, 341, 347, 352, 363, 397, 403, 406}
+# Les trois blocs du § 7.4 (397, 403, 406) ont d'abord été retirés avec les
+# autres, mais leurs phrases d'introduction les annoncent par deux-points : les
+# retirer laissait des annonces sans code. Ils restent.
+CODE_DOUBLONS = {334, 341, 347, 352, 363}
 #
 # 2. La veille AI Act : veille réglementaire, là où le référentiel demande la
 #    veille sur les vulnérabilités de sécurité ; et la traçabilité AI Act sort
@@ -218,7 +223,17 @@ for par in cible.paragraphs:
     pPr = par._p.pPr
     if (par.style.name or "") == "List Paragraph" and pPr is not None \
             and pPr.find(qn("w:numPr")) is not None:
-        par.style = STYLES["Heading 1"]
+        # « Titre1 » est le style de titre de la trame ; le document source en
+        # apporte un second, « Heading1 », de même nom mais d'une autre couleur
+        # et d'une autre police. Les désigner par leur identifiant évite que
+        # sept parties sur douze soient composées différemment des cinq autres.
+        pPr.find(qn("w:pStyle")).set(qn("w:val"), "Titre1")
+        for rpr in [pPr.find(qn("w:rPr"))] + [r._r.find(qn("w:rPr")) for r in par.runs]:
+            if rpr is None:
+                continue
+            for nom in ("w:rFonts", "w:color"):
+                for el in rpr.findall(qn(nom)):
+                    rpr.remove(el)
 
 # b) Le référentiel demande, pour le jeu d'essai, « données en entrée, données
 #    attendues, données obtenues ET analyse des écarts éventuels ». Les trois
@@ -371,6 +386,131 @@ for par in tous_paragraphes(cible):
             return "\u00a7 " + but
         run.text = RENVOI.sub(remplacer, run.text)
 print(f"  renvois ramen\u00e9s \u00e0 un niveau existant : {tronques} | renvois retir\u00e9s : {supprimes}")
+
+# ─────────────────── 5 sexies. retrait des numéros de partie ──────────────
+# La liste à deux niveaux de la trame réserve 0,63 cm au numéro de premier
+# niveau. À 18 pt, « 2. » dépasse cette réserve : la tabulation qui suit le
+# numéro n'avance plus, et le titre venait se coller au point (« 2.Le cahier
+# des charges »), sur huit parties des douze. On porte la réserve à 1,27 cm,
+# ce qui aligne les douze titres sur une même marge.
+_num = cible.part.numbering_part.element
+_abs = {n.find(qn("w:abstractNumId")).get(qn("w:val"))
+        for n in _num.findall(qn("w:num")) if n.get(qn("w:numId")) == "5"}
+for _an in _num.findall(qn("w:abstractNum")):
+    if _an.get(qn("w:abstractNumId")) not in _abs:
+        continue
+    for _lvl in _an.findall(qn("w:lvl")):
+        if _lvl.get(qn("w:ilvl")) != "0":
+            continue
+        _ind = _lvl.find(qn("w:pPr")).find(qn("w:ind"))
+        _ind.set(qn("w:left"), "720")
+        _ind.set(qn("w:hanging"), "720")
+
+# ─────────────────── 5 quinquies. corrections de relecture ────────────────
+# Relecture intégrale du dossier rempli. Trois familles de corrections :
+#  - des renvois qui, ramenés au niveau le plus profond que la trame connaisse,
+#    finissaient par désigner la section où ils se trouvent ;
+#  - des contradictions internes au texte source : audit d'accessibilité donné
+#    tantôt fait tantôt à faire, version d'Ollama, origine CORS ;
+#  - un paragraphe en double et un renvoi circulaire vers l'annexe.
+def remplacer_dans(par, ancien, nouveau):
+    """Remplace un fragment en préservant la mise en forme autour de lui."""
+    runs = par.runs
+    for r in runs:
+        if ancien in r.text:
+            r.text = r.text.replace(ancien, nouveau, 1)
+            return True
+    plein = "".join(r.text for r in runs)
+    i = plein.find(ancien)
+    if i < 0:
+        return False
+    j, pos = i + len(ancien), 0
+    for r in runs:
+        d, f = pos, pos + len(r.text)
+        pos = f
+        if f <= i or d >= j:
+            continue
+        r.text = (r.text[: max(0, i - d)]
+                  + (nouveau if d <= i < f else "")
+                  + (r.text[j - d:] if f > j else ""))
+    return True
+
+CORRECTIONS = [
+    # a) renvois d'une section vers elle-même
+    ("séparément (§ 5.3), et le rendu", "séparément, et le rendu"),
+    ("de contrôle de déploiement (§ 6).", "de contrôle de déploiement."),
+    ("le modèle se télécharge à part (§ 6).", "le modèle se télécharge à part."),
+    ("l'image Nginx du frontend (§ 6).", "l'image Nginx du frontend."),
+    ("appliqué aux jetons (§ 7.2), où", "appliqué aux jetons, où"),
+    ("une exception, documentée en § 8.", "une exception, documentée ci-après."),
+    ("restent à définir (§ 8).", "restent à définir."),
+    # b) l'origine CORS : le texte et la liste de contrôle se contredisaient
+    ("L'origine est aujourd'hui codée en dur pour le développement ; elle devra "
+     "passer en variable d'environnement au déploiement (§ 6).",
+     "L'origine est lue dans CORS_ORIGINS, dont la valeur par défaut est celle du "
+     "développement ; elle doit être renseignée avec le domaine réel au déploiement."),
+    # c) audit d'accessibilité : mené le 3 octobre (§ 9), et non restant à faire
+    ("L'audit outillé (Lighthouse et WAVE) et son rapport restent à produire (§ 5.1) ; "
+     "il sera mené sur la version 4.1.2, en vigueur, la version 5 étant annoncée pour "
+     "fin 2026 (§ 11).",
+     "L'audit outillé a été mené sur la version 4.1.2, en vigueur, la version 5 étant "
+     "annoncée pour fin 2026 (§ 9, § 11)."),
+    ("L'audit d'accessibilité restant à réaliser (§ 5.1, § 9) sera donc mené sur le "
+     "RGAA 4.1.2",
+     "L'audit d'accessibilité a donc été mené sur le RGAA 4.1.2 (§ 9)"),
+    # d) version d'Ollama : le tableau porte la version installée, pas un minimum
+    ("la version minimale 0.17.1 indiquée ci-dessus découle directement de la veille (§ 11).",
+     "la version installée indiquée ci-dessus, 0.35.1, découle directement de la veille (§ 11)."),
+    # e) renvoi circulaire : l'annexe 12.5 renvoie au § 6 pour ce même code
+    ("Leur code complet figure en annexe § 12.5.",
+     "Le code complet de la configuration figure en annexe § 12.5."),
+    # f) cookie de refresh : 7 jours est la durée de la session côté serveur,
+    #    le cookie portant lui un max_age de 30 jours
+    ("path=/auth, durée 7 jours (§ 7.4)",
+     "path=/auth, session de 7 jours côté serveur (§ 7.4)"),
+    # g) annexe 12.1 : deux introductions se recouvraient, et les planches ne
+    #    sont pas « une par page »
+    ("Les planches sont reproduites ci-après, une par page, dans l'ordre du parcours "
+     "utilisateur. Chacune porte sa référence, l'écran concerné et ses intentions de "
+     "conception numérotées — la raison d'être de chaque bloc, et non seulement sa "
+     "présence. Le fichier source est docs/maquettes-helpmedraft.html dans le dépôt.",
+     "Le fichier source des planches est docs/maquettes-helpmedraft.html dans le dépôt."),
+]
+
+def toutes_cellules():
+    for tbl in cible.tables:
+        for ligne in tbl.rows:
+            for cel in ligne.cells:
+                for par in cel.paragraphs:
+                    yield par
+
+faits = set()
+for par in list(cible.paragraphs) + list(toutes_cellules()):
+    for n, (ancien, nouveau) in enumerate(CORRECTIONS):
+        if n not in faits and remplacer_dans(par, ancien, nouveau):
+            faits.add(n)
+absentes = [CORRECTIONS[n][0][:45] for n in range(len(CORRECTIONS)) if n not in faits]
+print(f"  corrections de relecture : {len(faits)}/{len(CORRECTIONS)}"
+      + (" | NON TROUVÉES : " + str(absentes) if absentes else ""))
+
+# Un même renvoi écrit deux fois de suite (« § 8, § 8 ») : séquelle de deux
+# renvois distincts ramenés au même niveau.
+DOUBLE_RENVOI = re.compile(r"(§\s*\d+(?:\.\d+)*)\s*,\s*§\s*(\d+(?:\.\d+)*)")
+for par in list(cible.paragraphs) + list(toutes_cellules()):
+    for r in par.runs:
+        m = DOUBLE_RENVOI.search(r.text)
+        while m:
+            if m.group(1).split("§")[-1].strip() != m.group(2):
+                break
+            r.text = r.text.replace(m.group(0), m.group(1))
+            m = DOUBLE_RENVOI.search(r.text)
+
+# Paragraphe en double du § 9 : il répète la phrase qui le précède et annonce
+# « quatre contrôles humains » qui ne figurent nulle part.
+for par in cible.paragraphs:
+    if par.text.strip().startswith("Un outil automatique ne détecte qu'une partie des critères"):
+        par._p.getparent().remove(par._p)
+        break
 
 # ─────────────────── 6. figures ────────────────────────────────────────────
 def para_contenant(fragment, style=None):
@@ -640,36 +780,6 @@ if reglages.find(qn("w:updateFields")) is None:
 # les douze parties, leurs sous-parties, et la pagination relevée sur le PDF.
 # Les délimiteurs du champ sont conservés, pour qu'un rafraîchissement dans
 # Word reste possible.
-SOMMAIRE = [
- ("1.", "La liste des compétences mises en œuvre dans le cadre du projet"),
- ("2.", "Le cahier des charges ou l’expression des besoins du projet"),
- ("3.", "- la présentation de l’entreprise et du service"),
- ("4.", "La gestion de projet"),
- ("5.", "Les spécifications fonctionnelles du projet"),
- ("5.1.", "Les contraintes du projet et livrables attendus"),
- ("5.2.", "L’architecture logicielle du projet"),
- ("5.3.", "Les maquettes et enchaînement des maquettes"),
- ("5.4.", "Le modèle entités-associations et modèle physique de la base de données"),
- ("5.5.", "Le script de création ou de modification de la base de données"),
- ("5.6.", "Le diagramme du comportement des fonctionnalités de type cas d’utilisations"),
- ("5.7.", "Le diagramme du détail des cas d’utilisations les plus significatifs de type diagramme de séquence"),
- ("6.", "Les spécifications techniques du projet"),
- ("7.", "Les réalisations du candidat comportant les extraits de code les plus significatifs"),
- ("7.1.", "Les captures d’écran d’interfaces utilisateur et le code correspondant"),
- ("7.2.", "Des extraits de code de composants métier"),
- ("7.3.", "Des extraits de code de composants d’accès aux données"),
- ("7.4.", "Des extraits de code d’autres composants"),
- ("8.", "La présentation d’éléments de sécurité de l’application"),
- ("9.", "La présentation du plan de tests"),
- ("10.", "La présentation d’un jeu d’essai élaboré par le candidat"),
- ("11.", "- la description de la veille, effectuée par le candidat"),
- ("12.", "ANNEXES"),
- ("12.1.", "Les maquettes des interfaces utilisateur"),
- ("12.2.", "Les captures d’écrans d’interfaces utilisateurs et le code correspondant"),
- ("12.3.", "Le code de composants métier les plus significatifs"),
- ("12.4.", "Le code de composants d’accès aux données les plus significatifs"),
- ("12.5.", "Le code d’autres composants"),
-]
 
 if PAGES:
     for sdt in cible.element.body.iter(qn("w:sdt")):
@@ -730,6 +840,22 @@ if PAGES:
             precedent = el
         print(f"  sommaire reconstruit : {len(SOMMAIRE)} entr\u00e9es")
         break
+
+# Apostrophes : le texte source emploie l'apostrophe droite d'un bout à l'autre.
+# Les quelques paragraphes rédigés pour ce remplissage utilisaient l'apostrophe
+# typographique ; on les aligne. Les titres, repris mot pour mot du référentiel,
+# gardent la leur.
+vu_titre = False
+for par in cible.paragraphs:
+    if (par.style.name or "").startswith("Heading") and par.text.strip():
+        vu_titre = True
+        continue
+    if not vu_titre or (par.style.name or "").startswith("Heading"):
+        continue
+    for r in par.runs:
+        if "’" in r.text:
+            r.text = r.text.replace("’", "'")
+
 
 # ───────────────────────── marges ─────────────────────────────────────────
 # 2 cm au lieu des 2,5 cm de la trame : six pages de corps regagnées sans
