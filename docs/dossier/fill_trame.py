@@ -468,6 +468,9 @@ CORRECTIONS = [
     #    le cookie portant lui un max_age de 30 jours
     ("path=/auth, durée 7 jours (§ 7.4)",
      "path=/auth, session de 7 jours côté serveur (§ 7.4)"),
+    # f bis) les blocs de code sont désormais rendus sans leurs commentaires :
+    #    l'annexe 12.3 ne peut plus annoncer qu'ils sont conservés.
+    (" Commentaires d'origine conservés.", ""),
     # g) annexe 12.1 : deux introductions se recouvraient, et les planches ne
     #    sont pas « une par page »
     ("Les planches sont reproduites ci-après, une par page, dans l'ordre du parcours "

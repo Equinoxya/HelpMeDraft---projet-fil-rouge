@@ -36,7 +36,7 @@ COUPES = ({334, 341, 347, 352, 363}                   # code déjà en annexe
 ASCII_REMPLACES = {105, 139, 164, 226, 239}             # devenus archi, W-09, MCD, UC, séquence
 # Paragraphes réécrits à la relecture (contradictions internes, renvois d'une
 # section vers elle-même) : présents dans le dossier, sous une autre formulation.
-REECRITS = {156, 261, 280, 457, 575, 585}
+REECRITS = {156, 261, 280, 457, 575, 585, 610}
 EXCLUS = set(range(0, 22)) | TITRES_TRAME | COUPES | ASCII_REMPLACES | REECRITS
 
 textes = [p.text for p in out.paragraphs if p.text.strip()]
