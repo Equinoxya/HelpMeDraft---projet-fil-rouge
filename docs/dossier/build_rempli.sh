@@ -7,6 +7,10 @@ rendre() {
   soffice --headless -env:UserInstallation=file:///tmp/lo_profile \
           --convert-to pdf --outdir lo2 dossier-projet-rempli.docx >/dev/null 2>&1
 }
+# Les images des blocs de code sont versionnées : on ne les reconstruit que
+# si elles manquent, car le rendu demande Chromium et Playwright.
+[ -f fig/code/index.json ] || python3 code_images.py
+
 python3 fill_trame.py >/dev/null; rendre
 python3 pages_trame.py
 python3 fill_trame.py pages.json >/dev/null; rendre

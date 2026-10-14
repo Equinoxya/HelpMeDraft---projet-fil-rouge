@@ -764,6 +764,101 @@ STYLES["Heading 1"].paragraph_format.space_after = Pt(4)
 STYLES["Figure"].paragraph_format.space_before = Pt(8)
 STYLES["Figure"].paragraph_format.space_after = Pt(2)
 
+# ─────────────────── 10 bis. mise en forme du texte ───────────────────────
+# a) Le gras d'amorce à l'intérieur des paragraphes est retiré : « bcrypt
+#    plutôt que SHA-256. Une fonction de hachage… » se lit désormais d'un seul
+#    trait. Les paragraphes entièrement en gras sont conservés : ce sont les
+#    repères de sous-section, seule structure de lecture entre deux titres.
+#    Les tableaux gardent le leur, en-têtes comprises.
+amorces = 0
+for par in cible.paragraphs:
+    if (par.style.name or "").startswith("Heading"):
+        continue
+    pleins = [r for r in par.runs if r.text.strip()]
+    if not pleins:
+        continue
+    gras = [r for r in pleins if r.bold]
+    if gras and len(gras) < len(pleins):
+        for r in gras:
+            r.bold = None
+        amorces += 1
+print(f"  amorces en gras retirées : {amorces}")
+
+# b bis) Les fragments de code cités dans une phrase (« Verbatim Char ») étaient
+#    composés en 6,5 pt au milieu d'un texte à 11 pt : un corps de différence si
+#    marqué qu'il se lisait mal. Ramenés à 8,5 pt, ils restent distincts du texte
+#    courant sans être minuscules.
+if "Verbatim Char" in STYLES:
+    STYLES["Verbatim Char"].font.size = Pt(8.5)
+
+# b) Une seule police pour tout le texte. La trame compose les titres en
+#    « Calibri Light » et le corps en « Calibri » : deux graisses de dessin
+#    différentes. Les titres passent sur la police du corps.
+polices = cible.styles.element.find(qn("w:docDefaults"))
+for st in cible.styles.element.findall(qn("w:style")):
+    sid = st.get(qn("w:styleId")) or ""
+    if not (sid.startswith(("Titre", "Heading", "Title", "Subtitle"))
+            or sid in ("TOCHeading", "Sommaire")):
+        continue
+    rpr = st.find(qn("w:rPr"))
+    if rpr is None:
+        continue
+    for rf in rpr.findall(qn("w:rFonts")):
+        for att in ("w:asciiTheme", "w:hAnsiTheme", "w:eastAsiaTheme", "w:cstheme"):
+            if rf.get(qn(att)) and "major" in rf.get(qn(att)):
+                rf.set(qn(att), rf.get(qn(att)).replace("major", "minor"))
+
+# ─────────────────── 10 ter. blocs de code en images ──────────────────────
+# Chaque bloc de code est remplacé par son rendu en image, commentaires
+# retirés, produit par code_images.py. L'intérêt est une composition
+# identique d'un bloc à l'autre, quelle que soit la police d'origine du
+# document source. Un bloc trop haut pour une page est rendu en plusieurs
+# images, qui se suivent.
+import hashlib
+from code_nettoyage import nettoyer
+IDX = f"{FIG}/code/index.json"
+if os.path.exists(IDX):
+    manifeste = json.load(open(IDX))
+    k = W_FIG / manifeste["largeur_reference_css"]      # cm par pixel CSS
+    blocs = manifeste["blocs"]
+    poses = introuvables = 0
+    for par in list(cible.paragraphs):
+        if par.style.name != "Source Code":
+            continue
+        emp = hashlib.md5(nettoyer(par.text).encode("utf-8")).hexdigest()[:12]
+        images = blocs.get(emp)
+        if not images:
+            introuvables += 1
+            continue
+        precedent = par._p
+        for n, img in enumerate(images):
+            largeur = min(W_FIG, img["largeur_css"] * k)
+            if n == 0:
+                vider(par)
+                par.style = STYLES["Figure"]
+                par.alignment = 0
+                par.paragraph_format.space_before = Pt(4)
+                par.paragraph_format.space_after = Pt(2)
+                par.add_run().add_picture(f"{FIG}/code/{img['fichier']}",
+                                          width=Cm(largeur))
+                precedent = par._p
+            else:
+                el = OxmlElement("w:p")
+                precedent.addnext(el)
+                suite = Paragraph(el, par._parent)
+                suite.style = STYLES["Figure"]
+                suite.alignment = 0
+                suite.paragraph_format.space_before = Pt(2)
+                suite.paragraph_format.space_after = Pt(2)
+                suite.add_run().add_picture(f"{FIG}/code/{img['fichier']}",
+                                            width=Cm(largeur))
+                precedent = el
+            poses += 1
+    print(f"  blocs de code en images : {poses}"
+          + (f" | SANS IMAGE : {introuvables}" if introuvables else ""))
+else:
+    print("  !! fig/code/index.json absent : lancer code_images.py")
+
 # ─────────────────── 11. mise à jour des champs à l'ouverture ──────────────
 # La table des matières de la trame est un champ : sans cette instruction, elle
 # reste figée sur les numéros de page de la trame vide (tous à zéro).

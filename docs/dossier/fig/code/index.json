@@ -1,0 +1,389 @@
+{
+ "largeur_reference_css": 1419.5216,
+ "blocs": {
+  "5c9803838608": [
+   {
+    "fichier": "5c9803838608-0.png",
+    "largeur_css": 816.71875
+   }
+  ],
+  "1dafd47a002a": [
+   {
+    "fichier": "1dafd47a002a-0.png",
+    "largeur_css": 840.796875
+   }
+  ],
+  "a7bd26c8a223": [
+   {
+    "fichier": "a7bd26c8a223-0.png",
+    "largeur_css": 989
+   }
+  ],
+  "34dd0a484555": [
+   {
+    "fichier": "34dd0a484555-0.png",
+    "largeur_css": 1009.375
+   }
+  ],
+  "795b9092560e": [
+   {
+    "fichier": "795b9092560e-0.png",
+    "largeur_css": 852.84375
+   }
+  ],
+  "a3e97ea6c143": [
+   {
+    "fichier": "a3e97ea6c143-0.png",
+    "largeur_css": 1081.609375
+   }
+  ],
+  "21823d11e4a4": [
+   {
+    "fichier": "21823d11e4a4-0.png",
+    "largeur_css": 1141.828125
+   }
+  ],
+  "c707c00dd813": [
+   {
+    "fichier": "c707c00dd813-0.png",
+    "largeur_css": 864.875
+   }
+  ],
+  "db64c7311893": [
+   {
+    "fichier": "db64c7311893-0.png",
+    "largeur_css": 1262.234375
+   }
+  ],
+  "b7261683d4ab": [
+   {
+    "fichier": "b7261683d4ab-0.png",
+    "largeur_css": 1406.71875
+   },
+   {
+    "fichier": "b7261683d4ab-1.png",
+    "largeur_css": 1398.390625
+   }
+  ],
+  "03bb8ca1d49c": [
+   {
+    "fichier": "03bb8ca1d49c-0.png",
+    "largeur_css": 696.296875
+   }
+  ],
+  "5a9aa13e2aca": [
+   {
+    "fichier": "5a9aa13e2aca-0.png",
+    "largeur_css": 1418.765625
+   }
+  ],
+  "e6364fc61b5f": [
+   {
+    "fichier": "e6364fc61b5f-0.png",
+    "largeur_css": 1037.15625
+   }
+  ],
+  "4ed387ad3dab": [
+   {
+    "fichier": "4ed387ad3dab-0.png",
+    "largeur_css": 1406.71875
+   }
+  ],
+  "34409ea4ec49": [
+   {
+    "fichier": "34409ea4ec49-0.png",
+    "largeur_css": 864.875
+   }
+  ],
+  "5b0b16e2dc6a": [
+   {
+    "fichier": "5b0b16e2dc6a-0.png",
+    "largeur_css": 563.859375
+   }
+  ],
+  "a18fb70be70f": [
+   {
+    "fichier": "a18fb70be70f-0.png",
+    "largeur_css": 997.328125
+   }
+  ],
+  "5b92fa20ee68": [
+   {
+    "fichier": "5b92fa20ee68-0.png",
+    "largeur_css": 178.546875
+   }
+  ],
+  "23eefc080f02": [
+   {
+    "fichier": "23eefc080f02-0.png",
+    "largeur_css": 1021.40625
+   }
+  ],
+  "670f40008252": [
+   {
+    "fichier": "670f40008252-0.png",
+    "largeur_css": 828.75
+   }
+  ],
+  "49239bf591de": [
+   {
+    "fichier": "49239bf591de-0.png",
+    "largeur_css": 732.421875
+   }
+  ],
+  "45c84bdad847": [
+   {
+    "fichier": "45c84bdad847-0.png",
+    "largeur_css": 768.546875
+   }
+  ],
+  "380d59bf676c": [
+   {
+    "fichier": "380d59bf676c-0.png",
+    "largeur_css": 1057.53125
+   }
+  ],
+  "fa57e4097384": [
+   {
+    "fichier": "fa57e4097384-0.png",
+    "largeur_css": 925.078125
+   }
+  ],
+  "780656776af5": [
+   {
+    "fichier": "780656776af5-0.png",
+    "largeur_css": 1105.703125
+   }
+  ],
+  "beac64187634": [
+   {
+    "fichier": "beac64187634-0.png",
+    "largeur_css": 1153.859375
+   }
+  ],
+  "5d6dcfd5f05e": [
+   {
+    "fichier": "5d6dcfd5f05e-0.png",
+    "largeur_css": 1117.734375
+   }
+  ],
+  "e08d06e3f514": [
+   {
+    "fichier": "e08d06e3f514-0.png",
+    "largeur_css": 1081.609375
+   }
+  ],
+  "8b6b8a3eddfa": [
+   {
+    "fichier": "8b6b8a3eddfa-0.png",
+    "largeur_css": 1105.703125
+   }
+  ],
+  "4c6b1b805460": [
+   {
+    "fichier": "4c6b1b805460-0.png",
+    "largeur_css": 816.71875
+   }
+  ],
+  "bf7b19680705": [
+   {
+    "fichier": "bf7b19680705-0.png",
+    "largeur_css": 985.28125
+   }
+  ],
+  "cd8e26206787": [
+   {
+    "fichier": "cd8e26206787-0.png",
+    "largeur_css": 1202.03125
+   }
+  ],
+  "1e823ddaa776": [
+   {
+    "fichier": "1e823ddaa776-0.png",
+    "largeur_css": 587.9375
+   }
+  ],
+  "96e39ca14010": [
+   {
+    "fichier": "96e39ca14010-0.png",
+    "largeur_css": 1105.703125
+   }
+  ],
+  "a72f2963d0dd": [
+   {
+    "fichier": "a72f2963d0dd-0.png",
+    "largeur_css": 828.75
+   }
+  ],
+  "bc7bb9330e5a": [
+   {
+    "fichier": "bc7bb9330e5a-0.png",
+    "largeur_css": 864.875
+   },
+   {
+    "fichier": "bc7bb9330e5a-0.png",
+    "largeur_css": 864.875
+   }
+  ],
+  "a8c81afa520b": [
+   {
+    "fichier": "a8c81afa520b-0.png",
+    "largeur_css": 515.6875
+   }
+  ],
+  "ee3a00f3bfe2": [
+   {
+    "fichier": "ee3a00f3bfe2-0.png",
+    "largeur_css": 973.25
+   },
+   {
+    "fichier": "ee3a00f3bfe2-0.png",
+    "largeur_css": 973.25
+   }
+  ],
+  "63ad562392ca": [
+   {
+    "fichier": "63ad562392ca-0.png",
+    "largeur_css": 1202.03125
+   }
+  ],
+  "105aa06d1dd2": [
+   {
+    "fichier": "105aa06d1dd2-0.png",
+    "largeur_css": 660.1875
+   }
+  ],
+  "ebd76a93a971": [
+   {
+    "fichier": "ebd76a93a971-0.png",
+    "largeur_css": 1334.484375
+   }
+  ],
+  "ba349b7bc786": [
+   {
+    "fichier": "ba349b7bc786-0.png",
+    "largeur_css": 648.140625
+   }
+  ],
+  "37a8d9227daa": [
+   {
+    "fichier": "37a8d9227daa-0.png",
+    "largeur_css": 1189.984375
+   }
+  ],
+  "0a26b8701569": [
+   {
+    "fichier": "0a26b8701569-0.png",
+    "largeur_css": 888.953125
+   }
+  ],
+  "0c250dcbd4af": [
+   {
+    "fichier": "0c250dcbd4af-0.png",
+    "largeur_css": 925.078125
+   }
+  ],
+  "45d1eae90921": [
+   {
+    "fichier": "45d1eae90921-0.png",
+    "largeur_css": 1009.375
+   }
+  ],
+  "c0ba8908117c": [
+   {
+    "fichier": "c0ba8908117c-0.png",
+    "largeur_css": 455.484375
+   }
+  ],
+  "3e35563210f9": [
+   {
+    "fichier": "3e35563210f9-0.png",
+    "largeur_css": 46.09375
+   }
+  ],
+  "d9cb74147630": [
+   {
+    "fichier": "d9cb74147630-0.png",
+    "largeur_css": 46.09375
+   }
+  ],
+  "675dcc0d9e1b": [
+   {
+    "fichier": "675dcc0d9e1b-0.png",
+    "largeur_css": 1129.78125
+   },
+   {
+    "fichier": "675dcc0d9e1b-1.png",
+    "largeur_css": 1153.859375
+   }
+  ],
+  "57740303416d": [
+   {
+    "fichier": "57740303416d-0.png",
+    "largeur_css": 1117.734375
+   },
+   {
+    "fichier": "57740303416d-1.png",
+    "largeur_css": 1081.609375
+   }
+  ],
+  "ee2468a702bd": [
+   {
+    "fichier": "ee2468a702bd-0.png",
+    "largeur_css": 46.09375
+   }
+  ],
+  "9b702a919fcc": [
+   {
+    "fichier": "9b702a919fcc-0.png",
+    "largeur_css": 1117.734375
+   },
+   {
+    "fichier": "9b702a919fcc-1.png",
+    "largeur_css": 1226.109375
+   }
+  ],
+  "06dda4568a20": [
+   {
+    "fichier": "06dda4568a20-0.png",
+    "largeur_css": 1189.984375
+   }
+  ],
+  "5778c3842e65": [
+   {
+    "fichier": "5778c3842e65-0.png",
+    "largeur_css": 1141.828125
+   }
+  ],
+  "a85803f14639": [
+   {
+    "fichier": "a85803f14639-0.png",
+    "largeur_css": 46.09375
+   }
+  ],
+  "41fc829b03d9": [
+   {
+    "fichier": "41fc829b03d9-0.png",
+    "largeur_css": 1033.453125
+   }
+  ],
+  "b83787c0fe8e": [
+   {
+    "fichier": "b83787c0fe8e-0.png",
+    "largeur_css": 515.6875
+   }
+  ],
+  "afc7fbd04354": [
+   {
+    "fichier": "afc7fbd04354-0.png",
+    "largeur_css": 660.1875
+   }
+  ],
+  "acc63c7c66d2": [
+   {
+    "fichier": "acc63c7c66d2-0.png",
+    "largeur_css": 1202.03125
+   }
+  ]
+ }
+}

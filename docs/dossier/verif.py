@@ -54,6 +54,8 @@ for i, p in enumerate(src.paragraphs):
         continue
     if (p.style.name or "").startswith(("Heading", "Title")):
         continue                      # repris par la trame ou passé en gras
+    if p.style.name == "Source Code":
+        continue                      # rendu en image, contrôlé plus bas
     k = cle(p.text)
     if k in CLES:
         exacts += 1
@@ -91,6 +93,20 @@ print(f"\ntableaux : {len(src.tables)} source / {len(out.tables)} dossier, "
       f"{len(tab_manquants)} absents")
 for i, h in tab_manquants:
     print(f"    [{i}] {h}")
+
+# ── blocs de code rendus en images ────────────────────────────────────────
+import hashlib, json, os
+from code_nettoyage import nettoyer
+IDX = "/home/user/HelpMeDraft---projet-fil-rouge/docs/dossier/fig/code/index.json"
+manifeste = json.load(open(IDX))["blocs"] if os.path.exists(IDX) else {}
+codes = [p.text for i, p in enumerate(src.paragraphs)
+         if p.style.name == "Source Code" and i not in EXCLUS]
+sans_image = [c.split("\n")[0][:60] for c in codes
+              if hashlib.md5(nettoyer(c).encode()).hexdigest()[:12] not in manifeste]
+print(f"\nblocs de code : {len(codes)} dans la source, "
+      f"{sum(len(v) for v in manifeste.values())} images, {len(sans_image)} sans image")
+for c in sans_image:
+    print("    ", c)
 
 print(f"\nimages insérées : {len(out.element.body.findall('.//' + qn('a:blip')))}")
 
