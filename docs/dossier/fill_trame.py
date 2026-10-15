@@ -456,7 +456,21 @@ CORRECTIONS = [
     ("appliqué aux jetons (§ 7.2), où", "appliqué aux jetons, où"),
     # Les trois renvois vers « Écarts résiduels connus », retirée du dossier.
     (" Cette cohérence connaît une exception, documentée en § 8.", ""),
-    (" ; elle figure dans les compléments identifiés en § 8.", "."),
+    # La tâche de purge existe (auth_service.purge_expired_sessions), appelée
+    # à chaque create_session : le paragraphe la donnait à écrire.
+    ("Une limite connue :", "Un point de volumétrie :"),
+    (") sans purge automatique. Elle croît donc d'une ligne par rafraîchissement, "
+     "soit potentiellement plusieurs centaines par utilisateur et par semaine. "
+     "Une tâche de purge des lignes révoquées et expirées reste à écrire ; "
+     "elle figure dans les compléments identifiés en § 8.",
+     ") jusqu'au terme de leur jeton de rafraîchissement. La table croît d'une ligne "
+     "par rafraîchissement, soit potentiellement plusieurs centaines par utilisateur "
+     "et par semaine. Une tâche de purge, purge_expired_sessions(), supprime ces "
+     "lignes à chaque ouverture de session. Elle filtre sur l'expiration du jeton "
+     "et non sur le drapeau revoke : une session révoquée doit survivre jusqu'au "
+     "terme de son jeton, sans quoi un jeton volé puis rejoué ne serait plus reconnu "
+     "comme un rejeu, mais simplement comme inconnu — et la détection de vol "
+     "tomberait."),
     ("injecté ; elle est notée en § 8 mais n'a pas été appliquée",
      "injecté ; elle n'a pas été appliquée"),
     ("restent à définir (§ 8).", "restent à définir."),
