@@ -114,15 +114,29 @@ WIREFRAME_EDITEUR = {147}
 #    déjà ces titres.
 TITRES_EN_DOUBLE = {299, 419, 467, 516}
 
+# 6. « Écarts résiduels connus », la dernière sous-section de la partie 8.
+#    Le référentiel ne demande pour cette partie que « la présentation
+#    d'éléments de sécurité de l'application » : cette liste était un ajout.
+#    Retirée à la demande de l'autrice. Le retrait porte sur l'intitulé, le
+#    paragraphe d'introduction, le tableau des huit écarts et les deux
+#    paragraphes de commentaire — d'où une plage d'éléments du corps, et non
+#    une simple liste d'indices de paragraphe.
+ECARTS_RESIDUELS = (463, 466)
+
 EXCLUS = (CODE_DOUBLONS | VEILLE_AI_ACT | LANCEMENT_DEV | WIREFRAME_EDITEUR
-          | TITRES_EN_DOUBLE)
+          | TITRES_EN_DOUBLE | set(range(ECARTS_RESIDUELS[0], ECARTS_RESIDUELS[1] + 1)))
+
+ECARTES_CORPS = {pos_par[i] for i in EXCLUS if i in pos_par}
+# Tout ce qui se trouve entre le premier et le dernier paragraphe des écarts
+# résiduels part avec eux, tableau compris.
+ECARTES_CORPS |= set(range(pos_par[ECARTS_RESIDUELS[0]], pos_par[ECARTS_RESIDUELS[1]] + 1))
 
 def blocs(cle):
     deb, fin = BORNES[cle]
     j0 = pos_par[deb]
     j1 = pos_par[fin] if fin is not None else fin_corps
-    ecartes = {pos_par[i] for i in EXCLUS if i in pos_par}
-    return [el for j, el in enumerate(corps_src[j0:j1], start=j0) if j not in ecartes]
+    return [el for j, el in enumerate(corps_src[j0:j1], start=j0)
+            if j not in ECARTES_CORPS]
 
 # ───────────────────────── 4. remplissage ──────────────────────────────────
 titres = {}
@@ -440,7 +454,11 @@ CORRECTIONS = [
     ("le modèle se télécharge à part (§ 6).", "le modèle se télécharge à part."),
     ("l'image Nginx du frontend (§ 6).", "l'image Nginx du frontend."),
     ("appliqué aux jetons (§ 7.2), où", "appliqué aux jetons, où"),
-    ("une exception, documentée en § 8.", "une exception, documentée ci-après."),
+    # Les trois renvois vers « Écarts résiduels connus », retirée du dossier.
+    (" Cette cohérence connaît une exception, documentée en § 8.", ""),
+    (" ; elle figure dans les compléments identifiés en § 8.", "."),
+    ("injecté ; elle est notée en § 8 mais n'a pas été appliquée",
+     "injecté ; elle n'a pas été appliquée"),
     ("restent à définir (§ 8).", "restent à définir."),
     # b) l'origine CORS : le texte et la liste de contrôle se contredisaient
     ("L'origine est aujourd'hui codée en dur pour le développement ; elle devra "
@@ -765,7 +783,7 @@ for t in cible.tables:
 normal = STYLES["Normal"].paragraph_format
 normal.space_after = Pt(6)
 normal.space_before = Pt(0)
-normal.line_spacing = 0.98
+normal.line_spacing = 0.99
 for nom in ("Body Text", "First Paragraph", "Compact"):
     if nom in STYLES:
         pf = STYLES[nom].paragraph_format

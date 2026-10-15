@@ -32,11 +32,12 @@ COUPES = (set()                                      # plus aucun bloc de code �
           | set(range(562, 573))                        # veille AI Act condensée
           | set(range(282, 287))                        # lancement en développement
           | {147}                                       # wireframe ASCII de l'éditeur
-          | {299, 419, 467, 516})                       # intitulés déjà portés par la trame
+          | {299, 419, 467, 516}                        # intitulés déjà portés par la trame
+          | set(range(463, 467)))                       # « Écarts résiduels connus », retirée
 ASCII_REMPLACES = {105, 139, 164, 226, 239}             # devenus archi, W-09, MCD, UC, séquence
 # Paragraphes réécrits à la relecture (contradictions internes, renvois d'une
 # section vers elle-même) : présents dans le dossier, sous une autre formulation.
-REECRITS = {47, 49, 156, 261, 280, 457, 575, 585, 610}
+REECRITS = {47, 49, 156, 261, 280, 345, 359, 457, 575, 585, 610}
 EXCLUS = set(range(0, 22)) | TITRES_TRAME | COUPES | ASCII_REMPLACES | REECRITS
 
 textes = [p.text for p in out.paragraphs if p.text.strip()]
@@ -78,10 +79,9 @@ def empreinte(t):
     # dossier, ce qui ne change rien à la présence du tableau.
     return cle(" ".join(c.text for r in t.rows for c in r.cells), True)
 emp_out = [empreinte(t) for t in out.tables]
-# Le tableau 43 (§ 8) porte une cellule reformulée à la relecture : « durée 7
-# jours » y est devenu « session de 7 jours côté serveur », le cookie portant
-# lui un max_age de 30 jours.
-TABLEAUX_RETOUCHES = {43}
+# Le tableau 43 (§ 8) porte une cellule reformulée ; le 47 est celui des écarts
+# résiduels, retiré avec sa sous-section.
+TABLEAUX_RETOUCHES = {43, 47}
 tab_manquants = []
 for i, t in enumerate(src.tables):
     if i in TABLEAUX_RETOUCHES:
