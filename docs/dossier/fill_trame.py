@@ -812,10 +812,10 @@ print(f"  passages en gras retirés : {amorces}")
 
 # b bis) Les fragments de code cités dans une phrase (« Verbatim Char ») étaient
 #    composés en 6,5 pt au milieu d'un texte à 11 pt : un corps de différence si
-#    marqué qu'il se lisait mal. Ramenés à 8,5 pt, ils restent distincts du texte
+#    marqué qu'il se lisait mal. Ramenés à 7,5 pt, ils restent distincts du texte
 #    courant sans être minuscules.
 if "Verbatim Char" in STYLES:
-    STYLES["Verbatim Char"].font.size = Pt(8.5)
+    STYLES["Verbatim Char"].font.size = Pt(7.5)
 
 # b) Une seule police pour tout le texte. La trame compose les titres en
 #    « Calibri Light » et le corps en « Calibri » : deux graisses de dessin
