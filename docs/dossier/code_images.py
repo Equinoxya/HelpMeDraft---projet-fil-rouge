@@ -18,8 +18,8 @@ SOURCE = f"{RACINE}/Dossier projet CDA - HelpMeDraft.docx"
 SORTIE = f"{RACINE}/docs/dossier/fig/code"
 
 PX = 20          # corps du texte dans le rendu, en pixels CSS
-INTERLIGNE = 1.25
-MARGE = 10       # marge intérieure du cadre, en pixels CSS
+INTERLIGNE = 1.18
+MARGE = 7        # marge intérieure du cadre, en pixels CSS
 LARGEUR_MAX = 116        # la plus longue ligne du dossier, après nettoyage
 LIGNES_MAX = 68          # au-delà, le bloc ne tiendrait pas dans une page
 ECHELLE = 2              # facteur de rendu, pour que l'image reste nette
@@ -77,12 +77,19 @@ def main():
     src = docx.Document(SOURCE)
     blocs = [p.text for p in src.paragraphs if p.style.name == "Source Code"]
 
-    morceaux, reperes = [], []     # reperes : (empreinte, indice du morceau)
+    # Un même extrait peut figurer à deux endroits du dossier — en partie 7 et
+    # en annexe, par exemple. Il partage alors son empreinte, donc son image :
+    # on ne le rend qu'une fois, sans quoi la liste des morceaux de cette
+    # empreinte doublerait et le bloc serait posé deux fois de suite.
+    morceaux, reperes, vus = [], [], set()
     for brut in blocs:
         net = nettoyer(brut)
         if not net.strip():
             continue
         emp = hashlib.md5(net.encode("utf-8")).hexdigest()[:12]
+        if emp in vus:
+            continue
+        vus.add(emp)
         for n, m in enumerate(tronconner(net)):
             reperes.append((emp, n))
             morceaux.append(m)

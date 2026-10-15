@@ -83,16 +83,14 @@ fin_corps = len(corps_src) - 1      # le dernier enfant est le sectPr
 # Le corps doit tenir dans les 60 pages du référentiel ; il en faisait 70.
 # Indices de paragraphe du document source écartés du remplissage.
 #
-# 1. Huit blocs de code de la partie 7 reproduits à l'identique dans les
-#    annexes. Sur les 268 lignes significatives de la partie 7, 124 figurent
-#    déjà en annexe ; ces huit blocs le sont de 77 % à 100 %. Le référentiel
-#    attend en partie 7 des extraits commentés, et en annexe le code complet :
-#    rien n'est perdu. Les blocs du front (7.1) ne sont pas dupliqués, ils
-#    restent.
-# Les trois blocs du § 7.4 (397, 403, 406) ont d'abord été retirés avec les
-# autres, mais leurs phrases d'introduction les annoncent par deux-points : les
-# retirer laissait des annonces sans code. Ils restent.
-CODE_DOUBLONS = {334, 341, 347, 352, 363}
+# 1. Les blocs de code reproduits à l'identique en annexe. Huit avaient été
+#    retirés au départ, pour ramener le corps de 70 à 60 pages, mais la coupe
+#    allait trop loin : la partie 7.2 « Des extraits de code de composants
+#    métier » se retrouvait sans le moindre extrait, et trois phrases de la 7.4
+#    annonçaient par deux-points un code qui ne venait pas. Tous sont revenus,
+#    la place ayant été trouvée en resserrant les images de code et l'interligne
+#    de 2 %. Plus aucun bloc n'est écarté.
+CODE_DOUBLONS = set()
 #
 # 2. La veille AI Act : veille réglementaire, là où le référentiel demande la
 #    veille sur les vulnérabilités de sécurité ; et la traçabilité AI Act sort
@@ -767,7 +765,7 @@ for t in cible.tables:
 normal = STYLES["Normal"].paragraph_format
 normal.space_after = Pt(6)
 normal.space_before = Pt(0)
-normal.line_spacing = 1.0
+normal.line_spacing = 0.98
 for nom in ("Body Text", "First Paragraph", "Compact"):
     if nom in STYLES:
         pf = STYLES[nom].paragraph_format

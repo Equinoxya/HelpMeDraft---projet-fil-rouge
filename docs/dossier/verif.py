@@ -27,7 +27,7 @@ src, out = docx.Document(SRC), docx.Document(OUT)
 
 TITRES_TRAME = {27, 51, 60, 82, 86, 102, 121, 159, 199, 221, 236, 256, 300,
                 331, 360, 394, 539, 581, 582, 604, 609, 614, 623}
-COUPES = ({334, 341, 347, 352, 363}                   # code déjà en annexe
+COUPES = (set()                                      # plus aucun bloc de code écarté
           | {509}                                     # paragraphe en double du § 9
           | set(range(562, 573))                        # veille AI Act condensée
           | set(range(282, 287))                        # lancement en développement
