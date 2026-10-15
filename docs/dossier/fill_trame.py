@@ -781,11 +781,18 @@ for par in cible.paragraphs:
     if not pleins:
         continue
     gras = [r for r in pleins if r.bold]
-    if gras and len(gras) < len(pleins):
-        for r in gras:
-            r.bold = None
-        amorces += 1
-print(f"  amorces en gras retirées : {amorces}")
+    if not gras:
+        continue
+    # Huit paragraphes du document source sont en gras d'un bout à l'autre :
+    # l'amorce et le texte qui la suit y ont été saisis dans une seule plage
+    # de caractères. Un repère de sous-section ne dépasse pas 88 caractères,
+    # le plus court de ces paragraphes en fait 379 : la limite est franche.
+    if len(gras) == len(pleins) and len(par.text.strip()) <= 150:
+        continue
+    for r in gras:
+        r.bold = None
+    amorces += 1
+print(f"  passages en gras retirés : {amorces}")
 
 # b bis) Les fragments de code cités dans une phrase (« Verbatim Char ») étaient
 #    composés en 6,5 pt au milieu d'un texte à 11 pt : un corps de différence si
