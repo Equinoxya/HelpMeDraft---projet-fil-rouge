@@ -471,6 +471,22 @@ CORRECTIONS = [
     # f bis) les blocs de code sont désormais rendus sans leurs commentaires :
     #    l'annexe 12.3 ne peut plus annoncer qu'ils sont conservés.
     (" Commentaires d'origine conservés.", ""),
+    # h) partie 2 : le cahier des charges ne comporte aucune section de limites,
+    #    et aucun des cinq éléments écartés n'y figure. Le périmètre est un
+    #    cadrage de l'autrice, pas une exigence du client.
+    ("Les éléments suivants sont explicitement hors périmètre :",
+     "Les éléments suivants ont volontairement été écartés du périmètre :"),
+    # i) partie 2 : le cahier des charges propose « OpenAI GPT-4 via API REST ou
+    #    LLM local (Ollama) ». Le modèle local n'est donc pas un écart, et le
+    #    § 5.2 l'écrit déjà : « Le cahier des charges autorise explicitement les
+    #    deux. » Seul Vue 3 en est un.
+    ("Deux écarts assumés par rapport à cette recommandation sont justifiés en "
+     "§ 5.2 : l'usage de Vue 3 à la place de React, et le choix d'un modèle "
+     "local Ollama plutôt que l'API OpenAI.",
+     "Un écart assumé par rapport à cette recommandation est justifié en § 5.2 : "
+     "l'usage de Vue 3 à la place de React. Le choix d'un modèle local Ollama, "
+     "que le cahier des charges autorise explicitement, y est également "
+     "argumenté."),
     # g) annexe 12.1 : deux introductions se recouvraient, et les planches ne
     #    sont pas « une par page »
     ("Les planches sont reproduites ci-après, une par page, dans l'ordre du parcours "
