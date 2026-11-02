@@ -227,7 +227,7 @@ Annoncez le plan et respectez-le : le jury suit le dossier en parallèle, la cor
   const items = [
     ["1", "Le contexte et le besoin", "Dossier § 2 et § 3", "≈ 4 min"],
     ["2", "La gestion de projet", "§ 4", "≈ 5 min"],
-    ["3", "La conception", "§ 5", "≈ 11 min"],
+    ["3", "La conception", "§ 5", "≈ 12 min"],
     ["4", "La réalisation", "§ 6 et § 7", "≈ 7 min"],
     ["5", "La sécurité", "§ 8", "≈ 5 min"],
     ["6", "Tests, veille et bilan", "§ 9, § 10, § 11", "≈ 8 min"],
@@ -344,7 +344,7 @@ Travaillant seule, j'ai remplacé les rituels d'équipe par un point hebdomadair
 
 {
   const s = add("CONTENT", "Gestion de projet",
-`[6:20 — 8:50]
+`[6:20 — 8:35]
 Trois arbitrages résument le projet.
 Le premier : un JWT seul ne se révoque pas. J'ai donc ajouté une table user_session côté serveur et une rotation des refresh tokens. Chaque usage invalide le précédent ; si un jeton déjà consommé revient, c'est qu'il a été volé, et toutes les sessions du compte sont révoquées.
 Le deuxième : le quota. Je le calcule par agrégation sur le journal des appels IA, pas avec un compteur stocké sur l'utilisateur. Un compteur peut se désynchroniser ; une agrégation, non. Et l'historique reste auditable, ce qui sert aussi la traçabilité RGPD.
@@ -370,7 +370,7 @@ pres.addSection({ title: "Conception" });
 
 {
   const s = add("SECTION", "Conception",
-`[8:50 — 9:00]
+`[8:35 — 8:45]
 « Troisième temps, le plus long : la conception. »`);
   s.addText("3", { placeholder: "num" });
   s.addText("La conception", { placeholder: "title" });
@@ -379,7 +379,7 @@ pres.addSection({ title: "Conception" });
 
 {
   const s = add("MEDIA", "Conception",
-`[9:00 — 11:30]
+`[8:45 — 11:00]
 Architecture client/serveur découplée en trois niveaux, avec un service d'inférence en périphérie.
 Le point à retenir est celui du titre : le navigateur ne dialogue jamais directement avec le moteur d'inférence. Tout passe par l'API, qui vérifie l'authentification, la propriété du document, le quota, puis journalise l'interaction.
 Si le front appelait Ollama directement, ni le quota ni la traçabilité RGPD ne seraient applicables — un utilisateur contournerait le quota en appelant le port 11434 lui-même. L'intermédiaire n'est pas une commodité, c'est ce qui rend les contraintes du cahier des charges opposables.
@@ -392,7 +392,7 @@ Deux écarts à la recommandation du cahier des charges, tous deux argumentés d
 
 {
   const s = add("CONTENT", "Conception",
-`[11:30 — 13:30]
+`[11:00 — 13:00]
 Le backend est découpé en trois couches, et la règle qui compte est celle de la colonne de droite : ce que chaque couche ne contient jamais.
 Aucun import Flask dans services/. Cette règle n'est pas esthétique, elle est fonctionnelle : c'est elle qui rend les composants métier testables sans démarrer de serveur ni ouvrir de base. Sans elle, tout test d'auth_service ou d'ia_service deviendrait un test d'intégration, plus lent et plus fragile. C'est le socle du plan de tests.
 Je suis honnête sur une nuance, et elle est écrite dans le dossier : la lecture de la configuration passe par current_app, qui est un objet Flask. C'est le seul point où la règle fléchit, et le dossier l'explique en § 7.2.
@@ -423,7 +423,7 @@ Côté front, la même logique : aucune vue n'appelle axios directement, tout pa
 
 {
   const s = add("MEDIA", "Conception",
-`[13:30 — 15:00]
+`[13:00 — 14:30]
 Neuf planches de maquettage, une par écran, construites en trois temps : recensement des écrans à partir du périmètre, charte graphique et composants, puis les planches elles-mêmes.
 Celle-ci est l'écran le plus représentatif du produit : l'éditeur. Chaque planche porte sa route, sa garde de routeur, et une colonne « intentions » numérotée qui explique pourquoi l'écran est fait comme ça.
 Deux intentions à relever ici. La quatrième : l'enregistrement automatique 2,5 secondes après la dernière frappe, doublé d'un bouton explicite — je montrerai le code. La cinquième : l'historique des interactions IA, avec l'action, l'avant, l'après et le nombre de tokens. Ce n'est pas un confort, c'est la traçabilité exigée par le cahier des charges.
@@ -435,7 +435,7 @@ Le maquettage a servi deux objectifs : vérifier la couverture du périmètre, e
 
 {
   const s = add("MEDIA", "Conception",
-`[15:00 — 16:00]
+`[14:30 — 15:30]
 L'enchaînement des écrans. Trois zones : le public, l'espace authentifié, le back-office.
 Le routeur applique trois gardes qui correspondent exactement à ces zones : guest pour les pages de connexion et d'inscription, auth pour l'espace personnel, admin pour le back-office.
 Je précise tout de suite, parce que c'est la question qu'on pose : ces gardes sont du confort d'usage. Elles évitent d'afficher un écran vide et masquent le menu d'administration. Le contrôle qui compte est côté serveur, et je le montrerai dans la partie sécurité.`);
@@ -446,7 +446,7 @@ Je précise tout de suite, parce que c'est la question qu'on pose : ces gardes s
 
 {
   const s = add("MEDIA", "Conception",
-`[16:00 — 18:30]
+`[15:30 — 17:45]
 Le modèle entités-associations. Sept tables.
 Trois choix à défendre.
 Les identifiants sont des UUID v4, pas des entiers auto-incrémentés. Conséquence directe sur la sécurité : les identifiants ne sont pas énumérables. On ne balaie pas /documents/1, /documents/2.
@@ -460,7 +460,7 @@ Le modèle logique et le modèle physique sont dans le dossier en § 5.4, et le 
 
 {
   const s = add("MEDIA", "Conception",
-`[18:30 — 19:30]
+`[17:45 — 18:45]
 Trois acteurs : le visiteur, l'utilisateur authentifié, l'administrateur.
 Le périmètre de l'utilisateur est strictement limité à ses propres documents et dossiers, ses trois actions IA dans la limite de son quota, et son historique. L'administrateur hérite de tout le périmètre utilisateur et ajoute le back-office.
 Le moteur d'inférence apparaît comme un système externe sollicité par l'API — jamais par le navigateur, c'est la cohérence avec l'architecture.
@@ -472,7 +472,7 @@ Le cas le plus significatif est la génération d'une assistance IA : c'est celu
 
 {
   const s = add("MEDIA", "Conception",
-`[19:30 — 21:30]
+`[18:45 — 20:30]
 Le diagramme de séquence du cas le plus significatif : la génération d'une assistance IA.
 Suivez l'ordre des contrôles, il n'est pas arbitraire. Authentification, puis propriété du document, puis validation des entrées, puis quota — et seulement ensuite l'appel au modèle. Chaque contrôle est placé avant celui qui coûte plus cher. Vérifier le quota après l'inférence aurait permis de consommer le moteur sans jamais être compté.
 La journalisation intervient après la réponse du modèle, et elle enregistre le contenu avant et après.
@@ -489,7 +489,7 @@ pres.addSection({ title: "Réalisation" });
 
 {
   const s = add("SECTION", "Réalisation",
-`[21:30 — 21:40]
+`[20:30 — 20:40]
 « Quatrième temps : la réalisation, avec les écrans et le code. »`);
   s.addText("4", { placeholder: "num" });
   s.addText("La réalisation", { placeholder: "title" });
@@ -498,7 +498,7 @@ pres.addSection({ title: "Réalisation" });
 
 {
   const s = add("SPLIT", "Réalisation",
-`[21:40 — 22:40]
+`[20:40 — 21:40]
 Le tableau de bord, capture réelle de l'application en fonctionnement.
 Trois compteurs en haut, puis trois portes d'entrée vers la rédaction. Ce choix répond à un constat d'usage : devant un éditeur vide, l'utilisateur qui n'a pas de structure en tête abandonne. Proposer un modèle ou un document existant supprime la page blanche.
 Techniquement, deux choses. Les compteurs viennent de l'API, pas d'un calcul côté client. Et la recherche filtre la page courante côté client, parce que la pagination est serveur : la liste n'est jamais chargée entièrement.
@@ -520,7 +520,7 @@ Huit captures figurent en annexe § 12.2, avec le code correspondant.`);
 
 {
   const s = add("SPLIT", "Réalisation",
-`[22:40 — 24:40]
+`[21:40 — 23:25]
 L'éditeur, l'écran central du produit.
 Je m'arrête sur l'enregistrement automatique, parce que quatre décisions tiennent dans quelques lignes.
 Le délai de 2,5 secondes n'est pas arbitraire : enregistrer à chaque caractère saturerait l'API et multiplierait les écritures ; un délai trop long rendrait la sauvegarde invisible et ferait perdre du travail.
@@ -545,7 +545,7 @@ Une remarque de méthode, que j'ai tenu à écrire dans le dossier : sur la capt
 
 {
   const s = add("CONTENT", "Réalisation",
-`[24:40 — 26:40]
+`[23:25 — 25:25]
 Un composant métier : le quota IA. Dix lignes, et trois décisions.
 Première décision : c'est une agrégation. Je compte les lignes du journal des appels sur les vingt-quatre dernières heures. Je ne lis pas un compteur stocké sur l'utilisateur. Un compteur se désynchronise — il suffit d'un échec entre l'appel et l'incrément ; une agrégation est toujours juste par construction.
 Deuxième décision : c'est une fenêtre glissante, pas un compteur journalier. Le cahier des charges dit « 20 requêtes par 24 heures », pas « par jour calendaire ». Avec un compteur remis à zéro à minuit, un utilisateur fait quarante appels entre 23 h et 1 h.
@@ -585,7 +585,7 @@ Le test correspondant est le cas JE-07 du jeu d'essai, et mes données de test c
 
 {
   const s = add("CONTENT", "Réalisation",
-`[26:40 — 27:40]
+`[25:25 — 26:25]
 Un composant d'accès aux données, et c'est le motif le plus répété du projet.
 La propriété est dans la clause WHERE. Je ne charge pas le document puis ne compare son propriétaire : je demande à la base un document qui a cet identifiant ET qui appartient à l'utilisateur courant.
 La différence n'est pas stylistique. Avec un contrôle a posteriori, il suffit d'oublier un if dans une route pour ouvrir une faille. Ici, oublier la condition fait échouer le test de propriété, qui existe pour chaque ressource.
@@ -619,13 +619,42 @@ Et toutes les requêtes passent par l'ORM, paramétrées, sans aucune concaténa
     { x: M, y: 5.55, w: CW, h: 0.4, fontSize: 13.5, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "note uuid" });
 }
 
+{
+  const s = add("CONTENT", "Réalisation",
+`[26:25 — 27:55]
+Dernier point de la réalisation, et je préfère l'amener moi-même : l'application est conteneurisée et intégrée en continu depuis le 4 octobre, mais elle n'est pas déployée.
+La composition compte trois services. MySQL 8.4 avec un volume persistant et une sonde de santé — sans la sonde, le backend démarre avant que la base accepte les connexions. Le backend tourne sous Gunicorn, pas sous le serveur de développement de Flask, avec un utilisateur non privilégié. Le frontend est construit par Vite en deux étapes puis servi par Nginx : l'image finale fait une cinquantaine de mégaoctets, parce qu'elle ne contient que des fichiers statiques et pas la chaîne de construction.
+Un détail qui compte : les secrets sont déclarés sous la forme dollar-accolade VAR deux-points point d'interrogation message. La composition échoue immédiatement si la variable manque, au lieu de démarrer avec une valeur inventée.
+Ollama reste hors composition, sur l'hôte, atteint par host.docker.internal : son image pèse plusieurs gigaoctets et le modèle se télécharge à part.
+La CI tourne à chaque push et chaque pull request, en trois travaux parallèles. Le parallélisme n'est pas une optimisation de performance : enchaînés, un échec du frontend masquait l'état du backend et il fallait deux exécutions pour connaître les deux.
+Et la troisième carte est celle que je tiens à montrer, parce que ce sont des changements de configuration et pas de code — c'est précisément pour ça qu'ils s'oublient. Le plus traître est en bas : SameSite=Strict raisonne en sites, pas en origines. En développement, front et API sont tous deux sur localhost, donc le cookie passe. En production, deux domaines distincts casseraient le rafraîchissement du jeton sans qu'aucun test local ne le voie.
+Ce qui manque pour déployer est une machine disposant d'un démon Docker, pas une étape de conception.`);
+  s.addText("Conteneurisée, intégrée en continu, pas déployée", { placeholder: "title" });
+  s.addText("Trois services, trois travaux de CI, et une liste de contrôle avant la mise en production (dossier § 6).", { placeholder: "lead" });
+
+  card(s, { x: M, y: 1.95, w: 3.87, h: 3.15, badge: "3×", title: "Conteneurisation",
+    body: "MySQL 8.4, volume persistant et sonde de santé.\nBackend sous Gunicorn, utilisateur non privilégié.\nFrontend Vite puis Nginx, ~50 Mo.\n\nSecrets en ${VAR:?} : la composition échoue si la variable manque." });
+  card(s, { x: M + 4.11, y: 1.95, w: 3.87, h: 3.15, badge: "CI", title: "Intégration continue",
+    body: "GitHub Actions à chaque push et chaque pull request, en trois travaux parallèles : backend (Ruff, pytest), frontend (ESLint, vue-tsc, Vitest, build), Docker (composition et images).\n\nInstallation par npm ci --ignore-scripts." });
+  card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 3.15, badge: "!", accent: THEME.colors.accent4, title: "Avant la mise en production",
+    body: "APP_ENV=production, qui active Secure sur le cookie.\nUne JWT_SECRET_KEY distincte.\nCORS_ORIGINS au domaine réel.\nCompte MySQL sans droits DDL.\nTLS devant l'application.\nRedis pour le limiteur de débit." });
+
+  s.addText([
+    { text: "Le piège.  ", options: { bold: true } },
+    { text: "SameSite=Strict raisonne en sites, pas en origines. En développement, front et API sont tous deux sur localhost : le cookie passe. En production, il faut deux sous-domaines d'un même domaine, ou l'API derrière un reverse proxy — deux domaines distincts casseraient le rafraîchissement du jeton, et aucun test local ne le verrait.", options: {} },
+  ], { x: M, y: 5.3, w: CW, h: 1.0, fontSize: 14, color: THEME.colors.dk1, margin: 0, isTextBox: true, objectName: "piege samesite" });
+
+  s.addText("Ollama reste hors composition, sur l'hôte : son image pèse plusieurs gigaoctets et le modèle se télécharge à part.",
+    { x: M, y: 6.4, w: CW, h: 0.4, fontSize: 12.5, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "note ollama" });
+}
+
 // ═══════════════════════════ 6. Sécurité ═══════════════════════════
 
 pres.addSection({ title: "Sécurité" });
 
 {
   const s = add("SECTION", "Sécurité",
-`[27:40 — 27:50]
+`[27:55 — 28:05]
 « Cinquième temps : la sécurité. C'est le fil rouge du projet, pas un chapitre. »`);
   s.addText("5", { placeholder: "num" });
   s.addText("La sécurité", { placeholder: "title" });
@@ -634,7 +663,7 @@ pres.addSection({ title: "Sécurité" });
 
 {
   const s = add("CONTENT", "Sécurité",
-`[27:50 — 29:50]
+`[28:05 — 30:05]
 Ma grille de lecture est l'OWASP Top 10 2021, croisée avec les exigences du cahier des charges et les recommandations de l'ANSSI. Le dossier traite les dix catégories ; j'en montre six.
 Le point de méthode d'abord : la sécurité n'a pas été traitée en fin de projet, et pas par vertu — par nécessité pratique. Le filtrage par propriétaire dans le WHERE, le stockage d'empreintes, le refus de démarrer sans clé : ce sont des choix de structure. Les ajouter après coup aurait demandé de réécrire les couches concernées.
 A01, je viens de le montrer : la propriété est dans le WHERE, et le rôle est relu en base, pas lu dans le jeton.
@@ -666,7 +695,7 @@ Je suis transparente sur une faiblesse, elle est dans le dossier : A09, la journ
 
 {
   const s = add("CONTENT", "Sécurité",
-`[29:50 — 32:20]
+`[30:05 — 32:20]
 Le cycle de vie des sessions, parce que c'est la partie du projet qui m'a demandé le plus de réflexion.
 Deux besoins contradictoires. Un jeton court est sûr mais oblige à se reconnecter sans arrêt. Un jeton long est confortable mais dangereux. La combinaison des deux donne les deux propriétés : un access token de quinze minutes, non révocable mais à fenêtre d'exposition courte ; un refresh token de sept jours, révocable côté serveur.
 Le refresh token vit dans un cookie httpOnly, SameSite Strict, limité au chemin /auth. Inaccessible au JavaScript : même une faille XSS ne permet pas de le lire.
