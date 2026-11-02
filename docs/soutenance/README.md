@@ -38,3 +38,57 @@ NODE_PATH=$PWD/node_modules node build.js Soutenance-HelpMeDraft.pptx
 Le script applique ensuite le thème via `apply_theme.js` de la compétence pptx ;
 sans elle, retirer l'appel `applyTheme` en fin de fichier (les couleurs de thème
 repassent alors sur la palette Office par défaut).
+
+## Vidéo de démonstration
+
+`demo-helpmedraft.mp4` — 1 min 57, 1440 × 900, sous-titres incrustés.
+Onze séquences : accueil, connexion, tableau de bord, liste, éditeur et
+enregistrement automatique, génération IA, traçabilité des passages générés,
+quota (429), cloisonnement (404), back-office, clôture.
+
+Ce n'est pas un montage : un Chromium réel est piloté sur l'application en
+fonctionnement, et les sous-titres sont injectés dans la page, donc gravés
+dans l'image. Les données sont celles de `database/jeu_essai.py`, les mêmes
+qu'au § 10 du dossier.
+
+**Le fichier versionné ici a été enregistré sans Ollama** — la machine
+d'enregistrement n'en disposait pas. Le parcours applicatif est réel de bout en
+bout (interface, API, contrôles, base, journalisation) ; seul le modèle de
+langage est remplacé par un substitut qui rend une réponse écrite d'avance. La
+vidéo le dit elle-même, au moment de la génération et sur la carte finale.
+
+### Refaire la vidéo, avec un vrai modèle
+
+Sur une machine disposant d'Ollama, le script détecte un moteur réel et retire
+de lui-même les deux mentions.
+
+```sh
+cd backend && python database/jeu_essai.py --vider   # données reproductibles
+python run.py                                         # port 5000
+```
+
+```sh
+cd frontend && npm run dev                            # port 5173
+```
+
+```sh
+ollama serve && ollama pull qwen2.5:3b                # port 11434
+```
+
+```sh
+node docs/soutenance/enregistrer-demo.mjs docs/soutenance/demo
+```
+
+```sh
+ffmpeg -i docs/soutenance/demo/demo-helpmedraft.webm -c:v libx264 -preset slow -crf 23 -pix_fmt yuv420p docs/soutenance/demo-helpmedraft.mp4
+```
+
+Variables reconnues : `DEMO_URL` (défaut `http://localhost:5173`), `DEMO_API`
+(`http://localhost:5000`), `DEMO_MDP` (`JeuDEssai1`), `DEMO_DOC_AUTRUI` —
+l'identifiant d'un document d'un AUTRE compte, pour que le 404 de la séquence
+« cloisonnement » soit un vrai refus de propriété et non un identifiant
+inexistant.
+
+Une séquence qui échoue n'interrompt pas la captation : le script enregistre
+une capture `echec-<n>-<etape>.png` dans le dossier de sortie et passe à la
+suivante.
