@@ -4,6 +4,8 @@
 (≈ 4 500 mots, soit environ 40 minutes avec les pauses et les diagrammes commentés).
 Chaque note s'ouvre sur son créneau cumulé ; la suite est continue et se referme
 sur 40:00.
+Script oral télégraphique : [`script-oral.md`](./script-oral.md).
+
 `docs/Soutenance-HelpMeDraft.pdf` en est l'export, à garder comme secours le jour J.
 
 Le contenu est repris du dossier projet : aucune affirmation du diaporama ne
