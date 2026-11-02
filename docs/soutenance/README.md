@@ -92,3 +92,33 @@ inexistant.
 Une séquence qui échoue n'interrompt pas la captation : le script enregistre
 une capture `echec-<n>-<etape>.png` dans le dossier de sortie et passe à la
 suivante.
+
+## Teaser d'ouverture
+
+`pub-helpmedraft.mp4` — 20 s, 1600 × 900, muet.
+
+À passer avant de prendre la parole, ou en boucle pendant l'installation. Huit
+plans, coupes sèches : l'accroche de la page d'accueil, la connexion, le
+tableau de bord, un brouillon écrit vite, la génération, la lettre obtenue, les
+passages tracés, et la marque posée sur l'application assombrie.
+
+Tout ce qu'on y voit est l'application réelle — aucun carton, aucune
+reconstitution. Les quelques mots affichés en bas à gauche sont posés dans la
+page même, à la charte de l'app.
+
+`pub-20s.mjs` l'enregistre et le monte en une passe : captation d'un parcours
+au rythme naturel, relevé des bornes de chaque plan, puis découpe et
+accélération par ffmpeg pour tomber sur 20 s. Le tableau `MONTAGE` en fin de
+fichier donne la durée visée de chaque plan — c'est là qu'on règle le rythme.
+
+Mêmes prérequis que la vidéo de démonstration (backend, frontend, Ollama, jeu
+d'essai chargé) :
+
+```sh
+node docs/soutenance/pub-20s.mjs
+```
+
+Enregistré ici sans Ollama, comme la démonstration : la génération affichée est
+réelle côté application — appel, attente, flux, insertion — mais le texte vient
+d'un substitut. À refaire sur une machine équipée avant de la diffuser hors
+soutenance.
