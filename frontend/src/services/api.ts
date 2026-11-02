@@ -6,7 +6,7 @@ import router from "../index.ts";
 // développement, elle change — et une URL figée dans le bundle ne se corrige
 // qu'en reconstruisant le frontend. Le défaut reproduit l'ancienne valeur.
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:5000/",
+  baseURL: "/api",
   withCredentials: true, // essentiel pour envoyer le cookie httpOnly
 });
 
