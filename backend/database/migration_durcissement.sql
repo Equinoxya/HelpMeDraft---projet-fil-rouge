@@ -33,7 +33,7 @@ UPDATE consentement
 -- 3) Contraintes de valeur --------------------------------------------------
 ALTER TABLE `user`
     ADD CONSTRAINT ck_user_role  CHECK (role IN ('user','admin')),
-    ADD CONSTRAINT ck_user_quota CHECK (quota_daily_limit BETWEEN 0 AND 1000);
+    ADD CONSTRAINT ck_user_quota CHECK (quota_daily_limit BETWEEN 1 AND 1000);
 
 ALTER TABLE document
     ADD CONSTRAINT ck_document_status CHECK (status IN ('brouillon','a_relire','termine')),

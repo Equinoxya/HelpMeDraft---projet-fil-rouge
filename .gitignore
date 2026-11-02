@@ -15,6 +15,7 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo
@@ -27,6 +28,34 @@ __pycache__/
 *.pyc
 *.pyo
 .venv/
+venv/
+env/
+ENV/
 *.db
+*.db.avant-migration
 
+# ── Fichiers d'environnement ──────────────────────────────────────────────────
+# La règle `.env` seule ne suffisait pas : elle ne couvre que ce nom exact.
+# Deux clés réelles se sont ainsi retrouvées commitées dans « Claude outputs/env-1 »,
+# un fichier dont l'en-tête disait pourtant « NE JAMAIS COMMIT ».
 .env
+.env.*
+!.env.example
+
+# Dossier de travail où ces copies avaient atterri. Ignoré en entier : rien
+# qui y soit déposé ne doit partir dans le dépôt par inadvertance.
+# (settings.json y est déjà suivi et le reste — .gitignore ne désuit pas.)
+Claude outputs/
+
+# ── Sauvegardes de la base ────────────────────────────────────────────────────
+# backend/database/sauvegarde.sh y dépose des dumps complets : tous les comptes,
+# tous les documents, toutes les empreintes de mots de passe. Un dépôt n'est pas
+# un espace de sauvegarde, et ces fichiers ne doivent jamais y entrer.
+sauvegardes/
+
+# Tests et couverture
+.venv-test/
+.coverage
+coverage/
+htmlcov/
+.pytest_cache/

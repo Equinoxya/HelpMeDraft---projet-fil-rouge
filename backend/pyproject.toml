@@ -1,0 +1,37 @@
+# ==============================================================================
+# HelpMeDraft — configuration des outils Python
+# ==============================================================================
+
+[tool.ruff]
+# Le code existant tient dans cette largeur, à quelques lignes près.
+line-length = 100
+target-version = "py311"
+exclude = [".venv", "venv", "__pycache__", ".pytest_cache", "database/migrations"]
+
+[tool.ruff.lint]
+# E/F  : les erreurs de pycodestyle et pyflakes — le socle.
+# I    : ordre des imports.
+# B    : bugbear, qui attrape des pièges réels (arguments par défaut mutables,
+#        comparaisons douteuses) plutôt que du style.
+# UP   : tournures devenues obsolètes depuis Python 3.11.
+select = ["E", "F", "I", "B", "UP"]
+
+# E501 (ligne trop longue) n'est pas retenue : le projet commente abondamment,
+# en français, et couper ces explications à 100 colonnes les rendrait moins
+# lisibles sans rien corriger de réel.
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# E402 — imports qui ne sont pas en tête de fichier.
+#
+# VOLONTAIRE ici, et nécessaire : app/config.py lit ses variables
+# d'environnement À L'IMPORT et lève une RuntimeError si JWT_SECRET_KEY manque.
+# Ces deux fichiers doivent donc poser l'environnement AVANT d'importer
+# l'application. C'est la même contrainte que tests/conftest.py documente en
+# tête de fichier.
+"test_securite.py" = ["E402"]
+"tests/conftest.py" = ["E402"]
+
+# Les tests manipulent des objets factices et des fixtures : la détection
+# d'arguments inutilisés y produit surtout du bruit.
+"tests/**" = ["B008"]

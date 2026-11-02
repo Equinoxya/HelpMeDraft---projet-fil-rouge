@@ -58,7 +58,7 @@ const iconMap: Record<string, string> = {
       <!-- En-tête -->
       <header class="mb-16">
         <p
-          class="font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3"
+          class="font-mono text-xs uppercase tracking-widest text-[#C4341C] font-bold mb-3"
         >
           // FONCTIONNALITÉS
         </p>
@@ -68,8 +68,8 @@ const iconMap: Record<string, string> = {
           Tout ce dont vous avez besoin pour rédiger sans effort
         </h1>
         <p class="text-lg text-[#111111]/70 max-w-3xl">
-          HelpMeDraft vous accompagne à chaque étape de la rédaction
-          de vos documents professionnels.
+          HelpMeDraft vous accompagne à chaque étape de la rédaction de vos
+          documents professionnels.
         </p>
       </header>
 
@@ -84,6 +84,12 @@ const iconMap: Record<string, string> = {
             <div
               class="flex-shrink-0 w-16 h-16 border-2 border-[#111111] bg-[#F4F1EA] flex items-center justify-center"
             >
+              <!--
+                iconMap est une constante LOCALE de ce fichier : des tracés SVG écrits
+                en dur, jamais une saisie d'utilisateur. La règle reste active partout
+                ailleurs, où v-html serait un vrai risque.
+              -->
+              <!-- eslint-disable vue/no-v-html -->
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -92,6 +98,7 @@ const iconMap: Record<string, string> = {
                 class="w-8 h-8 text-[#111111]"
                 v-html="iconMap[feature.icon]"
               ></svg>
+              <!-- eslint-enable vue/no-v-html -->
             </div>
             <div>
               <h2 class="font-serif text-2xl font-normal mb-2">
@@ -104,7 +111,7 @@ const iconMap: Record<string, string> = {
                   :key="item"
                   class="flex items-center gap-2 font-mono text-sm"
                 >
-                  <span class="text-[#E0533C]">▹</span>
+                  <span class="text-[#C4341C]">▹</span>
                   <span>{{ item }}</span>
                 </li>
               </ul>
@@ -117,7 +124,7 @@ const iconMap: Record<string, string> = {
       <section class="mt-16 text-center">
         <RouterLink
           to="/documents/nouveau"
-          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-8 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#E0533C] transition-colors"
+          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-8 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#C4341C] transition-colors"
         >
           Commencer à rédiger
           <svg

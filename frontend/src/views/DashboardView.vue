@@ -5,6 +5,8 @@ import { useAuthStore } from "../stores/auth";
 import documentService from "../services/documentService";
 import type { DocumentItem, DocumentStatsResponse } from "../types/document";
 import { statusLabels, getStatusStyle } from "../utils/documentStatus";
+import donneesPersonnellesService from "../services/donneesPersonnellesService";
+import { messageErreur } from "../utils/erreurs";
 
 const authStore = useAuthStore();
 const searchQuery = ref("");
@@ -15,6 +17,30 @@ const userFirstname = computed(() => {
 
 const isLoading = ref(false);
 const errorMessage = ref("");
+
+// ── Export des données personnelles (RGPD art. 15 et 20) ────────────────────
+const exportEnCours = ref(false);
+const exportMessage = ref("");
+const exportErreur = ref("");
+
+async function exporterMesDonnees() {
+  exportEnCours.value = true;
+  exportMessage.value = "";
+  exportErreur.value = "";
+  try {
+    const nom = await donneesPersonnellesService.telechargerMesDonnees();
+    exportMessage.value = `Archive « ${nom} » téléchargée.`;
+  } catch (err) {
+    // Le 429 mérite son propre message : « échec » laisserait croire à une
+    // panne, alors que la limitation est volontaire et temporaire.
+    exportErreur.value = messageErreur(
+      err,
+      "L'export a échoué. Il est limité à 5 demandes par heure ; réessayez plus tard.",
+    );
+  } finally {
+    exportEnCours.value = false;
+  }
+}
 
 const statsData = ref<DocumentStatsResponse | null>(null);
 const recentDocuments = ref<DocumentItem[]>([]);
@@ -122,7 +148,7 @@ onMounted(fetchDashboardData);
       >
         <div>
           <p
-            class="font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3"
+            class="font-mono text-xs uppercase tracking-widest text-[#C4341C] font-bold mb-3"
           >
             // ESPACE PERSONNEL
           </p>
@@ -141,7 +167,7 @@ onMounted(fetchDashboardData);
 
         <RouterLink
           to="/documents/nouveau"
-          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-6 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black"
+          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-6 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -168,7 +194,7 @@ onMounted(fetchDashboardData);
         class="mt-12 p-12 text-center font-mono text-xs uppercase tracking-widest text-[#111111]/60 flex flex-col items-center gap-3"
       >
         <span
-          class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#E0533C] rounded-full animate-spin"
+          class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#C4341C] rounded-full animate-spin"
         ></span>
         Chargement de votre tableau de bord…
       </div>
@@ -176,7 +202,7 @@ onMounted(fetchDashboardData);
       <!-- ÉTAT D'ERREUR -->
       <div
         v-else-if="errorMessage"
-        class="mt-12 p-4 border border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold"
+        class="mt-12 p-4 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold"
         role="alert"
       >
         {{ errorMessage }}
@@ -201,7 +227,7 @@ onMounted(fetchDashboardData);
             <p class="font-serif text-5xl font-normal text-[#111111] my-1">
               {{ stat.value }}
             </p>
-            <p class="font-mono text-xs text-[#E0533C] font-bold mt-3">
+            <p class="font-mono text-xs text-[#C4341C] font-bold mt-3">
               ↑ {{ stat.detail }}
             </p>
           </article>
@@ -224,11 +250,11 @@ onMounted(fetchDashboardData);
               v-for="action in quickActions"
               :key="action.title"
               :to="action.to"
-              class="group relative flex flex-col justify-between p-8 bg-[#FAF8F5] border-2 border-[#111111] shadow-[6px_6px_0px_0px_#111111] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0px_0px_#111111] transition-all focus-visible:outline-2 focus-visible:outline-black"
+              class="group relative flex flex-col justify-between p-8 bg-[#FAF8F5] border-2 border-[#111111] shadow-[6px_6px_0px_0px_#111111] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0px_0px_#111111] transition-[transform,box-shadow,color] focus-visible:outline-2 focus-visible:outline-black"
             >
               <div>
                 <div
-                  class="w-12 h-12 border-2 border-[#111111] bg-[#F4F1EA] flex items-center justify-center text-[#111111] group-hover:bg-[#E0533C] group-hover:text-[#F4F1EA] transition-colors mb-6"
+                  class="w-12 h-12 border-2 border-[#111111] bg-[#F4F1EA] flex items-center justify-center text-[#111111] group-hover:bg-[#C4341C] group-hover:text-[#F4F1EA] transition-colors mb-6"
                 >
                   <svg
                     v-if="action.icon === 'document'"
@@ -311,7 +337,7 @@ onMounted(fetchDashboardData);
               </div>
 
               <div
-                class="mt-8 flex justify-end font-mono text-lg font-bold text-[#111111] group-hover:text-[#E0533C] transition-colors"
+                class="mt-8 flex justify-end font-mono text-lg font-bold text-[#111111] group-hover:text-[#C4341C] transition-colors"
               >
                 →
               </div>
@@ -351,7 +377,7 @@ onMounted(fetchDashboardData);
                   type="search"
                   placeholder="Rechercher par titre, type ou statut..."
                   aria-label="Rechercher un document"
-                  class="w-full bg-[#F4F1EA] border border-[#111111] pl-10 pr-4 py-2.5 font-mono text-xs text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                  class="w-full bg-[#F4F1EA] border border-[#111111] pl-10 pr-4 py-2.5 font-mono text-xs text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
                 />
               </div>
 
@@ -402,7 +428,7 @@ onMounted(fetchDashboardData);
 
                   <div>
                     <h3
-                      class="font-serif text-lg font-normal text-[#111111] group-hover:text-[#E0533C] transition-colors"
+                      class="font-serif text-lg font-normal text-[#111111] group-hover:text-[#C4341C] transition-colors"
                     >
                       {{ doc.titre }}
                     </h3>
@@ -427,7 +453,7 @@ onMounted(fetchDashboardData);
                   </span>
 
                   <span
-                    class="font-mono text-base font-bold text-[#111111] group-hover:translate-x-1 group-hover:text-[#E0533C] transition-transform"
+                    class="font-mono text-base font-bold text-[#111111] group-hover:translate-x-1 group-hover:text-[#C4341C] transition-transform"
                   >
                     →
                   </span>
@@ -445,6 +471,59 @@ onMounted(fetchDashboardData);
               </p>
             </div>
           </div>
+        </section>
+
+        <!-- MES DONNÉES PERSONNELLES (RGPD art. 15 et 20) -->
+        <section
+          class="mt-12 bg-[#FAF8F5] border-2 border-[#111111] shadow-[8px_8px_0px_0px_rgba(17,17,17,1)] p-6 sm:p-8"
+        >
+          <h2
+            class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C] mb-4"
+          >
+            [ Mes données personnelles ]
+          </h2>
+
+          <p class="font-serif text-base text-[#111111]/90 mb-3 max-w-2xl">
+            Récupérez une copie de tout ce que HelpMeDraft conserve sur vous :
+            votre compte, vos dossiers, vos documents et leur contenu,
+            l'historique de l'assistant et vos consentements.
+          </p>
+
+          <p class="font-mono text-xs text-[#111111]/70 mb-6 max-w-2xl">
+            L'archive ne contient
+            <strong>aucun mot de passe ni jeton de connexion</strong>, et aucune
+            donnée concernant une autre personne.
+          </p>
+
+          <button
+            type="button"
+            :disabled="exportEnCours"
+            class="font-mono text-xs uppercase tracking-wider px-5 py-3 border-2 border-[#111111] bg-[#111111] text-[#F4F1EA] hover:bg-[#C4341C] hover:border-[#C4341C] disabled:opacity-50 transition-colors"
+            @click="exporterMesDonnees"
+          >
+            {{
+              exportEnCours
+                ? "Préparation de l'archive…"
+                : "Télécharger mes données (ZIP)"
+            }}
+          </button>
+
+          <!-- aria-live : l'issue de l'export doit être annoncée, le
+               téléchargement d'un fichier ne se voyant pas dans la page. -->
+          <p
+            v-if="exportMessage"
+            class="mt-4 font-mono text-xs text-[#111111]/80"
+            aria-live="polite"
+          >
+            {{ exportMessage }}
+          </p>
+          <p
+            v-if="exportErreur"
+            class="mt-4 p-3 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold"
+            role="alert"
+          >
+            {{ exportErreur }}
+          </p>
         </section></template
       >
     </div>

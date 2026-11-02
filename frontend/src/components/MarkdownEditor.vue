@@ -44,7 +44,7 @@ const customTheme = EditorView.theme({
     lineHeight: "1.6",
   },
   ".cm-content": {
-    caretColor: "#E0533C",
+    caretColor: "#C4341C",
     fontFamily: "inherit",
     fontSize: "inherit",
     lineHeight: "inherit",
@@ -56,14 +56,14 @@ const customTheme = EditorView.theme({
     borderRight: "1px solid #111111",
   },
   ".cm-selectionBackground": {
-    backgroundColor: "#E0533C",
+    backgroundColor: "#C4341C",
     color: "#F4F1EA",
   },
   ".cm-cursor": {
-    borderLeftColor: "#E0533C",
+    borderLeftColor: "#C4341C",
   },
   "&.cm-focused": {
-    outline: "2px solid #E0533C",
+    outline: "2px solid #C4341C",
   },
 });
 
@@ -104,6 +104,14 @@ function initEditor() {
   const extensions = [
     markdown({ base: markdownLanguage }),
     customTheme,
+    // CodeMirror rend une zone d'édition en `contenteditable`, que les
+    // technologies d'assistance annoncent comme un champ de saisie sans nom :
+    // axe-core la signale en « aria-input-field-name », gravité « serious ».
+    // Aucune <label> ne peut la désigner, puisque ce n'est pas un <input> —
+    // le nom accessible doit donc être porté par la zone elle-même.
+    EditorView.contentAttributes.of({
+      "aria-label": "Éditeur de document, format Markdown",
+    }),
     keymap.of([...defaultKeymap, ...historyKeymap]),
     history(),
     EditorView.updateListener.of((update) => {
@@ -375,6 +383,14 @@ defineExpose({ focus });
         v-if="showPreview"
         class="w-1/2 border-l border-[#111111] bg-[#FAF8F5] overflow-auto p-6"
       >
+        <!--
+          C'est LE v-html à risque du projet : previewHtml vient du texte de
+          l'utilisateur. Il est assaini par DOMPurify avant d'arriver ici, et
+          cette parade est couverte par 13 tests de non-régression
+          (markdown-sanitization.spec.ts). Toute modification de la chaîne de
+          rendu doit les faire passer avant d'être retenue.
+        -->
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <div class="prose max-w-none" v-html="previewHtml"></div>
       </div>
     </div>
@@ -423,11 +439,11 @@ defineExpose({ focus });
   margin: 0.25em 0;
 }
 .prose :deep(a) {
-  color: #e0533c;
+  color: #c4341c;
   text-decoration: underline;
 }
 .prose :deep(a:hover) {
-  color: #c0452c;
+  color: #a72c18;
 }
 .prose :deep(strong) {
   font-weight: bold;
@@ -460,7 +476,7 @@ defineExpose({ focus });
   padding: 0;
 }
 .prose :deep(blockquote) {
-  border-left: 3px solid #e0533c;
+  border-left: 3px solid #c4341c;
   padding-left: 1em;
   margin-left: 0;
   color: #11111180;

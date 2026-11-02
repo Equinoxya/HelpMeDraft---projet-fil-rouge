@@ -1,4 +1,9 @@
 <script setup lang="ts">
+// Nom explicite : « Nav » et « Footer » entrent en collision avec les
+// éléments HTML <nav> et <footer>. La convention Vue impose un nom composé,
+// ce que defineOptions permet sans renommer le fichier ni ses références.
+defineOptions({ name: "AppFooter" });
+
 import { RouterLink } from "vue-router";
 
 const currentYear = new Date().getFullYear();
@@ -65,19 +70,24 @@ const contactEmail = "contact@helpmedraft.fr";
         </div>
       </aside>
 
-      <!-- BLOC NAVIGATION (3 cols) -->
+      <!--
+        BLOC NAVIGATION (3 cols)
+        Les trois intitulés du pied de page sont des h2 et non des h3 : sur une
+        page dont le contenu s'arrête au h1, un h3 ici créait un saut de niveau
+        (RGAA 9.1) — c'était la cause de cinq des six sauts relevés à l'audit.
+      -->
       <nav class="md:col-span-3 p-8 lg:p-12 space-y-6">
-        <h3
-          class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]"
+        <h2
+          class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C]"
         >
           [ Navigation ]
-        </h3>
+        </h2>
 
         <ul class="space-y-3 font-mono text-xs uppercase tracking-wider">
           <li v-for="link in navLinks" :key="link.to">
             <RouterLink
               :to="link.to"
-              class="hover:text-[#E0533C] hover:underline underline-offset-4 transition-colors block py-1 focus-visible:outline-2 focus-visible:outline-black"
+              class="hover:text-[#C4341C] hover:underline underline-offset-4 transition-colors block py-1 focus-visible:outline-2 focus-visible:outline-black"
             >
               → {{ link.label }}
             </RouterLink>
@@ -87,17 +97,17 @@ const contactEmail = "contact@helpmedraft.fr";
 
       <!-- BLOC LÉGAL (3 cols) -->
       <nav class="md:col-span-3 p-8 lg:p-12 space-y-6">
-        <h3
-          class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]"
+        <h2
+          class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C]"
         >
           [ Informations légales ]
-        </h3>
+        </h2>
 
         <ul class="space-y-3 font-mono text-xs uppercase tracking-wider">
           <li v-for="link in legalLinks" :key="link.to">
             <RouterLink
               :to="link.to"
-              class="hover:text-[#E0533C] hover:underline underline-offset-4 transition-colors block py-1 focus-visible:outline-2 focus-visible:outline-black"
+              class="hover:text-[#C4341C] hover:underline underline-offset-4 transition-colors block py-1 focus-visible:outline-2 focus-visible:outline-black"
             >
               {{ link.label }}
             </RouterLink>
@@ -110,15 +120,15 @@ const contactEmail = "contact@helpmedraft.fr";
         class="md:col-span-2 p-8 lg:p-12 space-y-6 flex flex-col justify-between"
       >
         <div class="space-y-6">
-          <h3
-            class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#E0533C]"
+          <h2
+            class="font-mono text-xs uppercase tracking-[0.2em] font-bold text-[#C4341C]"
           >
             [ Contact ]
-          </h3>
+          </h2>
 
           <a
             :href="`mailto:${contactEmail}`"
-            class="font-mono text-xs break-all hover:text-[#E0533C] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-black"
+            class="font-mono text-xs break-all hover:text-[#C4341C] underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-black"
           >
             {{ contactEmail }}
           </a>
@@ -180,7 +190,3 @@ const contactEmail = "contact@helpmedraft.fr";
     </div>
   </footer>
 </template>
-
-<style scoped>
-/* Suppression de l'import CSS scoped qui causait des warnings */
-</style>

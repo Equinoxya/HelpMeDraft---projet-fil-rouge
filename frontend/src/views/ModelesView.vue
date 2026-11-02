@@ -4,7 +4,8 @@ import { RouterLink } from "vue-router";
 const categories = [
   {
     name: "Courriels & Rapports",
-    description: "Écrits professionnels du quotidien : emails, notes, rapports...",
+    description:
+      "Écrits professionnels du quotidien : emails, notes, rapports...",
     templates: [
       {
         name: "Email professionnel",
@@ -148,7 +149,7 @@ const iconMap: Record<string, string> = {
       <!-- En-tête -->
       <header class="mb-16">
         <p
-          class="font-mono text-xs uppercase tracking-widest text-[#E0533C] font-bold mb-3"
+          class="font-mono text-xs uppercase tracking-widest text-[#C4341C] font-bold mb-3"
         >
           // MODÈLES DE DOCUMENTS
         </p>
@@ -167,11 +168,16 @@ const iconMap: Record<string, string> = {
       <section class="space-y-12">
         <div v-for="category in categories" :key="category.name">
           <div class="flex items-center gap-4 mb-6">
-            <span
+            <!--
+              Le nom de catégorie porte un h2 : le titre des cartes est un h3,
+              et sans niveau intermédiaire le document passait de h1 à h3
+              (RGAA 9.1). L'apparence de badge est conservée par les classes.
+            -->
+            <h2
               class="font-mono text-xs font-bold bg-[#111111] text-[#F4F1EA] px-2.5 py-1"
             >
               {{ category.name }}
-            </span>
+            </h2>
             <p class="font-mono text-sm text-[#111111]/60">
               {{ category.description }}
             </p>
@@ -182,12 +188,18 @@ const iconMap: Record<string, string> = {
               v-for="template in category.templates"
               :key="template.name"
               :to="`/documents/nouveau?template=${encodeURIComponent(template.name)}`"
-              class="group bg-[#FAF8F5] border-2 border-[#111111] p-6 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_#111111] transition-all"
+              class="group bg-[#FAF8F5] border-2 border-[#111111] p-6 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_#111111] transition-[transform,box-shadow,color]"
             >
               <div class="flex items-start gap-4">
                 <div
                   class="w-10 h-10 border border-[#111111] bg-[#F4F1EA] flex-shrink-0 flex items-center justify-center"
                 >
+                  <!--
+                    iconMap est une constante LOCALE de ce fichier : des tracés SVG écrits
+                    en dur, jamais une saisie d'utilisateur. La règle reste active partout
+                    ailleurs, où v-html serait un vrai risque.
+                  -->
+                  <!-- eslint-disable vue/no-v-html -->
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -196,10 +208,11 @@ const iconMap: Record<string, string> = {
                     class="w-5 h-5 text-[#111111]"
                     v-html="iconMap[template.icon]"
                   ></svg>
+                  <!-- eslint-enable vue/no-v-html -->
                 </div>
                 <div>
                   <h3
-                    class="font-serif text-lg font-normal mb-1 group-hover:text-[#E0533C] transition-colors"
+                    class="font-serif text-lg font-normal mb-1 group-hover:text-[#C4341C] transition-colors"
                   >
                     {{ template.name }}
                   </h3>
@@ -210,7 +223,7 @@ const iconMap: Record<string, string> = {
               </div>
               <div class="mt-4 flex justify-end">
                 <span
-                  class="font-mono text-lg font-bold text-[#111111] group-hover:text-[#E0533C] transition-colors"
+                  class="font-mono text-lg font-bold text-[#111111] group-hover:text-[#C4341C] transition-colors"
                 >
                   →
                 </span>
@@ -233,7 +246,7 @@ const iconMap: Record<string, string> = {
         </p>
         <a
           href="mailto:contact@helpmedraft.fr"
-          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-8 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#E0533C] transition-colors"
+          class="inline-flex items-center justify-center gap-3 bg-[#111111] text-[#F4F1EA] px-8 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#C4341C] transition-colors"
         >
           Nous contacter
         </a>

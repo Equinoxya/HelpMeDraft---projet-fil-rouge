@@ -1,10 +1,17 @@
 <script setup lang="ts">
+// Nom explicite : « Nav » et « Footer » entrent en collision avec les
+// éléments HTML <nav> et <footer>. La convention Vue impose un nom composé,
+// ce que defineOptions permet sans renommer le fichier ni ses références.
+defineOptions({ name: "AppNav" });
+
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { useAuthStore } from "../stores/auth";
-import { RouterLink, useRouter } from "vue-router";
+import { RouterLink, useRouter, useRoute } from "vue-router";
 import { storeToRefs } from "pinia";
 
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 
 const { isAuthenticated } = storeToRefs(authStore);
 
@@ -12,6 +19,45 @@ const handleLogout = async () => {
   await authStore.logout();
   router.push("/");
 };
+
+// Menu mobile.
+//
+// Il s'ouvrait par le `dropdown` de daisyUI, c'est-à-dire par le `focus-within`
+// du conteneur. Le greffon coûtait 45,6 Ko de CSS pour cette seule mécanique et
+// quatre autres classes — voir src/style.css.
+//
+// Le piloter par l'état du composant coûte une quinzaine de lignes et permet ce
+// que le `focus-within` ne permettait pas : annoncer l'état au lecteur d'écran
+// (`aria-expanded`), fermer par Échap, et fermer au clic extérieur.
+const menuOuvert = ref(false);
+const conteneurMenu = ref<HTMLElement | null>(null);
+
+function fermerMenu() {
+  menuOuvert.value = false;
+}
+
+function auClicDocument(evenement: MouseEvent) {
+  const cible = evenement.target as Node | null;
+  if (cible && !conteneurMenu.value?.contains(cible)) fermerMenu();
+}
+
+function auClavier(evenement: KeyboardEvent) {
+  if (evenement.key === "Escape") fermerMenu();
+}
+
+onMounted(() => {
+  document.addEventListener("click", auClicDocument);
+  document.addEventListener("keydown", auClavier);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", auClicDocument);
+  document.removeEventListener("keydown", auClavier);
+});
+
+// Naviguer referme le menu : sans cela, il resterait ouvert par-dessus la
+// nouvelle page, la navigation d'une SPA ne rechargeant pas le composant.
+watch(() => route.fullPath, fermerMenu);
 </script>
 
 <template>
@@ -28,14 +74,14 @@ const handleLogout = async () => {
           class="flex items-center gap-3 group focus-visible:outline-2 focus-visible:outline-black"
         >
           <div
-            class="w-8 h-8 bg-[#111111] text-[#F4F1EA] flex items-center justify-center font-mono font-black text-sm group-hover:bg-[#E0533C] transition-colors"
+            class="w-8 h-8 bg-[#111111] text-[#F4F1EA] flex items-center justify-center font-mono font-black text-sm group-hover:bg-[#C4341C] transition-colors"
           >
             H
           </div>
           <span
             class="font-mono text-sm uppercase tracking-widest font-black text-[#111111]"
           >
-            HelpMeDraft <span class="text-[#E0533C]">/</span> LexiCorp
+            HelpMeDraft <span class="text-[#C4341C]">/</span> LexiCorp
           </span>
         </RouterLink>
 
@@ -55,7 +101,7 @@ const handleLogout = async () => {
       >
         <RouterLink
           to="/"
-          class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+          class="!text-[#111111] hover:!text-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
         >
           Accueil
         </RouterLink>
@@ -64,13 +110,13 @@ const handleLogout = async () => {
         <template v-if="!isAuthenticated">
           <RouterLink
             to="/login"
-            class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+            class="!text-[#111111] hover:!text-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
           >
             Connexion
           </RouterLink>
           <RouterLink
             to="/register"
-            class="bg-[#111111] !text-[#F4F1EA] px-5 py-2.5 hover:bg-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black"
+            class="bg-[#111111] !text-[#F4F1EA] px-5 py-2.5 hover:bg-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black"
           >
             Espace Rédaction
           </RouterLink>
@@ -80,26 +126,26 @@ const handleLogout = async () => {
         <template v-else>
           <RouterLink
             to="/dashboard"
-            class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+            class="!text-[#111111] hover:!text-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
           >
             Tableau de bord
           </RouterLink>
           <RouterLink
             v-if="authStore.user?.role === 'admin'"
             to="/admin"
-            class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+            class="!text-[#111111] hover:!text-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
           >
             Administration
           </RouterLink>
           <RouterLink
             to="/documents"
-            class="!text-[#111111] hover:!text-[#E0533C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
+            class="!text-[#111111] hover:!text-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black py-2"
           >
             Mes documents
           </RouterLink>
           <button
+            class="!text-[#111111] border border-[#111111] px-4 py-2 hover:bg-[#C4341C] hover:border-[#C4341C] hover:!text-[#F4F1EA] transition-colors focus-visible:outline-2 focus-visible:outline-black cursor-pointer"
             @click="handleLogout"
-            class="!text-[#111111] border border-[#111111] px-4 py-2 hover:bg-[#E0533C] hover:border-[#E0533C] hover:!text-[#F4F1EA] transition-colors focus-visible:outline-2 focus-visible:outline-black cursor-pointer"
           >
             Déconnexion
           </button>
@@ -107,11 +153,14 @@ const handleLogout = async () => {
       </nav>
 
       <!-- MENU MOBILE -->
-      <div class="md:hidden dropdown dropdown-end">
+      <div ref="conteneurMenu" class="md:hidden relative">
         <button
-          tabindex="0"
+          type="button"
           aria-label="Menu de navigation"
-          class="w-10 h-10 border border-[#111111] bg-[#FAF8F5] text-[#111111] flex items-center justify-center hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors focus-visible:outline-2 focus-visible:outline-black"
+          aria-controls="menu-mobile"
+          :aria-expanded="menuOuvert"
+          class="w-10 h-10 border border-[#111111] bg-[#FAF8F5] text-[#111111] flex items-center justify-center hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors focus-visible:outline-2 focus-visible:outline-black cursor-pointer"
+          @click="menuOuvert = !menuOuvert"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -130,13 +179,14 @@ const handleLogout = async () => {
         </button>
 
         <ul
-          tabindex="0"
-          class="dropdown-content mt-2 w-64 border-2 border-[#111111] bg-[#FAF8F5] shadow-[6px_6px_0px_0px_rgba(17,17,17,1)] p-4 font-mono text-xs uppercase tracking-wider space-y-3 z-50 text-[#111111]"
+          v-if="menuOuvert"
+          id="menu-mobile"
+          class="absolute right-0 top-full mt-2 w-64 border-2 border-[#111111] bg-[#FAF8F5] shadow-[6px_6px_0px_0px_rgba(17,17,17,1)] p-4 font-mono text-xs uppercase tracking-wider space-y-3 z-50 text-[#111111]"
         >
           <li>
             <RouterLink
               to="/"
-              class="block py-2 !text-[#111111] hover:!text-[#E0533C]"
+              class="block py-2 !text-[#111111] hover:!text-[#C4341C]"
             >
               → Accueil
             </RouterLink>
@@ -147,7 +197,7 @@ const handleLogout = async () => {
             <li class="pt-2 border-t border-[#111111]/20">
               <RouterLink
                 to="/login"
-                class="block py-2 !text-[#111111] hover:!text-[#E0533C]"
+                class="block py-2 !text-[#111111] hover:!text-[#C4341C]"
               >
                 Connexion
               </RouterLink>
@@ -155,7 +205,7 @@ const handleLogout = async () => {
             <li>
               <RouterLink
                 to="/register"
-                class="block text-center bg-[#111111] !text-[#F4F1EA] py-2.5 mt-2 hover:bg-[#E0533C]"
+                class="block text-center bg-[#111111] !text-[#F4F1EA] py-2.5 mt-2 hover:bg-[#C4341C]"
               >
                 S'inscrire
               </RouterLink>
@@ -167,7 +217,7 @@ const handleLogout = async () => {
             <li>
               <RouterLink
                 to="/dashboard"
-                class="block py-2 !text-[#111111] hover:!text-[#E0533C]"
+                class="block py-2 !text-[#111111] hover:!text-[#C4341C]"
               >
                 → Tableau de bord
               </RouterLink>
@@ -175,15 +225,15 @@ const handleLogout = async () => {
             <li>
               <RouterLink
                 to="/documents"
-                class="block py-2 !text-[#111111] hover:!text-[#E0533C]"
+                class="block py-2 !text-[#111111] hover:!text-[#C4341C]"
               >
                 → Mes documents
               </RouterLink>
             </li>
             <li class="pt-2 border-t border-[#111111]/20">
               <button
+                class="w-full text-left py-2 text-[#C4341C] font-bold cursor-pointer"
                 @click="handleLogout"
-                class="w-full text-left py-2 text-[#E0533C] font-bold cursor-pointer"
               >
                 [ Déconnexion ]
               </button>

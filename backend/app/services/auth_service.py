@@ -1,13 +1,15 @@
 # backend/app/services/auth_service.py
-import bcrypt
-import jwt
 import datetime
-import secrets
 import hashlib
 import re
+import secrets
+
+import bcrypt
+import jwt
 from flask import current_app
-from sqlalchemy import select
-from database.db import SessionLocal, User, UserSession
+from sqlalchemy import delete, select
+
+from database.db import SessionLocal, UserSession
 from utilitaires import utc_now_naive
 
 ACCESS_TOKEN_EXPIRES_MINUTES = 15
@@ -26,6 +28,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     hashed_bytes = hashed_password.encode("utf-8")
     return bcrypt.checkpw(password_bytes, hashed_bytes)
 
+
 def is_password_valid(password: str) -> bool:
     if len(password) < 8:
         return False
@@ -40,7 +43,7 @@ def is_password_valid(password: str) -> bool:
 
 # ── Access token (JWT) ───────────────────────────────────────
 def generate_access_token(user_id: str) -> str:
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.UTC)
     payload = {
         "sub": user_id,  # UUID string, pas un int
         "iat": now,
@@ -52,10 +55,14 @@ def generate_access_token(user_id: str) -> str:
 def decode_access_token(token: str) -> dict:
     try:
         return jwt.decode(token, current_app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        raise ValueError("Token expiré")
-    except jwt.InvalidTokenError:
-        raise ValueError("Token invalide")
+    # `from e` conserve l'exception d'origine dans la chaîne (__cause__) : le
+    # message reste celui qu'attend l'appelant, mais la trace garde de quoi
+    # diagnostiquer. Sans elle, Python signale « During handling of the above
+    # exception, another exception occurred », ce qui brouille la lecture.
+    except jwt.ExpiredSignatureError as e:
+        raise ValueError("Token expiré") from e
+    except jwt.InvalidTokenError as e:
+        raise ValueError("Token invalide") from e
 
 
 # ── Refresh token (empreinte stockée en base dans UserSession) ───────────────
@@ -74,14 +81,45 @@ def hash_refresh_token(plain_token: str) -> str:
     return hashlib.sha256(plain_token.encode()).hexdigest()
 
 
+def purge_expired_sessions(user_id: str | None = None) -> int:
+    """
+    Supprime les sessions dont la date d'expiration est passée, et rend le
+    nombre de lignes supprimées.
+
+    Couvre les deux cas d'accumulation de la table `user_session` :
+      - les sessions jamais fermées, dont le jeton a expiré au bout de 7 jours ;
+      - les sessions révoquées par la rotation, qui restent volontairement en
+        base pour permettre la détection de rejeu.
+
+    Le critère est l'expiration et NON le drapeau `revoke` : une session
+    révoquée doit survivre jusqu'au terme de son jeton, sinon un jeton volé
+    puis rejoué ne serait plus reconnu comme un rejeu — il serait simplement
+    « inconnu », et la détection de vol tomberait.
+
+    Avec user_id, ne purge que ce compte ; sans, purge toute la table (usage
+    prévu : tâche planifiée).
+    """
+    with SessionLocal() as db_session:
+        stmt = delete(UserSession).where(UserSession.refresh_token_exp < utc_now_naive())
+        if user_id is not None:
+            stmt = stmt.where(UserSession.user_id == user_id)
+        supprimees = db_session.execute(stmt).rowcount
+        db_session.commit()
+        return supprimees or 0
+
+
 def create_session(user_id: str) -> str:
+    # Purge opportuniste : la connexion est le moment naturel pour nettoyer
+    # les sessions mortes de ce compte, sans tâche planifiée ni travail
+    # supplémentaire sur le chemin critique des autres requêtes.
+    purge_expired_sessions(user_id)
+
     refresh_token = generate_refresh_token()
     with SessionLocal() as db_session:
         user_session = UserSession(
             user_id=user_id,
             refresh_token_hash=hash_refresh_token(refresh_token),
-            refresh_token_exp=utc_now_naive()
-                + datetime.timedelta(days=REFRESH_TOKEN_EXPIRES_DAYS),
+            refresh_token_exp=utc_now_naive() + datetime.timedelta(days=REFRESH_TOKEN_EXPIRES_DAYS),
         )
         db_session.add(user_session)
         db_session.commit()
@@ -96,12 +134,18 @@ def verify_refresh_token(refresh_token: str) -> str:
         session = db_session.execute(stmt).scalar_one_or_none()
         if session is None:
             raise ValueError("Refresh token invalide")
+        # Une session révoquée reste en base jusqu'à l'expiration de son jeton,
+        # pour permettre la détection de rejeu (cf. rotate_refresh_token). Elle
+        # ne doit donc jamais être acceptée comme valide ici.
+        if session.revoke:
+            raise ValueError("Refresh token révoqué")
         if session.refresh_token_exp < utc_now_naive():
             db_session.delete(session)
             db_session.commit()
             raise ValueError("Refresh token expiré")
         return session.user_id
-    
+
+
 def revoke_all_user_sessions(user_id: str, db_session) -> None:
     stmt = select(UserSession).where(UserSession.user_id == user_id)
     sessions = db_session.execute(stmt).scalars().all()
@@ -147,14 +191,16 @@ def rotate_refresh_token(old_refresh_token: str) -> tuple[str, str]:
 
         return session.user_id, new_refresh_token
 
-def generate_reset_token() -> tuple[str,str]:
+
+def generate_reset_token() -> tuple[str, str]:
     plain_token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(plain_token.encode()).hexdigest()
     return plain_token, token_hash
 
+
 def hash_reset_token(plain_token: str) -> str:
     return hashlib.sha256(plain_token.encode()).hexdigest()
 
-def is_reset_token_expired(expires_at: datetime) -> bool:
-    return utc_now_naive() > expires_at  # réutilise ton helper existant
 
+def is_reset_token_expired(expires_at: datetime.datetime) -> bool:
+    return utc_now_naive() > expires_at  # réutilise ton helper existant

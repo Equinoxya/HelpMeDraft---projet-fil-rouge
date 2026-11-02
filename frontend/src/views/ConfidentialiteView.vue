@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { RouterLink } from "vue-router";
 const companyEmail = "contact@helpmedraft.fr";
 const dpoContact = "rgpd@helpmedraft.fr";
 </script>
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA] flex flex-col"
   >
     <!-- MAIN CONTENT -->
     <main
@@ -14,7 +15,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
       <!-- EN-TÊTE PAGE -->
       <header class="mb-10 pb-6 border-b border-[#111111]/20">
         <span
-          class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-2"
+          class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-2"
         >
           [ Protection des Données ]
         </span>
@@ -40,7 +41,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">01.</span>
+            <span class="font-mono text-sm text-[#C4341C]">01.</span>
             Responsable du Traitement
           </h2>
           <p
@@ -56,13 +57,13 @@ const dpoContact = "rgpd@helpmedraft.fr";
             référent RGPD à l'adresse :
             <a
               :href="`mailto:${dpoContact}`"
-              class="font-mono text-xs text-[#E0533C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
+              class="font-mono text-xs text-[#C4341C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
               >{{ dpoContact }}</a
             >
             ou par e-mail général à
             <a
               :href="`mailto:${companyEmail}`"
-              class="font-mono text-xs text-[#E0533C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
+              class="font-mono text-xs text-[#C4341C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
               >{{ companyEmail }}</a
             >.
           </p>
@@ -75,7 +76,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">02.</span> Collecte
+            <span class="font-mono text-sm text-[#C4341C]">02.</span> Collecte
             des Données & Cookies
           </h2>
           <p
@@ -86,7 +87,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           </p>
 
           <ul
-            class="space-y-3 font-mono text-xs border-l-2 border-[#E0533C] pl-4 py-1 mb-6"
+            class="space-y-3 font-mono text-xs border-l-2 border-[#C4341C] pl-4 py-1 mb-6"
           >
             <li class="leading-relaxed">
               <strong class="uppercase text-[#111111]"
@@ -118,7 +119,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <div
             class="p-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs leading-relaxed text-[#111111]"
           >
-            <span class="font-bold text-[#E0533C] uppercase block mb-1"
+            <span class="font-bold text-[#C4341C] uppercase block mb-1"
               >[ Gestion des cookies et sessions ]</span
             >
             Ce site utilise uniquement des cookies et jetons de session (JWT /
@@ -135,25 +136,55 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">03.</span>
+            <span class="font-mono text-sm text-[#C4341C]">03.</span>
             Intelligence Artificielle & Confidentialité
           </h2>
           <p
             class="text-sm sm:text-base leading-relaxed text-[#111111]/90 mb-4"
           >
             HelpMeDraft intègre des modèles de langage pour vous assister dans
-            la rédaction de vos documents professionnels.
+            la rédaction de vos documents professionnels. Les propositions
+            qu'ils produisent peuvent contenir des erreurs ; elles ne sont
+            jamais appliquées à votre document sans votre décision explicite.
+            L'article 05 des
+            <RouterLink to="/cgu" class="underline hover:text-[#C4341C]"
+              >conditions générales d'utilisation</RouterLink
+            >
+            détaille ce que cela implique pour vous.
           </p>
+
+          <!--
+            L'inférence est exécutée localement depuis le changement
+            d'architecture : il n'y a donc plus d'anonymisation avant envoi à un
+            tiers, puisqu'il n'y a plus d'envoi. La garantie est plus forte, et
+            c'est une propriété de l'architecture et non une mesure de
+            filtrage — elle ne peut pas échouer sur un cas particulier.
+          -->
+          <div
+            class="p-4 bg-[#111111] text-[#F4F1EA] font-mono text-xs leading-relaxed border border-[#111111] mb-4"
+          >
+            <strong class="text-[#E0533C] uppercase block mb-1"
+              >Aucun Transfert à un Tiers :</strong
+            >
+            Le modèle de langage est exécuté sur l'infrastructure de LexiCorp.
+            Le contenu de vos documents ne quitte à aucun moment cette
+            infrastructure : il n'est transmis à aucun fournisseur
+            d'intelligence artificielle, et n'est utilisé pour l'entraînement
+            d'aucun modèle.
+          </div>
+
           <div
             class="p-4 bg-[#111111] text-[#F4F1EA] font-mono text-xs leading-relaxed border border-[#111111]"
           >
             <strong class="text-[#E0533C] uppercase block mb-1"
-              >Garantie d'Anonymisation :</strong
+              >Ce Que Nous Conservons :</strong
             >
-            Conformément à notre charte de sécurité, aucune donnée à caractère
-            personnel n'est transmise aux API tierces (OpenAI) sans
-            anonymisation préalable. De plus, vos données ne sont en aucun cas
-            utilisées pour réentraîner les modèles publics d'IA.
+            Chaque appel à l'assistant est journalisé : l'action demandée, le
+            texte soumis, la proposition produite, et le fait que vous l'ayez ou
+            non versée à votre document. Cette conservation répond à deux
+            obligations — la traçabilité des contenus générés (règlement UE
+            2024/1689) et le décompte de votre quota quotidien. Ces extraits
+            sont rattachés à votre compte et supprimés avec lui.
           </div>
         </section>
 
@@ -164,7 +195,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">04.</span> Durée de
+            <span class="font-mono text-sm text-[#C4341C]">04.</span> Durée de
             Conservation des Données
           </h2>
           <p
@@ -176,7 +207,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           </p>
 
           <ul
-            class="space-y-3 font-mono text-xs border-l-2 border-[#E0533C] pl-4 py-1"
+            class="space-y-3 font-mono text-xs border-l-2 border-[#C4341C] pl-4 py-1"
           >
             <li class="leading-relaxed">
               <strong class="uppercase text-[#111111]"
@@ -199,6 +230,21 @@ const dpoContact = "rgpd@helpmedraft.fr";
             </li>
             <li class="leading-relaxed">
               <strong class="uppercase text-[#111111]"
+                >Journal d'administration :</strong
+              >
+              <span class="text-[#111111]/80">
+                Les actions de nos administrateurs sur votre compte —
+                modification de votre rôle ou de votre quota, suppression du
+                compte — sont journalisées avec l'adresse e-mail de l'auteur de
+                l'action et la vôtre, afin que nous puissions rendre compte de
+                ces traitements. Ce journal est conservé
+                <strong>un an</strong>, puis purgé automatiquement. Il survit
+                volontairement à la suppression de votre compte : c'est
+                précisément la trace de cette suppression.</span
+              >
+            </li>
+            <li class="leading-relaxed">
+              <strong class="uppercase text-[#111111]"
                 >Logs de sécurité & sessions :</strong
               >
               <span class="text-[#111111]/80">
@@ -215,7 +261,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           <h2
             class="font-serif text-xl sm:text-2xl font-bold text-[#111111] mb-4 pb-3 border-b border-[#111111]/10 flex items-center gap-2"
           >
-            <span class="font-mono text-sm text-[#E0533C]">05.</span> Vos Droits
+            <span class="font-mono text-sm text-[#C4341C]">05.</span> Vos Droits
             Informatique et Libertés
           </h2>
           <p
@@ -226,7 +272,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
           </p>
 
           <ul
-            class="space-y-3 font-mono text-xs border-l-2 border-[#E0533C] pl-4 py-1 mb-6"
+            class="space-y-3 font-mono text-xs border-l-2 border-[#C4341C] pl-4 py-1 mb-6"
           >
             <li class="leading-relaxed">
               <strong class="uppercase text-[#111111]"
@@ -234,7 +280,12 @@ const dpoContact = "rgpd@helpmedraft.fr";
               >
               <span class="text-[#111111]/80">
                 Vous pouvez consulter et modifier vos informations directement
-                depuis votre profil.</span
+                depuis votre profil, et
+                <strong
+                  >télécharger une copie complète de vos données depuis votre
+                  tableau de bord</strong
+                >
+                — sans avoir à nous écrire ni à attendre.</span
               >
             </li>
             <li class="leading-relaxed">
@@ -251,7 +302,12 @@ const dpoContact = "rgpd@helpmedraft.fr";
                 >Droit à la limitation et à la portabilité :</strong
               >
               <span class="text-[#111111]/80">
-                Vous pouvez demander une copie exportable de vos données
+                L'archive téléchargeable depuis votre tableau de bord contient
+                un fichier JSON lisible par machine et un fichier Markdown par
+                document, afin que vos contenus soient réutilisables ailleurs.
+                Elle ne contient aucun mot de passe, aucun jeton de connexion,
+                et aucune donnée concernant une autre personne. Vous pouvez
+                aussi demander une copie exportable de vos données
                 documentaires.</span
               >
             </li>
@@ -263,7 +319,7 @@ const dpoContact = "rgpd@helpmedraft.fr";
             Pour exercer l'un de ces droits, envoyez simplement votre demande à
             <a
               :href="`mailto:${companyEmail}`"
-              class="font-mono text-xs text-[#E0533C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
+              class="font-mono text-xs text-[#C4341C] underline underline-offset-4 hover:bg-[#111111] hover:text-[#F4F1EA] transition-colors px-1 font-bold"
               >{{ companyEmail }}</a
             >. Si vous estimez que vos droits ne sont pas respectés, vous
             disposez également du droit d'introduire une réclamation auprès de

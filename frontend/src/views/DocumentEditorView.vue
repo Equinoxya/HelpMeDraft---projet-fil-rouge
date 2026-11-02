@@ -1,20 +1,23 @@
 <script setup lang="ts">
-import {
-  ref,
-  computed,
-  watch,
-  onMounted,
-  onBeforeUnmount,
-  nextTick,
-} from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import documentService from "../services/documentService";
 import type { DocumentStatus } from "../types/document";
 import dossierService from "../services/dossierService";
 import type { DossierItem } from "../types/dossier";
 import iaService from "../services/iaService";
-import { type IaTypeAction, type IaScope } from "../types/ia";
+import {
+  type IaTypeAction,
+  type IaScope,
+  type IaHistoriqueEntry,
+} from "../types/ia";
+import {
+  estimerDureeGeneration,
+  formaterDuree,
+  avancementEstime,
+} from "../utils/iaEstimation";
 import MarkdownEditor from "../components/MarkdownEditor.vue";
+import { messageErreur, estAnnulation, estStatut } from "../utils/erreurs";
 
 // Type pour le ref de l'éditeur
 interface MarkdownEditorExposed {
@@ -63,6 +66,85 @@ const iaInstructions = ref("");
 const iaLoading = ref(false);
 const iaError = ref("");
 const iaResult = ref<string | null>(null);
+// Identifiant de l'interaction en base. Nécessaire pour marquer l'insertion
+// (AI Act) : sans lui, on saurait qu'un texte a été inséré mais pas de quelle
+// génération il provient.
+const iaResultId = ref<string | null>(null);
+// Texte réellement soumis au modèle, figé au moment de la génération. La
+// sélection du navigateur peut changer pendant l'attente ; appliquer la
+// proposition à un autre passage que celui qu'on a soumis donnerait un
+// résultat silencieusement faux.
+const iaSourceText = ref<string | null>(null);
+
+// Historique des interactions IA du document, et traçabilité des passages
+// effectivement versés au document.
+const iaHistorique = ref<IaHistoriqueEntry[]>([]);
+const afficherHistoriqueIa = ref(false);
+
+// Compteur de progression de la génération.
+//
+// Le backend n'interrompt plus l'inférence (voir OLLAMA_CONNECT_TIMEOUT dans
+// backend/app/config.py) : une génération peut légitimement durer plus d'une
+// minute sur une machine sans carte graphique. Un bouton figé pendant tout ce
+// temps ne dit pas si quelque chose avance ou si l'application est bloquée.
+// On affiche donc le temps écoulé et le temps estimé.
+const iaSecondesEcoulees = ref(0);
+const iaSecondesEstimees = ref(0);
+let iaCompteurInterval: ReturnType<typeof setInterval> | null = null;
+
+// Permet d'abandonner une génération en cours. Indispensable depuis que plus
+// aucun délai ne borne l'inférence : sans ce bouton, une génération lente
+// laisse l'utilisateur sans aucune porte de sortie.
+let iaAbort: AbortController | null = null;
+
+const iaAttenteDepassee = computed(
+  () =>
+    iaSecondesEstimees.value > 0 &&
+    iaSecondesEcoulees.value > iaSecondesEstimees.value,
+);
+
+const iaAvancement = computed(() =>
+  avancementEstime(iaSecondesEcoulees.value, iaSecondesEstimees.value),
+);
+
+const iaTexteProgression = computed(() => {
+  const ecoule = formaterDuree(iaSecondesEcoulees.value);
+  if (iaAttenteDepassee.value) {
+    // L'estimation n'est qu'un ordre de grandeur : la dépasser est normal et
+    // ne doit pas ressembler à une panne. On arrête de l'afficher plutôt que
+    // de montrer un temps restant négatif.
+    return `${ecoule} écoulées — plus long que prévu, la génération continue`;
+  }
+  return `${ecoule} / ~${formaterDuree(iaSecondesEstimees.value)} estimées`;
+});
+
+function demarrerCompteurIa(contenu: string) {
+  iaSecondesEcoulees.value = 0;
+  iaSecondesEstimees.value = estimerDureeGeneration(
+    contenu,
+    iaTypeAction.value,
+  );
+  // On repart du temps de départ réel à chaque tick plutôt que d'incrémenter :
+  // les intervalles de l'onglet en arrière-plan sont ralentis par le
+  // navigateur, et un compteur incrémenté dériverait du temps réellement
+  // écoulé.
+  const debut = Date.now();
+  arreterCompteurIa();
+  iaCompteurInterval = setInterval(() => {
+    iaSecondesEcoulees.value = (Date.now() - debut) / 1000;
+  }, 1000);
+}
+
+function arreterCompteurIa() {
+  if (iaCompteurInterval) {
+    clearInterval(iaCompteurInterval);
+    iaCompteurInterval = null;
+  }
+}
+
+function annulerGenerationIa() {
+  iaAbort?.abort();
+}
 
 function openIaPanel() {
   const selection = window.getSelection();
@@ -75,6 +157,7 @@ function openIaPanel() {
     iaScope.value = "document";
   }
   iaResult.value = null;
+  iaResultId.value = null;
   iaError.value = "";
   showIaPanel.value = true;
 }
@@ -82,7 +165,11 @@ function openIaPanel() {
 function closeIaPanel() {
   showIaPanel.value = false;
   iaResult.value = null;
+  iaResultId.value = null;
   iaError.value = "";
+  // Fermer le panneau vaut abandon : sans cela, la génération continuerait
+  // d'occuper le serveur pour un résultat que plus personne n'attend.
+  annulerGenerationIa();
 }
 
 function getIaSourceText(): string | null {
@@ -113,43 +200,211 @@ async function handleGenerateIa() {
   iaLoading.value = true;
   iaError.value = "";
   iaResult.value = null;
+  iaResultId.value = null;
+  demarrerCompteurIa(contenu);
+  iaAbort = new AbortController();
 
   try {
-    const result = await iaService.generer(documentId.value, {
-      type_action: iaTypeAction.value,
-      scope: iaScope.value,
-      contenu,
-      instructions: iaInstructions.value.trim() || undefined,
-    });
+    const result = await iaService.generer(
+      documentId.value,
+      {
+        type_action: iaTypeAction.value,
+        scope: iaScope.value,
+        contenu,
+        instructions: iaInstructions.value.trim() || undefined,
+      },
+      iaAbort.signal,
+    );
     iaResult.value = result.content_after;
-  } catch (err: any) {
-    iaError.value =
-      err.response?.data?.error ?? "L'assistant IA n'a pas pu répondre.";
+    iaResultId.value = result.id_ia;
+  } catch (err) {
+    // Une annulation n'est pas une erreur : l'utilisateur sait ce qu'il a
+    // fait, et lui afficher « L'assistant IA n'a pas pu répondre » le
+    // laisserait croire à une panne.
+    if (estAnnulation(err)) {
+      iaError.value = "";
+    } else {
+      iaError.value = messageErreur(err, "L'assistant IA n'a pas pu répondre.");
+    }
   } finally {
     iaLoading.value = false;
+    arreterCompteurIa();
+    iaAbort = null;
   }
 }
 
-function applyIaResult() {
-  if (!iaResult.value) return;
+/**
+ * Applique la proposition au document.
+ *
+ * Deux modes, exigés par le cahier des charges : « le résultat doit pouvoir
+ * être inséré ou venir remplacer le texte d'origine ». Remplacer écrase la
+ * source ; insérer la conserve et ajoute la proposition juste après. Dans les
+ * deux cas, c'est l'utilisateur qui décide — la génération seule ne touche
+ * jamais au document.
+ *
+ * Le repérage se fait par recherche de chaîne dans le Markdown, et non par les
+ * décalages de la sélection du navigateur. `Range.startOffset` compte les
+ * caractères DANS LE NŒUD DOM sélectionné, pas depuis le début du document :
+ * utilisé tel quel sur `content`, il désigne une position arbitraire et
+ * tronquait le texte à un endroit sans rapport avec la sélection. Chercher le
+ * texte source dans la chaîne donne la bonne position, ou aucune — auquel cas
+ * on ajoute en fin plutôt que d'écrire au hasard.
+ *
+ * @returns le décalage de la proposition dans le nouveau contenu, ou null si
+ *          rien n'a été appliqué.
+ */
+interface ImpactProposition {
+  /** Décalage de la proposition dans le nouveau contenu. */
+  position: number;
+  /** Message à montrer quand le passage visé n'a pas pu être retrouvé. */
+  avertissement?: string;
+}
 
-  if (iaScope.value === "selection") {
-    const selection = window.getSelection();
-    if (selection && !selection.isCollapsed) {
-      const range = selection.getRangeAt(0);
-      const start = content.value.substring(0, range.startOffset);
-      const end = content.value.substring(range.endOffset);
-      content.value = start + iaResult.value + end;
+function appliquerProposition(
+  mode: "inserer" | "remplacer",
+): ImpactProposition | null {
+  const proposition = iaResult.value;
+  if (!proposition) return null;
+
+  if (iaScope.value === "document") {
+    if (mode === "remplacer") {
+      content.value = proposition;
+      return { position: 0 };
     }
-  } else {
-    content.value = iaResult.value;
+    const position = content.value.length;
+    content.value = `${content.value}\n\n${proposition}`;
+    return { position: position + 2 };
   }
+
+  // Portée « sélection » : on retrouve le texte soumis au modèle dans le
+  // Markdown. iaSourceText est figé au moment de la génération, et non relu
+  // ici : la sélection du navigateur a pu changer pendant l'attente, et
+  // appliquer la proposition à un autre passage que celui qu'on a soumis
+  // serait un résultat silencieusement faux.
+  const source = iaSourceText.value;
+  const debut = source ? content.value.indexOf(source) : -1;
+
+  if (!source || debut === -1) {
+    // La sélection ne correspond plus à rien dans le texte — elle venait de
+    // l'aperçu rendu, ou le document a été modifié depuis. On n'écrase rien :
+    // on ajoute en fin, et on le dit plutôt que de laisser croire au
+    // remplacement demandé.
+    const position = content.value.length;
+    content.value = `${content.value}\n\n${proposition}`;
+    return {
+      position: position + 2,
+      avertissement:
+        "Le passage d'origine n'a pas été retrouvé : la proposition a été ajoutée en fin de document.",
+    };
+  }
+
+  const avant = content.value.slice(0, debut);
+  const apres = content.value.slice(debut + source.length);
+  content.value =
+    mode === "remplacer"
+      ? avant + proposition + apres
+      : `${avant}${source}\n\n${proposition}${apres}`;
+
+  return {
+    position: mode === "remplacer" ? debut : debut + source.length + 2,
+  };
+}
+
+/**
+ * Applique la proposition, puis enregistre la trace exigée par l'AI Act.
+ *
+ * L'ordre compte : on marque APRÈS avoir modifié le contenu, jamais avant.
+ * Une trace enregistrée pour une insertion qui n'aurait pas eu lieu serait
+ * fausse, et une trace fausse est pire qu'une trace absente — elle ferait
+ * croire à une vérification qui n'a pas eu lieu.
+ *
+ * Symétriquement, un échec du marquage n'annule pas l'insertion : l'utilisateur
+ * a demandé à insérer son texte, et lui retirer son travail parce qu'un appel
+ * de journalisation a échoué serait une régression bien pire que l'écart de
+ * traçabilité. L'échec est signalé, pas masqué.
+ */
+async function appliquerIaResult(mode: "inserer" | "remplacer") {
+  const idIa = iaResultId.value;
+  const impact = appliquerProposition(mode);
+  if (impact === null) return;
 
   nextTick(() => {
     markdownEditorRef.value?.focus();
   });
   scheduleAutoSave();
+
+  let message = impact.avertissement ?? "";
+
+  if (idIa && documentId.value) {
+    try {
+      await iaService.marquerInsertion(documentId.value, idIa, impact.position);
+      await chargerHistoriqueIa();
+    } catch {
+      message =
+        "Le texte a bien été inséré, mais la trace de génération n'a pas pu être enregistrée.";
+    }
+  }
+
+  if (message) {
+    // Le panneau reste ouvert : fermer effacerait le message avec lui, et
+    // l'utilisateur n'apprendrait jamais que le résultat diffère de ce qu'il a
+    // demandé.
+    iaResult.value = null;
+    iaResultId.value = null;
+    iaError.value = message;
+    return;
+  }
+
   closeIaPanel();
+}
+
+/**
+ * Charge l'historique des interactions IA du document.
+ *
+ * Silencieux en cas d'échec : l'historique est une information secondaire, et
+ * un message d'erreur en haut de l'éditeur pour une liste qui ne s'affiche pas
+ * coûterait plus à l'utilisateur qu'il ne lui apporte.
+ */
+/**
+ * Passages du document issus d'une génération (AI Act, art. 50).
+ *
+ * La réconciliation se fait par recherche du texte généré dans le contenu
+ * courant, et non par les décalages enregistrés. Un décalage devient faux dès
+ * la première frappe en amont du passage : le maintenir exigerait de suivre
+ * chaque édition, pour répondre à une question — « ce passage vient-il d'une
+ * génération ? » — à laquelle une recherche de chaîne répond directement.
+ *
+ * Trois états, et le troisième est le plus utile : un passage « modifié
+ * depuis » dit que l'utilisateur s'est approprié le texte, ce qui est
+ * exactement le comportement que l'outil vise.
+ */
+const passagesGeneres = computed(() =>
+  iaHistorique.value
+    .filter((entree) => entree.insere)
+    .map((entree) => ({
+      ...entree,
+      present: Boolean(
+        entree.content_after && content.value.includes(entree.content_after),
+      ),
+    })),
+);
+
+function formaterHorodatage(iso: string | null): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
+
+async function chargerHistoriqueIa() {
+  if (!documentId.value) return;
+  try {
+    iaHistorique.value = await iaService.historique(documentId.value);
+  } catch {
+    iaHistorique.value = [];
+  }
 }
 
 async function loadDocument(id: string) {
@@ -163,9 +418,12 @@ async function loadDocument(id: string) {
     idDossier.value = document.id_dossier ?? "";
     content.value = document.content ?? "";
     isLoading.value = false;
+    // Chargé après le document : la réconciliation des passages générés a
+    // besoin du contenu courant pour dire lesquels y sont encore.
+    void chargerHistoriqueIa();
     return;
-  } catch (err: any) {
-    if (err.response?.status === 404) {
+  } catch (err) {
+    if (estStatut(err, 404)) {
       errorMessage.value = "Ce document est introuvable.";
     } else {
       errorMessage.value =
@@ -191,6 +449,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (savedNoticeTimeout) clearTimeout(savedNoticeTimeout);
   if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+  arreterCompteurIa();
+  annulerGenerationIa();
 });
 
 function buildPayload() {
@@ -259,10 +519,11 @@ async function handleSave() {
     savedNoticeTimeout = setTimeout(() => {
       savedNotice.value = false;
     }, 2500);
-  } catch (err: any) {
-    errorMessage.value =
-      err.response?.data?.error ??
-      "Une erreur est survenue lors de l'enregistrement.";
+  } catch (err) {
+    errorMessage.value = messageErreur(
+      err,
+      "Une erreur est survenue lors de l'enregistrement.",
+    );
   } finally {
     isSaving.value = false;
   }
@@ -295,7 +556,7 @@ function handleCancel() {
 
 <template>
   <div
-    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#E0533C] selection:text-[#F4F1EA] flex flex-col"
+    class="min-h-screen bg-[#F4F1EA] text-[#111111] font-sans antialiased selection:bg-[#C4341C] selection:text-[#F4F1EA] flex flex-col"
   >
     <!-- MAIN CONTENT -->
     <main
@@ -305,7 +566,7 @@ function handleCancel() {
       <div class="flex items-center justify-between gap-4 mb-8">
         <RouterLink
           to="/documents"
-          class="font-mono text-xs uppercase tracking-wider text-[#111111] hover:text-[#E0533C] transition-colors font-bold inline-flex items-center gap-2"
+          class="font-mono text-xs uppercase tracking-wider text-[#111111] hover:text-[#C4341C] transition-colors font-bold inline-flex items-center gap-2 py-2"
         >
           ← Retour aux documents
         </RouterLink>
@@ -314,7 +575,7 @@ function handleCancel() {
           v-if="isEditMode"
           type="button"
           :disabled="isDeleting || isLoading"
-          class="font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#E0533C] text-[#E0533C] hover:bg-[#E0533C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors"
+          class="font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#C4341C] text-[#C4341C] hover:bg-[#C4341C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors"
           @click="handleDelete"
         >
           {{ isDeleting ? "Suppression…" : "Supprimer le document" }}
@@ -325,11 +586,16 @@ function handleCancel() {
       <div
         class="bg-[#FAF8F5] border-2 border-[#111111] p-6 sm:p-10 shadow-[8px_8px_0px_0px_rgba(17,17,17,1)]"
       >
-        <span
-          class="font-mono text-xs uppercase tracking-[0.2em] text-[#E0533C] font-bold block mb-4"
+        <!--
+          h1 et non span : l'écran « Nouveau document » était le seul sans
+          titre de premier niveau (RGAA 9.1). L'intitulé de mode est bien le
+          titre de la page, et les classes gardent son apparence.
+        -->
+        <h1
+          class="font-mono text-xs uppercase tracking-[0.2em] text-[#C4341C] font-bold block mb-4"
         >
           [ {{ isEditMode ? "Mode Édition" : "Nouveau Brouillon" }} ]
-        </span>
+        </h1>
 
         <!-- CHARGEMENT -->
         <div
@@ -337,7 +603,7 @@ function handleCancel() {
           class="p-12 text-center font-mono text-xs uppercase tracking-widest text-[#111111]/60 flex flex-col items-center gap-3"
         >
           <span
-            class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#E0533C] rounded-full animate-spin"
+            class="w-6 h-6 border-2 border-[#111111]/20 border-t-[#C4341C] rounded-full animate-spin"
           ></span>
           Chargement du document…
         </div>
@@ -346,7 +612,7 @@ function handleCancel() {
           <!-- ALERTE ERREUR -->
           <div
             v-if="errorMessage"
-            class="mb-6 p-4 border border-[#E0533C] bg-[#E0533C]/10 font-mono text-xs text-[#E0533C] font-bold flex items-center gap-2"
+            class="mb-6 p-4 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold flex items-center gap-2"
             role="alert"
           >
             <svg
@@ -374,7 +640,7 @@ function handleCancel() {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="w-4 h-4 text-[#E0533C] shrink-0"
+              class="w-4 h-4 text-[#C4341C] shrink-0"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -404,7 +670,7 @@ function handleCancel() {
                 type="text"
                 placeholder="Ex. Compte rendu de réunion du 12 mars"
                 maxlength="255"
-                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-serif text-lg text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#E0533C] transition-shadow"
+                class="w-full h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-serif text-lg text-[#111111] placeholder-[#111111]/40 focus:outline-none focus:ring-2 focus:ring-[#C4341C] transition-shadow"
               />
             </div>
 
@@ -418,7 +684,7 @@ function handleCancel() {
               <select
                 id="status"
                 v-model="status"
-                class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
               >
                 <option value="brouillon">Brouillon</option>
                 <option value="a_relire">À relire</option>
@@ -435,7 +701,7 @@ function handleCancel() {
               <select
                 id="dossier"
                 v-model="idDossier"
-                class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#E0533C]"
+                class="h-12 px-4 bg-[#F4F1EA] border border-[#111111] font-mono text-xs uppercase tracking-wider text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#C4341C]"
               >
                 <option value="">Aucun dossier</option>
                 <option
@@ -468,7 +734,7 @@ function handleCancel() {
             </span>
             <span
               v-else-if="autoSaveStatus === 'error'"
-              class="font-mono text-[10px] uppercase tracking-wider text-[#E0533C] font-bold"
+              class="font-mono text-[10px] uppercase tracking-wider text-[#C4341C] font-bold"
             >
               ⚠ Échec de l'enregistrement auto — pensez à enregistrer
               manuellement
@@ -482,18 +748,50 @@ function handleCancel() {
           >
             <div class="flex items-center justify-between">
               <span
-                class="font-mono text-xs uppercase tracking-widest font-bold text-[#E0533C]"
+                class="font-mono text-xs uppercase tracking-widest font-bold text-[#C4341C]"
               >
                 [ Assistant IA — Ollama ]
               </span>
               <button
                 type="button"
-                class="font-mono text-xs text-[#111111]/60 hover:text-[#E0533C]"
+                class="font-mono text-xs text-[#111111]/60 hover:text-[#C4341C]"
                 @click="closeIaPanel"
               >
                 ✕ Fermer
               </button>
             </div>
+
+            <!--
+              MENTION D'INFORMATION — AI Act (règlement UE 2024/1689, art. 50),
+              applicable depuis le 2 août 2026.
+
+              Permanente, et non « affichée au premier usage puis mémorisée ».
+              Un état « déjà vue » vivrait dans le localStorage : il disparaît
+              en navigation privée et ne suit pas l'utilisateur d'un poste à
+              l'autre, de sorte que l'information serait donnée ou non selon le
+              navigateur — invérifiable. Une mention permanente satisfait
+              l'obligation sans état à maintenir.
+
+              Le titre du panneau nomme un outil ; cette mention dit que le
+              texte proposé est produit par un modèle et peut être faux. Ce
+              n'est pas la même information.
+            -->
+            <p
+              class="flex gap-2 p-3 bg-[#FAF8F5] border border-[#111111]/30 text-xs leading-relaxed text-[#111111]/80"
+              role="note"
+            >
+              <span aria-hidden="true" class="font-mono text-[#C4341C]">ⓘ</span>
+              <span>
+                Les propositions ci-dessous sont
+                <strong>générées par un modèle de langage</strong> exécuté
+                localement. Elles peuvent contenir des erreurs ou des
+                affirmations fausses : <strong>relisez avant d'insérer</strong>.
+                Vous restez responsable du contenu final de votre document
+                (<RouterLink to="/cgu" class="underline hover:text-[#C4341C]"
+                  >CGU</RouterLink
+                >).
+              </span>
+            </p>
 
             <div class="flex flex-wrap gap-4">
               <div class="space-y-1">
@@ -545,7 +843,7 @@ function handleCancel() {
 
             <div
               v-if="iaError"
-              class="font-mono text-xs text-[#E0533C] font-bold"
+              class="font-mono text-xs text-[#C4341C] font-bold"
             >
               {{ iaError }}
             </div>
@@ -553,11 +851,43 @@ function handleCancel() {
             <button
               type="button"
               :disabled="iaLoading"
-              class="h-10 px-5 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase tracking-wider hover:bg-[#E0533C] disabled:opacity-50 transition-colors"
+              class="h-10 px-5 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase tracking-wider hover:bg-[#C4341C] disabled:opacity-50 transition-colors"
               @click="handleGenerateIa"
             >
               {{ iaLoading ? "Génération en cours…" : "Générer" }}
             </button>
+
+            <!--
+              Compteur de génération. L'inférence n'est plus interrompue par un
+              délai maximum : elle peut durer plus d'une minute sur une machine
+              sans carte graphique. Sans ce compteur, l'utilisateur n'a aucun
+              moyen de distinguer une attente normale d'un blocage.
+            -->
+            <div v-if="iaLoading" class="space-y-2" role="status">
+              <div
+                class="h-1 w-full bg-[#111111]/10 overflow-hidden"
+                aria-hidden="true"
+              >
+                <div
+                  class="h-full bg-[#C4341C] transition-[width] duration-1000 ease-linear"
+                  :style="{ width: `${iaAvancement * 100}%` }"
+                ></div>
+              </div>
+              <div class="flex items-center justify-between gap-3">
+                <p
+                  class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/60"
+                >
+                  {{ iaTexteProgression }}
+                </p>
+                <button
+                  type="button"
+                  class="shrink-0 font-mono text-[10px] uppercase tracking-wider underline hover:text-[#C4341C] transition-colors"
+                  @click="annulerGenerationIa"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
 
             <div
               v-if="iaResult"
@@ -573,13 +903,28 @@ function handleCancel() {
               >
                 {{ iaResult }}
               </div>
-              <div class="flex gap-3">
+              <!--
+                Deux actions distinctes, exigées par le cahier des charges :
+                « le résultat doit pouvoir être inséré ou venir remplacer le
+                texte d'origine ». Insérer conserve la source et ajoute la
+                proposition après ; remplacer écrase la source. Aucune des deux
+                n'est appliquée sans ce clic — la génération ne touche jamais au
+                document d'elle-même.
+              -->
+              <div class="flex flex-wrap gap-3">
                 <button
                   type="button"
-                  class="h-9 px-4 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase hover:bg-[#E0533C] transition-colors"
-                  @click="applyIaResult"
+                  class="h-9 px-4 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase hover:bg-[#C4341C] transition-colors"
+                  @click="appliquerIaResult('inserer')"
                 >
                   Insérer
+                </button>
+                <button
+                  type="button"
+                  class="h-9 px-4 bg-[#111111] text-[#F4F1EA] font-mono text-xs uppercase hover:bg-[#C4341C] transition-colors"
+                  @click="appliquerIaResult('remplacer')"
+                >
+                  Remplacer
                 </button>
                 <button
                   type="button"
@@ -592,12 +937,78 @@ function handleCancel() {
             </div>
           </div>
 
+          <!--
+            TRAÇABILITÉ DES CONTENUS GÉNÉRÉS — AI Act (art. 50).
+
+            La table `ia` conserve chaque proposition produite ; `insere`
+            distingue celles que l'utilisateur a versées au document. La
+            présence du passage est recalculée à l'affichage en cherchant le
+            texte généré dans le contenu courant : un décalage enregistré
+            deviendrait faux à la première frappe en amont.
+
+            « Modifié depuis » n'est pas un échec de traçabilité, c'est
+            l'information la plus utile de la liste : elle dit que
+            l'utilisateur s'est approprié le texte.
+          -->
+          <section
+            v-if="passagesGeneres.length > 0"
+            class="mt-6 border border-[#111111] bg-[#FAF8F5]"
+          >
+            <h2 class="m-0">
+              <button
+                type="button"
+                class="w-full flex items-center justify-between gap-3 px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-[#111111]/70 hover:text-[#C4341C] transition-colors"
+                :aria-expanded="afficherHistoriqueIa"
+                aria-controls="passages-generes"
+                @click="afficherHistoriqueIa = !afficherHistoriqueIa"
+              >
+                <span>
+                  Passages issus d'une génération ({{ passagesGeneres.length }})
+                </span>
+                <span aria-hidden="true">{{
+                  afficherHistoriqueIa ? "▴" : "▾"
+                }}</span>
+              </button>
+            </h2>
+
+            <ul
+              v-show="afficherHistoriqueIa"
+              id="passages-generes"
+              class="px-4 pb-4 space-y-3 list-none"
+            >
+              <li
+                v-for="passage in passagesGeneres"
+                :key="passage.id_ia"
+                class="pt-3 border-t border-[#111111]/15 space-y-1"
+              >
+                <p
+                  class="font-mono text-[10px] uppercase tracking-wider text-[#111111]/60"
+                >
+                  {{ passage.type_action }} ·
+                  {{ formaterHorodatage(passage.insere_at) }} ·
+                  {{ passage.tokens_used }} tokens
+                </p>
+                <p class="text-sm font-serif text-[#111111]/90 line-clamp-2">
+                  {{ passage.content_after }}
+                </p>
+                <p class="font-mono text-[10px] uppercase tracking-wider">
+                  <span v-if="passage.present" class="text-[#C4341C] font-bold">
+                    Présent tel quel dans le document
+                  </span>
+                  <span v-else class="text-[#111111]/50">
+                    Modifié depuis l'insertion
+                  </span>
+                </p>
+              </li>
+            </ul>
+          </section>
+
           <!-- ÉDITEUR MARKDOWN -->
           <MarkdownEditor
             ref="markdownEditorRef"
             v-model="content"
             @input="handleEditorInput"
-            @openIaPanel="openIaPanel"
+            @open-ia-panel="openIaPanel"
           />
 
           <!-- BOUTONS EN BAS -->
@@ -615,7 +1026,7 @@ function handleCancel() {
             <button
               type="button"
               :disabled="isSaving || !isTitreValid"
-              class="h-12 px-6 font-mono text-xs uppercase tracking-widest bg-[#111111] text-[#F4F1EA] border border-[#111111] hover:bg-[#E0533C] disabled:opacity-50 transition-colors shadow-[4px_4px_0px_0px_rgba(224,83,60,1)] hover:shadow-none"
+              class="h-12 px-6 font-mono text-xs uppercase tracking-widest bg-[#111111] text-[#F4F1EA] border border-[#111111] hover:bg-[#C4341C] disabled:opacity-50 transition-colors shadow-[4px_4px_0px_0px_rgba(224,83,60,1)] hover:shadow-none"
               @click="handleSave"
             >
               {{ isSaving ? "Enregistrement…" : "Enregistrer" }}

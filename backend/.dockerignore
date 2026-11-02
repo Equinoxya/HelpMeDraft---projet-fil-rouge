@@ -1,0 +1,29 @@
+# Environnements virtuels : ils contiennent des binaires compilés pour la
+# machine hôte, inutilisables dans l'image, et pèsent des centaines de Mo.
+.venv/
+venv/
+env/
+ENV/
+
+# Secrets : ne doivent JAMAIS entrer dans une image, qui se partage et se pousse
+# sur un registre.
+.env
+.env.*
+!.env.example
+
+# Bases de données locales
+*.db
+*.db.avant-migration
+
+# Caches et artefacts de test
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Tests : l'image de production n'en a pas besoin. Ils tournent en intégration
+# continue, pas dans le conteneur livré.
+tests/
+
+.git/

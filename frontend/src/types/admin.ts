@@ -35,3 +35,29 @@ export interface AdminStats {
     termine: number;
   };
 }
+
+/** Les trois actions tracées par le journal d'administration. */
+export type ActionAdmin = "role" | "quota" | "suppression";
+
+export interface EntreeJournal {
+  id_action: string;
+  acteur_email: string;
+  /**
+   * Email de la cible, COPIÉ à l'instant de l'action : il reste lisible après
+   * la suppression du compte, ce qui est précisément le cas où la trace sert.
+   */
+  cible_email: string;
+  action: ActionAdmin;
+  avant: string | null;
+  apres: string | null;
+  created_at: string;
+}
+
+export interface JournalResponse {
+  items: EntreeJournal[];
+  page: number;
+  per_page: number;
+  total: number;
+  action: ActionAdmin | null;
+  retention_jours: number;
+}
