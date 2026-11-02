@@ -8,25 +8,30 @@ const { applyTheme } = require("/root/.claude/skills/synced/c1c8c12f-8277-41a7-a
 const R = "/home/user/HelpMeDraft---projet-fil-rouge";
 const OUT = process.argv[2] || "Soutenance-HelpMeDraft.pptx";
 
+// La charte est celle de l'application : parchemin, noir plein, accent brique.
+// #C4341C est la teinte retenue APRÈS l'audit d'accessibilité du 03/10 (l'accent
+// d'origine #E0533C ne tenait pas le 4,5:1 sur fond clair) ; il reste utilisé sur
+// les fonds noirs, où c'est lui qui passe le seuil.
 const THEME = {
   name: "HelpMeDraft",
-  headFontFace: "Cambria",
+  headFontFace: "Georgia",
   bodyFontFace: "Calibri",
   colors: {
-    dk1: "1B2033",
-    lt1: "FFFFFF",
-    dk2: "141B2D",
-    lt2: "EDEFF4",
-    accent1: "D98324", // ocre — accent principal
-    accent2: "1B2A41", // encre
-    accent3: "2A9D8F", // vert — acquis
-    accent4: "B3261E", // rouge — risque
-    accent5: "5B6880", // gris sur fond clair
-    accent6: "9AA8C0", // gris sur fond sombre
-    hlink: "D98324",
-    folHlink: "5B6880",
+    dk1: "111111", // texte et bordures
+    lt1: "F4F1EA", // fond parchemin
+    dk2: "111111", // fond des diapositives sombres
+    lt2: "FAF8F5", // surface des cartes
+    accent1: "C4341C", // accent brique, sur fond clair
+    accent2: "A72C18", // survol
+    accent3: "1F6F4A", // vert — acquis
+    accent4: "C4341C", // risque : même brique, la charte n'a qu'un rouge
+    accent5: "5A554C", // gris chaud sur fond clair
+    accent6: "A8A194", // gris chaud sur fond noir
+    hlink: "C4341C",
+    folHlink: "5A554C",
   },
 };
+const ACCENT_SOMBRE = "E0533C"; // accent éclairci, lisible sur #111111
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE"; // 13.3 x 7.5
@@ -39,15 +44,29 @@ const C = pres.SchemeColor;
 const W = 13.3, H = 7.5, M = 0.6, CW = W - 2 * M; // 12.1
 
 const FOOT = "HelpMeDraft  ·  Ophélie Bellissens  ·  CDA — Metz Numeric School";
-const shadow = (o = {}) => ({ type: "outer", angle: 90, blur: 10, offset: 2, color: "0E1422", opacity: 0.12, ...o });
+// 8px 8px 0 #111111 : la charte pose une ombre sans flou. Un effet d'ombre est
+// rendu différemment selon le lecteur ; un rectangle noir décalé derrière le bloc
+// donne exactement le même aplat partout.
+const BORD = { color: "111111", width: 1.25 };
+const DEC = 0.07; // décalage de l'ombre, en pouces
+function bloc(s, { x, y, w, h, fill, line, name }) {
+  s.addShape(pres.ShapeType.rect, {
+    x: x + DEC, y: y + DEC, w, h,
+    fill: { color: "111111" }, line: { color: "111111", width: 0.75 },
+    objectName: `ombre ${name}`,
+  });
+  s.addShape(pres.ShapeType.rect, {
+    x, y, w, h, fill: { color: fill }, line: line || { ...BORD }, objectName: name,
+  });
+}
 
 // ───────────────────────────── layouts ─────────────────────────────
 
 const footLight = [
-  { text: { text: FOOT, options: { x: M, y: 6.98, w: 8, h: 0.3, fontSize: 9, color: THEME.colors.accent5, isTextBox: true, objectName: "pied" } } },
+  { text: { text: FOOT, options: { x: M, y: 6.98, w: 8, h: 0.3, fontSize: 9, color: THEME.colors.accent5, fontFace: "Courier New", isTextBox: true, objectName: "pied" } } },
 ];
 const footDark = [
-  { text: { text: FOOT, options: { x: M, y: 6.98, w: 8, h: 0.3, fontSize: 9, color: THEME.colors.accent6, isTextBox: true, objectName: "pied" } } },
+  { text: { text: FOOT, options: { x: M, y: 6.98, w: 8, h: 0.3, fontSize: 9, color: THEME.colors.accent6, fontFace: "Courier New", isTextBox: true, objectName: "pied" } } },
 ];
 const numLight = { x: 12.5, y: 6.98, w: 0.4, h: 0.3, fontSize: 9, color: THEME.colors.accent5, align: "right" };
 const numDark = { x: 12.5, y: 6.98, w: 0.4, h: 0.3, fontSize: 9, color: THEME.colors.accent6, align: "right" };
@@ -56,9 +75,9 @@ pres.defineSlideMaster({
   title: "TITLE",
   background: { color: C.text2 },
   objects: [
-    { placeholder: { options: { name: "kicker", type: "body", x: M + 0.3, y: 1.9, w: CW, h: 0.4, fontSize: 14, color: C.accent1, bold: true, charSpacing: 2 }, text: "" } },
-    { placeholder: { options: { name: "title", type: "title", align: "left", x: M + 0.3, y: 2.4, w: 11.6, h: 1.5, fontSize: 44, bold: true, color: C.background1, valign: "top" }, text: "" } },
-    { placeholder: { options: { name: "subtitle", type: "body", x: M + 0.3, y: 3.95, w: 11.0, h: 0.9, fontSize: 19, color: C.accent6 }, text: "" } },
+    { placeholder: { options: { name: "kicker", type: "body", x: M + 0.3, y: 1.9, w: CW, h: 0.4, fontSize: 13, color: ACCENT_SOMBRE, bold: true, charSpacing: 3, fontFace: "Courier New" }, text: "" } },
+    { placeholder: { options: { name: "title", type: "title", align: "left", x: M + 0.3, y: 2.4, w: 11.6, h: 1.5, fontSize: 40, bold: true, color: C.background1, valign: "top" }, text: "" } },
+    { placeholder: { options: { name: "subtitle", type: "body", x: M + 0.3, y: 3.95, w: 11.0, h: 0.9, fontSize: 19, color: C.background2 }, text: "" } },
     { placeholder: { options: { name: "meta", type: "body", x: M + 0.3, y: 5.5, w: 11.0, h: 1.0, fontSize: 14, color: C.accent6 }, text: "" } },
   ],
 });
@@ -67,8 +86,8 @@ pres.defineSlideMaster({
   title: "SECTION",
   background: { color: C.text2 },
   objects: [
-    { placeholder: { options: { name: "num", type: "body", x: M + 0.3, y: 2.0, w: 2.2, h: 1.6, fontSize: 80, bold: true, color: C.accent1, valign: "bottom" }, text: "" } },
-    { placeholder: { options: { name: "title", type: "title", align: "left", x: M + 0.3, y: 3.7, w: 11.6, h: 1.0, fontSize: 34, bold: true, color: C.background1, valign: "top" }, text: "" } },
+    { placeholder: { options: { name: "num", type: "body", x: M + 0.3, y: 2.0, w: 2.2, h: 1.6, fontSize: 80, bold: true, color: ACCENT_SOMBRE, valign: "bottom" }, text: "" } },
+    { placeholder: { options: { name: "title", type: "title", align: "left", x: M + 0.3, y: 3.7, w: 11.6, h: 1.0, fontSize: 32, bold: true, color: C.background1, valign: "top" }, text: "" } },
     { placeholder: { options: { name: "sub", type: "body", x: M + 0.3, y: 4.7, w: 11.0, h: 0.5, fontSize: 15, color: C.accent6 }, text: "" } },
   ],
   slideNumber: numDark,
@@ -79,7 +98,7 @@ pres.defineSlideMaster({
   background: { color: C.background1 },
   objects: [
     ...footLight,
-    { placeholder: { options: { name: "title", type: "title", align: "left", x: M, y: 0.42, w: CW, h: 0.9, fontSize: 30, bold: true, color: C.text1, valign: "bottom" }, text: "" } },
+    { placeholder: { options: { name: "title", type: "title", align: "left", x: M, y: 0.42, w: CW, h: 0.9, fontSize: 26, bold: true, color: C.text1, valign: "bottom" }, text: "" } },
     { placeholder: { options: { name: "lead", type: "body", x: M, y: 1.38, w: CW, h: 0.42, fontSize: 14, color: C.accent5 }, text: "" } },
   ],
   slideNumber: numLight,
@@ -90,7 +109,7 @@ pres.defineSlideMaster({
   background: { color: C.background1 },
   objects: [
     ...footLight,
-    { placeholder: { options: { name: "title", type: "title", align: "left", x: M, y: 0.42, w: CW, h: 0.9, fontSize: 30, bold: true, color: C.text1, valign: "bottom" }, text: "" } },
+    { placeholder: { options: { name: "title", type: "title", align: "left", x: M, y: 0.42, w: CW, h: 0.9, fontSize: 26, bold: true, color: C.text1, valign: "bottom" }, text: "" } },
     { placeholder: { options: { name: "caption", type: "body", x: M, y: 6.52, w: CW, h: 0.35, fontSize: 11, color: C.accent5, italic: true }, text: "" } },
   ],
   slideNumber: numLight,
@@ -101,7 +120,7 @@ pres.defineSlideMaster({
   background: { color: C.background1 },
   objects: [
     ...footLight,
-    { placeholder: { options: { name: "title", type: "title", align: "left", x: M, y: 0.42, w: CW, h: 0.9, fontSize: 30, bold: true, color: C.text1, valign: "bottom" }, text: "" } },
+    { placeholder: { options: { name: "title", type: "title", align: "left", x: M, y: 0.42, w: CW, h: 0.9, fontSize: 26, bold: true, color: C.text1, valign: "bottom" }, text: "" } },
     { placeholder: { options: { name: "body", type: "body", x: M, y: 1.5, w: 6.1, h: 4.9, fontSize: 15, color: C.text1, valign: "top" }, text: "" } },
     { placeholder: { options: { name: "caption", type: "body", x: 7.0, y: 6.52, w: 5.7, h: 0.35, fontSize: 11, color: C.accent5, italic: true, align: "center" }, text: "" } },
   ],
@@ -113,7 +132,7 @@ pres.defineSlideMaster({
   background: { color: C.text2 },
   objects: [
     ...footDark,
-    { placeholder: { options: { name: "title", type: "title", align: "left", x: M, y: 0.6, w: CW, h: 0.9, fontSize: 32, bold: true, color: C.background1, valign: "bottom" }, text: "" } },
+    { placeholder: { options: { name: "title", type: "title", align: "left", x: M, y: 0.6, w: CW, h: 0.9, fontSize: 30, bold: true, color: C.background1, valign: "bottom" }, text: "" } },
   ],
   slideNumber: numDark,
 });
@@ -131,17 +150,15 @@ function add(masterName, sectionTitle, notes) {
 // carte : fond teinté, pastille ocre numérotée, titre, corps
 function card(s, { x, y, w, h, badge, title, body, accent }) {
   const col = accent || C.accent1;
-  s.addShape(pres.ShapeType.roundRect, {
-    x, y, w, h, rectRadius: 0.08, fill: { color: C.background2 },
-    line: { color: C.background2 }, shadow: shadow(), objectName: `carte ${title}`,
-  });
-  let tx = x + 0.28;
+  bloc(s, { x, y, w, h, fill: C.background2, name: `carte ${title}` });
+  let tx = x + 0.3;
   if (badge) {
-    s.addShape(pres.ShapeType.ellipse, { x: x + 0.28, y: y + 0.26, w: 0.42, h: 0.42, fill: { color: col }, line: { color: col }, objectName: `pastille ${badge}` });
-    s.addText(badge, { x: x + 0.28, y: y + 0.26, w: 0.42, h: 0.42, fontSize: 13, bold: true, color: "FFFFFF", align: "center", valign: "middle", margin: 0, isTextBox: true });
-    tx = x + 0.86;
+    const bw = Math.max(0.46, 0.17 + 0.11 * badge.length);
+    s.addShape(pres.ShapeType.rect, { x: x + 0.3, y: y + 0.26, w: bw, h: 0.42, fill: { color: col }, line: { ...BORD }, objectName: `pastille ${badge}` });
+    s.addText(badge.toUpperCase(), { x: x + 0.3, y: y + 0.26, w: bw, h: 0.42, fontSize: 12, bold: true, color: "F4F1EA", fontFace: "Courier New", align: "center", valign: "middle", margin: 0, isTextBox: true });
+    tx = x + 0.3 + bw + 0.22;
   }
-  s.addText(title, { x: tx, y: y + 0.24, w: x + w - 0.28 - tx, h: 0.46, fontSize: 15, bold: true, color: C.text1, valign: "middle", margin: 0, isTextBox: true });
+  s.addText(title, { x: tx, y: y + 0.24, w: x + w - 0.3 - tx, h: 0.46, fontSize: 15, bold: true, color: C.text1, valign: "middle", margin: 0, isTextBox: true });
   if (body) {
     s.addText(body, { x: x + 0.28, y: y + 0.78, w: w - 0.56, h: h - 1.02, fontSize: 14, color: C.text1, valign: "top", margin: 0, lineSpacing: 19, isTextBox: true });
   }
@@ -149,26 +166,20 @@ function card(s, { x, y, w, h, badge, title, body, accent }) {
 
 // tuile de chiffre
 function stat(s, { x, y, w, h, value, label }) {
-  s.addShape(pres.ShapeType.roundRect, {
-    x, y, w, h, rectRadius: 0.08, fill: { color: C.background2 },
-    line: { color: C.background2 }, shadow: shadow(), objectName: `chiffre ${value}`,
-  });
+  bloc(s, { x, y, w, h, fill: C.background2, name: `chiffre ${value}` });
   s.addText(value, { x: x + 0.2, y: y + 0.12, w: w - 0.4, h: 0.62, fontSize: 34, bold: true, color: C.accent1, align: "center", valign: "middle", margin: 0, isTextBox: true });
   s.addText(label, { x: x + 0.2, y: y + 0.72, w: w - 0.4, h: h - 0.86, fontSize: 13, color: C.text1, align: "center", valign: "top", margin: 0, isTextBox: true });
 }
 
 // bloc de code sur fond sombre
 function code(s, { x, y, w, h, lines, file, size = 11.5 }) {
-  s.addShape(pres.ShapeType.roundRect, {
-    x, y, w, h, rectRadius: 0.06, fill: { color: C.text2 }, line: { color: C.text2 },
-    shadow: shadow({ opacity: 0.2 }), objectName: `code ${file || ""}`,
-  });
+  bloc(s, { x, y, w, h, fill: C.text2, name: `code ${file || ""}` });
   if (file) {
-    s.addText(file, { x: x + 0.3, y: y + 0.16, w: w - 0.6, h: 0.28, fontSize: 10.5, color: THEME.colors.accent1, fontFace: "Courier New", margin: 0, isTextBox: true });
+    s.addText(file, { x: x + 0.3, y: y + 0.16, w: w - 0.6, h: 0.28, fontSize: 10.5, color: ACCENT_SOMBRE, fontFace: "Courier New", margin: 0, isTextBox: true });
   }
   s.addText(lines.join("\n"), {
     x: x + 0.3, y: y + (file ? 0.5 : 0.24), w: w - 0.6, h: h - (file ? 0.74 : 0.48),
-    fontSize: size, fontFace: "Courier New", color: "E6EBF5", lineSpacing: size * 1.5,
+    fontSize: size, fontFace: "Courier New", color: "F4F1EA", lineSpacing: size * 1.5,
     valign: "top", margin: 0, isTextBox: true,
   });
 }
@@ -179,7 +190,8 @@ function media(s, { file, ratio, x = M, y = 1.5, maxW = CW, maxH = 4.85, name })
   let h = w / ratio;
   const px = x + (maxW - w) / 2;
   const py = y + (maxH - h) / 2;
-  s.addImage({ path: file, x: px, y: py, w, h, shadow: shadow({ blur: 14, offset: 3, opacity: 0.18 }), objectName: name || "figure" });
+  bloc(s, { x: px, y: py, w, h, fill: "FFFFFF", name: `cadre ${name || "figure"}` });
+  s.addImage({ path: file, x: px, y: py, w, h, objectName: name || "figure" });
 }
 
 const li = (items) => items.map((t, i) => ({
@@ -222,11 +234,11 @@ Annoncez le plan et respectez-le : le jury suit le dossier en parallèle, la cor
   ];
   items.forEach((it, i) => {
     const y = 1.95 + i * 0.8;
-    s.addShape(pres.ShapeType.ellipse, { x: M + 0.1, y: y + 0.08, w: 0.46, h: 0.46, fill: { color: C.accent1 }, line: { color: C.accent1 }, objectName: `puce ${it[0]}` });
-    s.addText(it[0], { x: M + 0.1, y: y + 0.08, w: 0.46, h: 0.46, fontSize: 14, bold: true, color: "FFFFFF", align: "center", valign: "middle", margin: 0, isTextBox: true });
+    s.addShape(pres.ShapeType.rect, { x: M + 0.1, y: y + 0.08, w: 0.46, h: 0.46, fill: { color: C.accent1 }, line: { ...BORD }, objectName: `puce ${it[0]}` });
+    s.addText(it[0], { x: M + 0.1, y: y + 0.08, w: 0.46, h: 0.46, fontSize: 13, bold: true, color: "F4F1EA", fontFace: "Courier New", align: "center", valign: "middle", margin: 0, isTextBox: true });
     s.addText(it[1], { x: M + 0.85, y: y, w: 6.4, h: 0.62, fontSize: 19, bold: true, color: C.text1, valign: "middle", margin: 0, isTextBox: true });
-    s.addText(it[2], { x: 7.4, y: y, w: 2.6, h: 0.62, fontSize: 14, color: C.accent5, valign: "middle", margin: 0, isTextBox: true });
-    s.addText(it[3], { x: 10.2, y: y, w: 2.5, h: 0.62, fontSize: 14, color: C.accent1, bold: true, align: "right", valign: "middle", margin: 0, isTextBox: true });
+    s.addText(it[2], { x: 7.4, y: y, w: 2.6, h: 0.62, fontSize: 13, color: C.accent5, fontFace: "Courier New", valign: "middle", margin: 0, isTextBox: true });
+    s.addText(it[3], { x: 10.2, y: y, w: 2.5, h: 0.62, fontSize: 13, color: C.accent1, bold: true, fontFace: "Courier New", align: "right", valign: "middle", margin: 0, isTextBox: true });
   });
 }
 
@@ -399,7 +411,7 @@ Côté front, la même logique : aucune vue n'appelle axios directement, tout pa
   s.addText("Ne contient jamais", { x: M + 8.7, y: 1.95, w: 3.1, h: 0.3, fontSize: 12, bold: true, color: THEME.colors.accent4, margin: 0, isTextBox: true });
   rows.forEach((r, i) => {
     const y = 2.3 + i * 1.12;
-    s.addShape(pres.ShapeType.roundRect, { x: M, y, w: CW, h: 1.0, rectRadius: 0.06, fill: { color: C.background2 }, line: { color: C.background2 }, shadow: shadow(), objectName: `couche ${r[0]}` });
+    bloc(s, { x: M, y, w: CW, h: 1.0, fill: C.background2, name: `couche ${r[0]}` });
     s.addText(r[0], { x: M + 0.28, y: y + 0.14, w: 3.5, h: 0.34, fontSize: 15, bold: true, color: C.text1, margin: 0, isTextBox: true });
     s.addText(r[1], { x: M + 0.28, y: y + 0.5, w: 3.5, h: 0.34, fontSize: 12.5, color: THEME.colors.accent5, fontFace: "Courier New", margin: 0, isTextBox: true });
     s.addText(r[2], { x: M + 4.0, y: y + 0.14, w: 4.5, h: 0.75, fontSize: 14, color: C.text1, margin: 0, isTextBox: true });
@@ -501,7 +513,8 @@ Huit captures figurent en annexe § 12.2, avec le code correspondant.`);
       "Huit captures figurent en annexe § 12.2, avec le code qui les produit.",
     ]),
   ], { placeholder: "body" });
-  s.addImage({ path: `${R}/docs/captures/C-05-tableau-de-bord.png`, x: 7.52, y: 1.5, w: 4.66, h: 4.9, shadow: shadow({ blur: 14, offset: 3, opacity: 0.18 }), objectName: "capture C-05" });
+  bloc(s, { x: 7.52, y: 1.5, w: 4.66, h: 4.9, fill: "FFFFFF", name: "cadre capture C-05" });
+  s.addImage({ path: `${R}/docs/captures/C-05-tableau-de-bord.png`, x: 7.52, y: 1.5, w: 4.66, h: 4.9, objectName: "capture C-05" });
   s.addText("Capture C-05 — tableau de bord.", { placeholder: "caption" });
 }
 
@@ -525,7 +538,8 @@ Une remarque de méthode, que j'ai tenu à écrire dans le dossier : sur la capt
       "Une capture atteste d'un état, pas d'un comportement — d'où le jeu d'essai du § 10.",
     ]),
   ], { placeholder: "body" });
-  s.addImage({ path: `${R}/docs/captures/C-07-nouveau-document.png`, x: 7.3, y: 2.1, w: 5.4, h: 4.15, shadow: shadow({ blur: 14, offset: 3, opacity: 0.18 }), objectName: "capture C-07" });
+  bloc(s, { x: 7.3, y: 2.1, w: 5.4, h: 4.15, fill: "FFFFFF", name: "cadre capture C-07" });
+  s.addImage({ path: `${R}/docs/captures/C-07-nouveau-document.png`, x: 7.3, y: 2.1, w: 5.4, h: 4.15, objectName: "capture C-07" });
   s.addText("Capture C-07 — éditeur, création d'un document.", { placeholder: "caption" });
 }
 
@@ -670,7 +684,7 @@ Une précision sur la purge : la tâche purge_expired_sessions filtre sur l'expi
   ];
   el.forEach((e, i) => {
     const y = 1.95 + i * 1.6;
-    s.addShape(pres.ShapeType.roundRect, { x: M, y, w: 6.1, h: 1.3, rectRadius: 0.06, fill: { color: C.background2 }, line: { color: C.background2 }, shadow: shadow(), objectName: `session ${e[0]}` });
+    bloc(s, { x: M, y, w: 6.1, h: 1.3, fill: C.background2, name: `session ${e[0]}` });
     s.addText(e[0], { x: M + 0.28, y: y + 0.18, w: 5.5, h: 0.34, fontSize: 16, bold: true, color: THEME.colors.accent1, margin: 0, isTextBox: true });
     s.addText(e[1], { x: M + 0.28, y: y + 0.56, w: 5.54, h: 0.6, fontSize: 14.5, color: C.text1, valign: "top", margin: 0, isTextBox: true });
   });
@@ -727,10 +741,10 @@ Ce qui reste : les tests système attendent une machine avec un démon Docker, e
   ];
   niv.forEach((v, i) => {
     const x = M + i * 3.07;
-    s.addShape(pres.ShapeType.roundRect, { x, y: 3.45, w: i === 3 ? 2.89 : 2.9, h: 1.55, rectRadius: 0.06, fill: { color: C.background2 }, line: { color: C.background2 }, shadow: shadow(), objectName: `niveau ${v[0]}` });
+    bloc(s, { x, y: 3.45, w: i === 3 ? 2.89 : 2.9, h: 1.55, fill: C.background2, name: `niveau ${v[0]}` });
     s.addText(v[0], { x: x + 0.22, y: 3.62, w: 2.46, h: 0.5, fontSize: 15, bold: true, color: C.text1, margin: 0, isTextBox: true });
     s.addText(v[1], { x: x + 0.22, y: 4.14, w: 2.46, h: 0.34, fontSize: 13, color: THEME.colors.accent5, margin: 0, isTextBox: true });
-    s.addText(v[2], { x: x + 0.22, y: 4.5, w: 2.46, h: 0.34, fontSize: 13, bold: true, color: THEME.colors.accent3, margin: 0, isTextBox: true });
+    s.addText(v[2], { x: x + 0.22, y: 4.5, w: 2.46, h: 0.34, fontSize: 12.5, bold: true, color: THEME.colors.accent3, fontFace: "Courier New", margin: 0, isTextBox: true });
   });
 
   card(s, { x: M, y: 5.2, w: CW, h: 1.42, badge: "!", accent: THEME.colors.accent4, title: "Les doubles de test mentent",
@@ -804,19 +818,19 @@ Je vous remercie, je suis à votre disposition pour vos questions.`);
   s.addText("Ce que je retiens", { placeholder: "title" });
 
   const cols = [
-    ["Livré", THEME.colors.accent3, "Cinq lots fonctionnels complets\n195 tests automatisés au vert\nDocker Compose et pipeline CI\nAudits accessibilité et sécurité\nJournal de veille et dossier projet"],
-    ["Reste à faire", THEME.colors.accent1, "Déploiement effectif\nBascule complète SQLite → MySQL\nTrois compléments AI Act\nJournalisation applicative\nTests système et de charge"],
-    ["Appris", "E6EBF5", "Un prompt est du code : il se teste\nUne mesure de sécurité est un composant comme un autre\nUn jeu de données, c'est choisir les valeurs qui font échouer"],
+    ["Livré", "5FBF8F", "Cinq lots fonctionnels complets\n195 tests automatisés au vert\nDocker Compose et pipeline CI\nAudits accessibilité et sécurité\nJournal de veille et dossier projet"],
+    ["Reste à faire", ACCENT_SOMBRE, "Déploiement effectif\nBascule complète SQLite → MySQL\nTrois compléments AI Act\nJournalisation applicative\nTests système et de charge"],
+    ["Appris", "F4F1EA", "Un prompt est du code : il se teste\nUne mesure de sécurité est un composant comme un autre\nUn jeu de données, c'est choisir les valeurs qui font échouer"],
   ];
   cols.forEach((c, i) => {
     const x = M + i * 4.11;
     const w = i === 2 ? 3.88 : 3.87;
-    s.addShape(pres.ShapeType.roundRect, { x, y: 1.85, w, h: 3.05, rectRadius: 0.08, fill: { color: "1E2740" }, line: { color: "1E2740" }, objectName: `bilan ${c[0]}` });
+    s.addShape(pres.ShapeType.rect, { x, y: 1.85, w, h: 3.05, fill: { color: "111111" }, line: { color: "F4F1EA", width: 1.25 }, objectName: `bilan ${c[0]}` });
     s.addText(c[0], { x: x + 0.3, y: 2.1, w: w - 0.6, h: 0.45, fontSize: 19, bold: true, color: c[1], margin: 0, isTextBox: true });
-    s.addText(c[2], { x: x + 0.3, y: 2.62, w: w - 0.6, h: 2.55, fontSize: 14.5, color: "E6EBF5", lineSpacing: 23, valign: "top", margin: 0, isTextBox: true });
+    s.addText(c[2], { x: x + 0.3, y: 2.62, w: w - 0.6, h: 2.55, fontSize: 14.5, color: "F4F1EA", lineSpacing: 23, valign: "top", margin: 0, isTextBox: true });
   });
 
-  s.addText("Merci de votre attention.", { x: M, y: 5.35, w: CW, h: 0.6, fontSize: 24, bold: true, color: THEME.colors.accent1, margin: 0, isTextBox: true, objectName: "merci" });
+  s.addText("Merci de votre attention.", { x: M, y: 5.35, w: CW, h: 0.6, fontSize: 24, bold: true, color: ACCENT_SOMBRE, margin: 0, isTextBox: true, objectName: "merci" });
 }
 
 (async () => {
