@@ -78,24 +78,31 @@ def generer_ia(id_document):
             return jsonify({
                 "error": f"Quota IA quotidien atteint ({current_user.quota_daily_limit} requêtes / 24h)."
             }), 429
-        prompt = build_prompt(type_action, contenu, instructions)
 
-        try:
-            content_after, tokens_used = call_ollama(prompt)
-        except RuntimeError as e:
-            return jsonify({"error": str(e)}), 502
-
+        # ✅ CRÉATION DE L'ENTRÉE IA AVANT L'APPEL (pour décompter le quota)
         new_ia = IA(
             type_action=type_action,
             content_before=contenu,
-            content_after=content_after,
-            tokens_used=tokens_used,
+            content_after="",  # Vide par défaut
+            tokens_used=0,     # 0 par défaut
             user_id=request.user_id,
             id_document=id_document,
         )
         db_session.add(new_ia)
-        db_session.commit()
-        db_session.refresh(new_ia)
+        db_session.flush()  # Génère l'ID sans commit final
+
+        prompt = build_prompt(type_action, contenu, instructions)
+
+        try:
+            content_after, tokens_used = call_ollama(prompt)
+            # ✅ MISE À JOUR si succès
+            new_ia.content_after = content_after
+            new_ia.tokens_used = tokens_used
+            db_session.commit()
+        except RuntimeError as e:
+            # ✅ COMMIT QUAND MÊME pour décompter le quota (même en cas d'erreur)
+            db_session.commit()
+            return jsonify({"error": str(e)}), 502
 
         return jsonify({
             "id_ia": new_ia.id_ia,
