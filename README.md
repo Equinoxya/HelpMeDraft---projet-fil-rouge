@@ -63,6 +63,7 @@ Les assistants de rédaction existants envoient le texte de l'utilisateur à une
 <td width="50%" valign="top">
 
 ### 🔐 Comptes & sessions
+- **Export de ses données personnelles** en une archive ZIP (RGPD art. 15 et 20)
 - Inscription avec consentement RGPD explicite et tracé
 - Connexion / déconnexion, rôles `user` et `admin`
 - Réinitialisation du mot de passe par email (token à usage unique, 1 h)
@@ -95,9 +96,10 @@ Les assistants de rédaction existants envoient le texte de l'utilisateur à une
 <td width="50%" valign="top">
 
 ### 🛠️ Back-office admin
-- Liste paginée des utilisateurs avec compteurs d'usage
+- Liste paginée des utilisateurs, **avec recherche** sur email, prénom et nom
 - Modification du rôle et du quota IA quotidien
-- Suppression de compte, avec garde-fous
+- Suppression de compte : **l'email doit être recopié**, et le serveur le vérifie
+- **Journal des actions d'administration** — qui a changé quoi, sur qui, quand
 - Statistiques globales : comptes, documents par statut, appels IA sur 24 h et 7 jours
 
 </td>
@@ -430,6 +432,7 @@ Base : `http://localhost:5000`. Toutes les routes hors `/auth` exigent l'en-têt
 | `POST` | `/auth/refresh` | Renouvellement de l'access token (cookie `refresh_token`) |
 | `POST` | `/auth/logout` | Déconnexion et révocation de la session |
 | `GET` | `/auth/me` | Profil de l'utilisateur courant |
+| `GET` | `/auth/export` | **Export des données personnelles** (RGPD art. 15 et 20) : archive ZIP du compte appelant — 5 req./h. Aucun identifiant en paramètre : le compte exporté est celui du jeton |
 | `POST` | `/auth/forgot-password` | Envoi du lien de réinitialisation — 3 req./h |
 | `POST` | `/auth/reset-password` | Définition du nouveau mot de passe |
 
@@ -464,9 +467,10 @@ Base : `http://localhost:5000`. Toutes les routes hors `/auth` exigent l'en-têt
 
 | Méthode | Route | Description |
 |---|---|---|
-| `GET` | `/admin/users` | Liste paginée avec compteurs d'usage |
-| `PATCH` | `/admin/users/<id>` | Modification de `role` et `quota_daily_limit`. Le **premier** administrateur se désigne hors de l'API, voir [Désigner le premier administrateur](#6--désigner-le-premier-administrateur) |
-| `DELETE` | `/admin/users/<id>` | Suppression d'un compte |
+| `GET` | `/admin/users` | Liste paginée avec compteurs d'usage. `recherche` filtre sur email, prénom et nom (128 caractères max) |
+| `PATCH` | `/admin/users/<id>` | Modification de `role` et `quota_daily_limit`. Chaque changement est tracé au journal. Le **premier** administrateur se désigne hors de l'API, voir [Désigner le premier administrateur](#6--désigner-le-premier-administrateur) |
+| `DELETE` | `/admin/users/<id>` | Suppression d'un compte. **Exige `?confirmation=<email>`**, comparé en base : un appel direct sur le mauvais identifiant échoue |
+| `GET` | `/admin/journal` | Journal des actions d'administration, du plus récent au plus ancien. `action` filtre sur `role`, `quota` ou `suppression`. **Lecture seule** |
 | `GET` | `/admin/stats` | Statistiques globales |
 
 </details>
@@ -475,7 +479,7 @@ Base : `http://localhost:5000`. Toutes les routes hors `/auth` exigent l'en-têt
 
 ## 🗃️ Modèle de données
 
-Sept entités, identifiants UUID, suppression en cascade depuis `user`.
+Huit entités, identifiants UUID, suppression en cascade depuis `user` — sauf le journal d'administration, qui doit lui survivre.
 
 | Table | Rôle |
 |---|---|
@@ -484,6 +488,7 @@ Sept entités, identifiants UUID, suppression en cascade depuis `user`.
 | `dossier` | Regroupement de documents d'un utilisateur |
 | `ia` | Journal des appels IA : action, contenu avant/après, tokens consommés, et trace d'insertion (`insere`, `position_debut`, `insere_at`) |
 | `consentement` | Traçabilité des consentements RGPD (type, acceptation, date) |
+| `journal_admin` | Actions d'administration : acteur, cible, type, valeur avant/après. Les emails y sont **copiés** pour survivre à la suppression du compte |
 | `user_session` | Refresh tokens hachés, expiration, drapeau de révocation |
 | `password_reset` | Tokens de réinitialisation hachés, expiration, usage unique |
 
@@ -576,11 +581,15 @@ L'[audit de sécurité](docs/audit-securite.md) est rédigé : **0 vulnérabilit
 - ✅ Inférence IA entièrement locale : aucun contenu utilisateur transmis à un tiers
 - ✅ Pages Mentions légales, CGU et Politique de confidentialité intégrées, article dédié aux
   contenus générés et à la responsabilité éditoriale de l'utilisateur
+- ✅ **Export des données personnelles** (art. 15 et 20) : archive ZIP depuis le tableau de bord —
+  compte, dossiers, documents et leur contenu, historique IA, consentements, et un fichier Markdown
+  par document. **Sans aucun mot de passe, jeton, ni donnée d'un tiers**
 - ✅ **Traçabilité des contenus générés** (règlement UE 2024/1689, art. 50) : la table `ia`
   distingue une proposition *produite* d'une proposition *acceptée*, et l'éditeur rappelle à
   l'ouverture les passages issus d'une génération
 - 🚧 Consentement distinct dédié à l'usage de l'IA
-- 🚧 Export des données et suppression de compte à l'initiative de l'utilisateur
+- 🚧 Suppression de compte à l'initiative de l'utilisateur (art. 17) — l'export vient en premier :
+  on ne supprime pas ce qu'on n'a pas pu emporter
 
 **Accessibilité (RGAA)**
 

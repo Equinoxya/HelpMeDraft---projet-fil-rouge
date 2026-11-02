@@ -230,6 +230,21 @@ const dpoContact = "rgpd@helpmedraft.fr";
             </li>
             <li class="leading-relaxed">
               <strong class="uppercase text-[#111111]"
+                >Journal d'administration :</strong
+              >
+              <span class="text-[#111111]/80">
+                Les actions de nos administrateurs sur votre compte —
+                modification de votre rôle ou de votre quota, suppression du
+                compte — sont journalisées avec l'adresse e-mail de l'auteur de
+                l'action et la vôtre, afin que nous puissions rendre compte de
+                ces traitements. Ce journal est conservé
+                <strong>un an</strong>, puis purgé automatiquement. Il survit
+                volontairement à la suppression de votre compte : c'est
+                précisément la trace de cette suppression.</span
+              >
+            </li>
+            <li class="leading-relaxed">
+              <strong class="uppercase text-[#111111]"
                 >Logs de sécurité & sessions :</strong
               >
               <span class="text-[#111111]/80">
@@ -265,7 +280,12 @@ const dpoContact = "rgpd@helpmedraft.fr";
               >
               <span class="text-[#111111]/80">
                 Vous pouvez consulter et modifier vos informations directement
-                depuis votre profil.</span
+                depuis votre profil, et
+                <strong
+                  >télécharger une copie complète de vos données depuis votre
+                  tableau de bord</strong
+                >
+                — sans avoir à nous écrire ni à attendre.</span
               >
             </li>
             <li class="leading-relaxed">
@@ -282,7 +302,12 @@ const dpoContact = "rgpd@helpmedraft.fr";
                 >Droit à la limitation et à la portabilité :</strong
               >
               <span class="text-[#111111]/80">
-                Vous pouvez demander une copie exportable de vos données
+                L'archive téléchargeable depuis votre tableau de bord contient
+                un fichier JSON lisible par machine et un fichier Markdown par
+                document, afin que vos contenus soient réutilisables ailleurs.
+                Elle ne contient aucun mot de passe, aucun jeton de connexion,
+                et aucune donnée concernant une autre personne. Vous pouvez
+                aussi demander une copie exportable de vos données
                 documentaires.</span
               >
             </li>

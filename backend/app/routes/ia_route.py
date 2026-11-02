@@ -107,26 +107,40 @@ def generer_ia(id_document):
                     "error": f"Quota IA quotidien atteint ({current_user.quota_daily_limit} requêtes / 24h)."
                 }
             ), 429
+
+        # L'entrée est créée AVANT l'appel pour disposer de son identifiant
+        # (id_ia) dans la réponse : le client s'en sert ensuite pour signaler
+        # l'insertion de la proposition (traçabilité AI Act). Elle n'est
+        # conservée que si l'appel aboutit.
+        new_ia = IA(
+            type_action=type_action,
+            content_before=contenu,
+            content_after="",  # Vide par défaut
+            tokens_used=0,  # 0 par défaut
+            user_id=request.user_id,
+            id_document=id_document,
+        )
+        db_session.add(new_ia)
+        db_session.flush()  # Génère l'ID sans commit final
+
         prompt = build_prompt(type_action, contenu, instructions)
 
         try:
             content_after, tokens_used = call_ollama(
                 prompt, temperature=temperature_pour(type_action)
             )
+            # ✅ MISE À JOUR si succès
+            new_ia.content_after = content_after
+            new_ia.tokens_used = tokens_used
+            db_session.commit()
         except RuntimeError as e:
+            # Rien n'est conservé : l'entrée a été créée avant l'appel pour
+            # obtenir son identifiant, pas pour décompter le quota. TI-50
+            # (tests/integration/test_ia_routes.py) l'exige — un appel qui
+            # échoue ne doit pas être facturé, sinon une panne d'Ollama épuise
+            # le quota de l'utilisateur sans lui rendre aucun service.
+            db_session.rollback()
             return jsonify({"error": str(e)}), 502
-
-        new_ia = IA(
-            type_action=type_action,
-            content_before=contenu,
-            content_after=content_after,
-            tokens_used=tokens_used,
-            user_id=request.user_id,
-            id_document=id_document,
-        )
-        db_session.add(new_ia)
-        db_session.commit()
-        db_session.refresh(new_ia)
 
         return jsonify(
             {
