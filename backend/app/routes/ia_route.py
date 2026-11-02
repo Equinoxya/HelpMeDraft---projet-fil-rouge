@@ -102,27 +102,16 @@ def generer_ia(id_document):
         ).scalar_one()
 
         if calls_last_24h >= current_user.quota_daily_limit:
-<<<<<<< HEAD
-            return jsonify({
-                "error": f"Quota IA quotidien atteint ({current_user.quota_daily_limit} requêtes / 24h)."
-            }), 429
-=======
             return jsonify(
                 {
                     "error": f"Quota IA quotidien atteint ({current_user.quota_daily_limit} requêtes / 24h)."
                 }
             ), 429
-        prompt = build_prompt(type_action, contenu, instructions)
 
-        try:
-            content_after, tokens_used = call_ollama(
-                prompt, temperature=temperature_pour(type_action)
-            )
-        except RuntimeError as e:
-            return jsonify({"error": str(e)}), 502
->>>>>>> 7505e375251ef9597a7bb9424ee162972c1aa183
-
-        # ✅ CRÉATION DE L'ENTRÉE IA AVANT L'APPEL (pour décompter le quota)
+        # L'entrée est créée AVANT l'appel pour disposer de son identifiant
+        # (id_ia) dans la réponse : le client s'en sert ensuite pour signaler
+        # l'insertion de la proposition (traçabilité AI Act). Elle n'est
+        # conservée que si l'appel aboutit.
         new_ia = IA(
             type_action=type_action,
             content_before=contenu,
