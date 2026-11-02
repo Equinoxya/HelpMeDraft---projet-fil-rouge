@@ -24,6 +24,12 @@ dist-ssr
 *.sln
 *.sw?
 # Python
+#
+# Ces deux règles existaient déjà, et ne suffisaient pas : trois .pyc étaient
+# SUIVIS malgré elles (backend/app/routes/ et backend/database/). .gitignore
+# n'ignore que les fichiers non suivis — il ne désuit jamais ce qui est déjà
+# dans l'index. Ils apparaissaient donc, recompilés, dans le diff de chaque
+# exécution des tests. Retirés de l'index avec « git rm --cached ».
 __pycache__/
 *.pyc
 *.pyo
