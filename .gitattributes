@@ -44,6 +44,13 @@ docker-compose.yml text eol=lf
 *.html          text eol=lf
 *.css           text eol=lf
 
+# ── Scripts Windows : CRLF IMPOSE ────────────────────────────────────────────
+# cmd.exe ne lit correctement un fichier batch qu'en CRLF. Converti en LF, il
+# echoue de façon obscure (labels non trouves, lignes concatenees).
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+*.ps1           text eol=crlf
+
 # ── Binaires : aucune conversion, elle les corromprait ───────────────────────
 *.png           binary
 *.jpg           binary
