@@ -15,6 +15,11 @@ const userFirstname = computed(() => {
   return authStore.user?.firstname || "Ophélie";
 });
 
+// L'accès à l'administration n'était offert que par le menu de navigation
+// de bureau : un administrateur arrivant sur son tableau de bord — ou
+// naviguant au téléphone — n'avait aucun point d'entrée visible.
+const isAdmin = computed(() => authStore.user?.role === "admin");
+
 const isLoading = ref(false);
 const errorMessage = ref("");
 
@@ -187,6 +192,50 @@ onMounted(fetchDashboardData);
           Nouveau document
         </RouterLink>
       </header>
+
+      <!-- ACCÈS ADMINISTRATION (réservé au rôle admin) -->
+      <section
+        v-if="isAdmin"
+        class="mt-12 p-6 bg-[#FAF8F5] border-2 border-[#111111] shadow-[6px_6px_0px_0px_#111111] flex flex-col md:flex-row md:items-center justify-between gap-6"
+        aria-label="Accès à l'administration"
+      >
+        <div>
+          <p
+            class="font-mono text-[11px] uppercase tracking-widest text-[#C4341C] font-bold mb-2"
+          >
+            // RÔLE ADMINISTRATEUR
+          </p>
+          <h2 class="font-serif text-2xl font-normal">
+            Espace d'administration
+          </h2>
+          <p class="mt-2 text-sm text-[#111111]/70 max-w-xl leading-relaxed">
+            Gérez les comptes utilisateurs, leurs rôles et leurs quotas
+            d'utilisation de l'IA.
+          </p>
+        </div>
+
+        <RouterLink
+          to="/admin"
+          class="inline-flex items-center justify-center gap-3 shrink-0 bg-[#111111] text-[#F4F1EA] px-6 py-4 font-mono text-xs uppercase tracking-wider font-bold hover:bg-[#C4341C] transition-colors focus-visible:outline-2 focus-visible:outline-black"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            class="w-4 h-4"
+            aria-hidden="true"
+          >
+            <path
+              d="M12 3l7 4v5c0 4.418-2.986 8.093-7 9-4.014-.907-7-4.582-7-9V7l7-4z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+          </svg>
+          Ouvrir l'administration
+        </RouterLink>
+      </section>
 
       <!-- ÉTAT DE CHARGEMENT -->
       <div
