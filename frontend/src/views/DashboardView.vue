@@ -205,7 +205,9 @@ onMounted(fetchDashboardData);
           >
             // RÔLE ADMINISTRATEUR
           </p>
-          <h2 class="font-serif text-2xl font-normal">Espace d'administration</h2>
+          <h2 class="font-serif text-2xl font-normal">
+            Espace d'administration
+          </h2>
           <p class="mt-2 text-sm text-[#111111]/70 max-w-xl leading-relaxed">
             Gérez les comptes utilisateurs, leurs rôles et leurs quotas
             d'utilisation de l'IA.
