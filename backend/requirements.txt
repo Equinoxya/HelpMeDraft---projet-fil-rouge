@@ -45,6 +45,22 @@ PyJWT==2.15.0                # signature et vérification des access tokens (HS2
 # ── Intégration IA ────────────────────────────────────────────────────────────
 requests==2.34.2             # appels HTTP vers l'API locale Ollama
 
+# ── Export PDF des documents terminés ─────────────────────────────────────────
+# Chaîne de rendu Markdown -> HTML -> PDF (app/services/pdf_service.py).
+#
+# WeasyPrint plutôt qu'une bibliothèque de dessin comme ReportLab ou fpdf2 : le
+# document est écrit en Markdown et l'éditeur en montre déjà un rendu HTML.
+# Produire le PDF depuis la même représentation est le seul moyen d'obtenir un
+# fichier conforme à ce que l'utilisateur a relu. Composer le PDF primitive par
+# primitive obligerait à réimplémenter titres, listes et tableaux, puis à les
+# maintenir en parallèle du rendu de l'aperçu.
+#
+# ATTENTION : WeasyPrint s'appuie sur Pango et sur ses bibliothèques système.
+# Elles sont installées par apt dans backend/Dockerfile — la roue seule ne
+# suffit pas, et l'import échoue au démarrage si elles manquent.
+weasyprint==70.0
+markdown==3.11.2           # Markdown -> HTML, extensions tables / nl2br / sane_lists
+
 # ── Configuration ─────────────────────────────────────────────────────────────
 python-dotenv==1.2.3         # chargement du fichier .env (app/config.py)
 

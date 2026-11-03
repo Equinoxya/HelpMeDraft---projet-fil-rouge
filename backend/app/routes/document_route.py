@@ -1,7 +1,10 @@
-from flask import Blueprint, jsonify, request
+from urllib.parse import quote
+
+from flask import Blueprint, Response, jsonify, request
 from sqlalchemy import func, select
 
 from app.routes.auth_routes import token_required
+from app.services import pdf_service
 from database.db import Document, Dossier, SessionLocal
 
 document_bp = Blueprint("documents", __name__, url_prefix="/documents")
@@ -192,6 +195,63 @@ def get_document(id_document):
             return jsonify({"error": "Document introuvable"}), 404
 
         return jsonify(_serialize_document(document)), 200
+
+
+@document_bp.route("/<id_document>/export.pdf", methods=["GET"])
+def export_document_pdf(id_document):
+    """
+    Export d'un document TERMINÉ au format PDF.
+
+    LA RESTRICTION AU STATUT « TERMINÉ » EST VÉRIFIÉE ICI, et pas seulement
+    dans l'interface. Le bouton n'apparaît que sur les documents terminés, mais
+    l'URL est devinable : sans ce contrôle, un brouillon s'exporterait par un
+    appel direct. C'est une règle métier — on n'exporte que ce qui est abouti —
+    donc elle appartient au serveur, l'interface ne faisant que l'afficher.
+
+    409 et non 403 : le refus ne tient pas aux droits de l'appelant, qui est
+    bien le propriétaire, mais à l'état du document. Changer son statut suffit
+    à lever le refus, ce qu'un 403 laisserait croire impossible.
+    """
+    with SessionLocal() as db_session:
+        stmt = select(Document).where(
+            Document.id_document == id_document,
+            Document.user_id == request.user_id,
+        )
+        document = db_session.execute(stmt).scalar_one_or_none()
+        # 404 et non 403 pour un document d'autrui : répondre « interdit »
+        # confirmerait son existence, ce qui renseigne sur les données des
+        # autres comptes. Même choix que get_document.
+        if document is None:
+            return jsonify({"error": "Document introuvable"}), 404
+
+        if document.status != "termine":
+            return (
+                jsonify(
+                    {
+                        "error": "Seuls les documents terminés peuvent être exportés",
+                        "status": document.status,
+                    }
+                ),
+                409,
+            )
+
+        pdf = pdf_service.rendre_document(document.titre, document.content)
+        nom = pdf_service.nom_de_fichier(document.titre)
+
+    # Content-Disposition en « attachment » : le navigateur enregistre au lieu
+    # d'afficher. Le nom est encodé en RFC 5987 (filename*) en plus du nom
+    # simple, sinon un titre accentué arrive tronqué ou en mojibake.
+    return Response(
+        pdf,
+        mimetype="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{nom.encode("ascii", "replace").decode()}"; '
+                f"filename*=UTF-8''{quote(nom)}"
+            ),
+            "Content-Length": str(len(pdf)),
+        },
+    )
 
 
 @document_bp.route("/<id_document>", methods=["PUT"])

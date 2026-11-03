@@ -19,6 +19,30 @@ const isLoading = ref(false);
 const errorMessage = ref("");
 const deletingId = ref<string | null>(null);
 
+// ── Export PDF des documents terminés ───────────────────────────────────────
+//
+// Le bouton n'est proposé que sur les documents terminés, mais c'est le serveur
+// qui tranche : il répond 409 sur un brouillon, l'URL étant devinable. Un
+// identifiant par document suffit comme état — deux exports simultanés depuis
+// la même liste sont possibles, et rien ne justifie de les sérialiser.
+const exportingId = ref<string | null>(null);
+const exportError = ref("");
+
+async function handleExport(item: DocumentItem) {
+  exportingId.value = item.id_document;
+  exportError.value = "";
+  try {
+    await documentService.exporterPdf(item.id_document);
+  } catch (err) {
+    exportError.value = messageErreur(
+      err,
+      "L'export PDF a échoué. Réessayez dans un instant.",
+    );
+  } finally {
+    exportingId.value = null;
+  }
+}
+
 const dossiers = ref<DossierItem[]>([]);
 const activeDossierId = ref<string | null>(null);
 const showNewDossierInput = ref(false);
@@ -384,6 +408,35 @@ onMounted(() => {
             <span>{{ errorMessage }}</span>
           </div>
 
+          <!-- ALERTE ERREUR D'EXPORT -->
+          <!--
+            Distincte de l'alerte ci-dessus : un export qui échoue ne remet pas
+            en cause la liste affichée, et effacer l'une pour montrer l'autre
+            ferait disparaître l'erreur de chargement qui explique une liste
+            vide.
+          -->
+          <div
+            v-if="exportError"
+            class="p-4 border-b border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold flex items-center gap-2"
+            role="alert"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-4 h-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <span>{{ exportError }}</span>
+          </div>
+
           <!-- ÉTAT DE CHARGEMENT -->
           <div
             v-if="isLoading"
@@ -462,6 +515,21 @@ onMounted(() => {
                 >
                   {{ statusLabels[document.status] }}
                 </span>
+                <!-- BOUTON EXPORTER — documents terminés uniquement -->
+                <button
+                  v-if="document.status === 'termine'"
+                  type="button"
+                  :disabled="exportingId === document.id_document"
+                  class="self-end sm:self-center font-mono text-xs uppercase tracking-wider px-3 py-1.5 border border-[#111111] text-[#111111] hover:bg-[#111111] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors shrink-0 cursor-pointer"
+                  :title="`Exporter « ${document.titre} » en PDF`"
+                  @click="handleExport(document)"
+                >
+                  {{
+                    exportingId === document.id_document
+                      ? "Export…"
+                      : "Exporter PDF"
+                  }}
+                </button>
                 <!-- BOUTON SUPPRIMER -->
                 <button
                   type="button"
