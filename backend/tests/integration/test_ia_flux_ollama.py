@@ -33,20 +33,33 @@ import pytest
 
 from app.services.ia_service import call_ollama
 
+
 # Flux volontairement découpé en plein milieu des mots, avec un tiret cadratin
 # et des accents : c'est là qu'un découpage d'octets mal géré se verrait.
+def _bloc(contenu: str, **extra) -> dict:
+    """Une ligne du flux au format /api/chat, où le texte est sous message.content."""
+    return {"message": {"role": "assistant", "content": contenu}, "done": False, **extra}
+
+
 FLUX_NOMINAL = [
-    {"response": "Bonjour, je ", "done": False},
-    {"response": "ser", "done": False},
-    {"response": "ai en retard", "done": False},
-    {"response": " — désolée.", "done": False},
-    {"response": "", "done": True, "prompt_eval_count": 30, "eval_count": 12},
+    _bloc("Bonjour, je "),
+    _bloc("ser"),
+    _bloc("ai en retard"),
+    _bloc(" — désolée."),
+    _bloc("", done=True, prompt_eval_count=30, eval_count=12),
 ]
 TEXTE_ATTENDU = "Bonjour, je serai en retard — désolée."
 
+# Les messages d'un appel quelconque : /api/chat en attend une liste, et non
+# une chaîne. Leur contenu importe peu ici — c'est le transport qui est testé.
+MESSAGES = [
+    {"role": "system", "content": "Tu es un correcteur."},
+    {"role": "user", "content": "BJR je serai en retar"},
+]
+
 
 class _FauxOllama:
-    """Serveur HTTP qui imite /api/generate, sur un port libre choisi par l'OS."""
+    """Serveur HTTP qui imite /api/chat, sur un port libre choisi par l'OS."""
 
     def __init__(self, flux=None, refuse_think=False, statut_erreur=None, erreur=None):
         self.flux = flux if flux is not None else FLUX_NOMINAL
@@ -54,6 +67,11 @@ class _FauxOllama:
         self.statut_erreur = statut_erreur
         self.erreur = erreur
         self.corps_recus = []
+        # Le CHEMIN est enregistré, et pas seulement le corps : c'est le seul
+        # moyen de vérifier qu'on s'adresse bien à /api/chat. Un appel à
+        # /api/generate avec une charge au format chat obtiendrait d'Ollama une
+        # réponse vide plutôt qu'une erreur — panne silencieuse.
+        self.chemins_recus = []
         faux = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -65,6 +83,7 @@ class _FauxOllama:
             def do_POST(self):
                 corps = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                 faux.corps_recus.append(corps)
+                faux.chemins_recus.append(self.path)
 
                 if faux.statut_erreur is not None:
                     return self._erreur(faux.statut_erreur, faux.erreur)
@@ -132,10 +151,39 @@ def test_le_flux_ndjson_est_recompose_accents_compris(app, ollama):
     """
     with ollama():
         with app.app_context():
-            texte, jetons = call_ollama("corrige : BJR")
+            texte, jetons = call_ollama(MESSAGES)
 
     assert texte == TEXTE_ATTENDU
     assert jetons == 42, "les compteurs ne figurent que sur la ligne done: true"
+
+
+def test_la_requete_part_bien_sur_api_chat_avec_les_deux_roles(app, ollama):
+    """
+    LE CŒUR DE LA CORRECTION, et le test qui manquait.
+
+    Les règles doivent voyager dans un message `system` distinct du document.
+    C'est ce qui remplace les marqueurs textuels d'une version précédente, que
+    le modèle recopiait dans sa réponse — l'utilisatrice recevait ses propres
+    délimiteurs en guise de reformulation.
+
+    Le chemin est vérifié autant que le corps : une charge au format chat
+    envoyée à /api/generate n'échouerait pas franchement, elle rendrait du
+    vide.
+    """
+    with ollama() as faux:
+        with app.app_context():
+            texte, _ = call_ollama(MESSAGES)
+
+    assert faux.chemins_recus == ["/api/chat"]
+
+    corps = faux.corps_recus[0]
+    assert "prompt" not in corps, "l'ancien champ d'/api/generate ne doit plus être envoyé"
+    assert [m["role"] for m in corps["messages"]] == ["system", "user"]
+    assert corps["messages"][0]["content"] == "Tu es un correcteur."
+    assert corps["messages"][1]["content"] == "BJR je serai en retar"
+
+    # Et la réponse, qu'/api/chat place sous message.content, est bien relue.
+    assert texte == TEXTE_ATTENDU
 
 
 def test_le_mode_raisonnement_est_desactive_dans_la_vraie_requete(app, ollama):
@@ -146,7 +194,7 @@ def test_le_mode_raisonnement_est_desactive_dans_la_vraie_requete(app, ollama):
     """
     with ollama() as faux:
         with app.app_context():
-            call_ollama("corrige : BJR")
+            call_ollama(MESSAGES)
 
     corps = faux.corps_recus[0]
     assert corps["think"] is False, "think doit être envoyé à false"
@@ -175,7 +223,7 @@ def test_un_modele_sans_mode_raisonnement_aboutit_quand_meme(app, ollama):
     with ollama(refuse_think=True) as faux:
         with app.app_context():
             app.config["OLLAMA_MODEL"] = "llama3.1"
-            texte, _ = call_ollama("corrige : BJR")
+            texte, _ = call_ollama(MESSAGES)
 
     assert texte == TEXTE_ATTENDU, "la génération doit aboutir malgré le refus"
     assert len(faux.corps_recus) == 2, "un seul nouvel essai, pas une boucle"
@@ -194,7 +242,7 @@ def test_le_diagnostic_d_ollama_survit_a_la_lecture_en_flux(app, ollama):
     ):
         with app.app_context():
             with pytest.raises(RuntimeError) as capture:
-                call_ollama("corrige : BJR")
+                call_ollama(MESSAGES)
 
     message = str(capture.value)
     assert "ollama pull" in message, "l'erreur doit donner la commande à lancer"
@@ -215,16 +263,16 @@ def test_un_ollama_ancien_qui_ignore_think_ne_pollue_pas_le_resultat(app, ollama
     broncher et renvoie le bloc malgré tout.
     """
     flux = [
-        {"response": "<think>\nOkay, let's tackle this. BJR", "done": False},
-        {"response": " is an abbreviation for bonjour.", "done": False},
-        {"response": " Let me check the typos.\n</think>", "done": False},
-        {"response": "\n\nBonjour, je serai en retard. Désolée.", "done": False},
-        {"response": "", "done": True, "prompt_eval_count": 50, "eval_count": 900},
+        _bloc("<think>\nOkay, let's tackle this. BJR"),
+        _bloc(" is an abbreviation for bonjour."),
+        _bloc(" Let me check the typos.\n</think>"),
+        _bloc("\n\nBonjour, je serai en retard. Désolée."),
+        _bloc("", done=True, prompt_eval_count=50, eval_count=900),
     ]
     with ollama(flux=flux) as faux:
         with app.app_context():
             app.config["OLLAMA_MODEL"] = "qwen3:4b"
-            texte, jetons = call_ollama("corrige : BJR")
+            texte, jetons = call_ollama(MESSAGES)
 
     assert texte == "Bonjour, je serai en retard. Désolée."
     assert "<think>" not in texte and "</think>" not in texte
@@ -235,7 +283,8 @@ def test_un_ollama_ancien_qui_ignore_think_ne_pollue_pas_le_resultat(app, ollama
     # quoi que ce soit.
     corps = faux.corps_recus[0]
     assert corps["think"] is False
-    assert "/no_think" not in corps["prompt"], (
+    envoye = json.dumps(corps, ensure_ascii=False)
+    assert "/no_think" not in envoye, (
         "la consigne ne doit plus être envoyée : elle ressortait dans le texte"
     )
 
@@ -259,4 +308,4 @@ def test_une_erreur_en_cours_de_flux_n_est_pas_prise_pour_du_texte(app, ollama):
     with ollama(flux=flux):
         with app.app_context():
             with pytest.raises(RuntimeError, match="model runner"):
-                call_ollama("corrige : BJR")
+                call_ollama(MESSAGES)

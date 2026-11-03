@@ -4,7 +4,7 @@ from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import func, select
 
 from app.routes.auth_routes import token_required
-from app.services.ia_service import build_prompt, call_ollama, temperature_pour
+from app.services.ia_service import build_messages, call_ollama, temperature_pour
 from database.db import IA, Document, SessionLocal, User
 from utilitaires import utc_now_naive
 
@@ -123,11 +123,11 @@ def generer_ia(id_document):
         db_session.add(new_ia)
         db_session.flush()  # Génère l'ID sans commit final
 
-        prompt = build_prompt(type_action, contenu, instructions)
+        messages = build_messages(type_action, contenu, instructions)
 
         try:
             content_after, tokens_used = call_ollama(
-                prompt, temperature=temperature_pour(type_action)
+                messages, temperature=temperature_pour(type_action)
             )
             # ✅ MISE À JOUR si succès
             new_ia.content_after = content_after
