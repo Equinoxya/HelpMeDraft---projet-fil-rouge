@@ -1,0 +1,55 @@
+# ==============================================================================
+# HelpMeDraft — normalisation des fins de ligne
+#
+# POURQUOI CE FICHIER EXISTE, et ce qu'il a corrigé :
+#
+# Le dépôt est édité sous Windows, qui termine ses lignes par CRLF. Tant que le
+# code ne quitte pas Windows, cela ne se voit pas. Mais les conteneurs tournent
+# sous Linux, et un script shell dont la première ligne est « #!/bin/bash\r »
+# désigne un interpréteur nommé « bash\r », qui n'existe pas. Le script
+# database/initdb/20-droits.sh échouait donc au PREMIER démarrage du service db,
+# c'est-à-dire exactement au moment où la base se crée : les droits au moindre
+# privilège n'étaient jamais appliqués, et l'initialisation s'interrompait.
+#
+# Le symptôme est trompeur — « bad interpreter: No such file or directory » sur
+# un fichier qui est bien là — et il n'apparaît QUE dans le conteneur, jamais à
+# l'édition. D'où cette normalisation explicite plutôt qu'un core.autocrlf
+# local, qui ne vaudrait que sur une seule machine et ne suivrait pas le dépôt.
+#
+# `text eol=lf` : stocké en LF dans le dépôt, et écrit en LF dans la copie de
+# travail, quelle que soit la configuration git de la machine qui clone.
+# ==============================================================================
+
+# Par défaut, git décide pour les fichiers texte qu'il détecte.
+* text=auto
+
+# ── Tout ce qui est lu ou exécuté par Linux : LF imposé ──────────────────────
+*.sh            text eol=lf
+*.sql           text eol=lf
+Dockerfile      text eol=lf
+*.dockerignore  text eol=lf
+docker-compose.yml text eol=lf
+*.conf          text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+
+# ── Code et configuration : LF, par cohérence avec l'intégration continue ────
+*.py            text eol=lf
+*.ts            text eol=lf
+*.vue           text eol=lf
+*.js            text eol=lf
+*.mjs           text eol=lf
+*.json          text eol=lf
+*.md            text eol=lf
+*.html          text eol=lf
+*.css           text eol=lf
+
+# ── Binaires : aucune conversion, elle les corromprait ───────────────────────
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.svg           text eol=lf
+*.ico           binary
+*.db            binary
+*.docx          binary
+*.pdf           binary
