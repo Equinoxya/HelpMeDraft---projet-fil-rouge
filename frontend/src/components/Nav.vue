@@ -230,6 +230,14 @@ watch(() => route.fullPath, fermerMenu);
                 → Mes documents
               </RouterLink>
             </li>
+            <li v-if="authStore.user?.role === 'admin'">
+              <RouterLink
+                to="/admin"
+                class="block py-2 !text-[#111111] hover:!text-[#C4341C]"
+              >
+                → Administration
+              </RouterLink>
+            </li>
             <li class="pt-2 border-t border-[#111111]/20">
               <button
                 class="w-full text-left py-2 text-[#C4341C] font-bold cursor-pointer"

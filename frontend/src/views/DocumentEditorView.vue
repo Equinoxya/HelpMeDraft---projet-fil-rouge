@@ -415,6 +415,7 @@ async function loadDocument(id: string) {
     const document = await documentService.get(id);
     titre.value = document.titre;
     status.value = document.status;
+    statutEnregistre.value = document.status;
     idDossier.value = document.id_dossier ?? "";
     content.value = document.content ?? "";
     isLoading.value = false;
@@ -472,6 +473,12 @@ async function persistDocument() {
     const created = await documentService.create(payload);
     router.replace(`/documents/${created.id_document}`);
   }
+
+  // Le statut enregistré est noté ICI, et non dans le menu déroulant : c'est
+  // l'unique point de passage de tout enregistrement, manuel comme
+  // automatique. Le bouton d'export s'y fie, l'export portant sur ce qui est
+  // en base et non sur ce qui est à l'écran.
+  statutEnregistre.value = status.value;
 }
 
 function scheduleAutoSave() {
@@ -529,6 +536,42 @@ async function handleSave() {
   }
 }
 
+// ── Export PDF ──────────────────────────────────────────────────────────────
+//
+// Proposé seulement sur un document ENREGISTRÉ et marqué terminé. Deux raisons
+// de ne pas l'offrir autrement :
+//
+//   - un document jamais enregistré n'a pas d'identifiant, donc rien à
+//     exporter ;
+//   - le serveur refuse par un 409 tout document non terminé. Passer le statut
+//     à « Terminé » dans le menu sans enregistrer afficherait un bouton qui
+//     échouerait, l'export portant sur ce qui est en base et non sur l'écran.
+//     D'où la comparaison avec le statut ENREGISTRÉ et non avec `status`.
+const isExporting = ref(false);
+const exportError = ref("");
+const statutEnregistre = ref<DocumentStatus | null>(null);
+
+const peutExporter = computed(
+  () => isEditMode.value && statutEnregistre.value === "termine",
+);
+
+async function handleExport() {
+  if (!documentId.value || isExporting.value) return;
+
+  isExporting.value = true;
+  exportError.value = "";
+  try {
+    await documentService.exporterPdf(documentId.value);
+  } catch (err) {
+    exportError.value = messageErreur(
+      err,
+      "L'export PDF a échoué. Réessayez dans un instant.",
+    );
+  } finally {
+    isExporting.value = false;
+  }
+}
+
 async function handleDelete() {
   if (!documentId.value) return;
 
@@ -571,15 +614,52 @@ function handleCancel() {
           ← Retour aux documents
         </RouterLink>
 
-        <button
-          v-if="isEditMode"
-          type="button"
-          :disabled="isDeleting || isLoading"
-          class="font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#C4341C] text-[#C4341C] hover:bg-[#C4341C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors"
-          @click="handleDelete"
-        >
-          {{ isDeleting ? "Suppression…" : "Supprimer le document" }}
-        </button>
+        <div class="flex items-center gap-3">
+          <!-- EXPORT PDF — document enregistré et terminé uniquement -->
+          <button
+            v-if="peutExporter"
+            type="button"
+            :disabled="isExporting || isLoading"
+            class="font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#111111] text-[#111111] hover:bg-[#111111] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors cursor-pointer inline-flex items-center gap-2"
+            @click="handleExport"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
+              />
+            </svg>
+            {{ isExporting ? "Export…" : "Exporter en PDF" }}
+          </button>
+
+          <button
+            v-if="isEditMode"
+            type="button"
+            :disabled="isDeleting || isLoading"
+            class="font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#C4341C] text-[#C4341C] hover:bg-[#C4341C] hover:text-[#F4F1EA] disabled:opacity-50 transition-colors"
+            @click="handleDelete"
+          >
+            {{ isDeleting ? "Suppression…" : "Supprimer le document" }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ALERTE ERREUR D'EXPORT -->
+      <div
+        v-if="exportError"
+        class="mb-6 p-4 border border-[#C4341C] bg-[#C4341C]/10 font-mono text-xs text-[#C4341C] font-bold"
+        role="alert"
+      >
+        {{ exportError }}
       </div>
 
       <!-- CARTE ÉDITEUR -->

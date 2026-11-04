@@ -59,3 +59,6 @@ sauvegardes/
 coverage/
 htmlcov/
 .pytest_cache/
+
+# Journal produit par demarrer-docker.bat (diagnostic local).
+docker-demarrage.log

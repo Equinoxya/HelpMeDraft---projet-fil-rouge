@@ -11,6 +11,41 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
+# Bibliothèques système de WeasyPrint, utilisé pour l'export PDF des documents
+# terminés. Ce ne sont PAS des dépendances facultatives : la roue Python ne
+# contient que les liaisons, et « import weasyprint » échoue sans elles — au
+# démarrage de l'application, donc sur tous les points d'entrée à la fois, et
+# non seulement sur la route d'export.
+#
+#   libpango-1.0-0, libpangoft2-1.0-0  mise en page et rendu du texte
+#   libharfbuzz0b                      façonnage des glyphes
+#   libharfbuzz-subset0                sous-ensemble des polices embarquées
+#                                      dans le PDF. Sans elle, WeasyPrint
+#                                      bascule sur fontTools et avertit que ce
+#                                      repli disparaîtra dans une version
+#                                      future : l'export cesserait alors de
+#                                      fonctionner à la première mise à jour
+#   libgdk-pixbuf-2.0-0                images référencées dans un document
+#   libffi8                            appel des bibliothèques ci-dessus
+#   fonts-dejavu-core                  une police À CHASSE FIXE pour les blocs
+#                                      de code. L'image slim n'embarque aucune
+#                                      police : sans elle, le texte sort dans
+#                                      une police de secours, voire en carrés.
+#
+# --no-install-recommends et la purge des listes d'apt : une image qui porte
+# son cache de paquets pèse une centaine de mégaoctets de plus sans rien
+# apporter à l'exécution.
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+        libpango-1.0-0 \
+        libpangoft2-1.0-0 \
+        libharfbuzz0b \
+        libharfbuzz-subset0 \
+        libgdk-pixbuf-2.0-0 \
+        libffi8 \
+        fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Les dépendances sont copiées et installées AVANT le code applicatif : Docker
