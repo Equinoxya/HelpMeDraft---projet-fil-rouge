@@ -1,0 +1,8 @@
+{
+  "name": "helpmedraft-soutenance",
+  "private": true,
+  "description": "Construction du support de soutenance (build.js).",
+  "dependencies": {
+    "pptxgenjs": "4.0.1"
+  }
+}

@@ -1,6 +1,6 @@
 # Script oral — soutenance HelpMeDraft
 
-Support : `docs/Soutenance-HelpMeDraft.pptx` (30 diapos) · PDF de secours : `docs/Soutenance-HelpMeDraft.pdf`
+Support : `docs/Soutenance-HelpMeDraft.pptx` (31 diapos) · PDF de secours : `docs/Soutenance-HelpMeDraft.pdf`
 Durée : **40 min** d'exposé, questions après.
 
 > Mode d'emploi : les notes du .pptx sont rédigées en phrases complètes (à lire si tu bloques).
@@ -14,10 +14,10 @@ Durée : **40 min** d'exposé, questions après.
 |---|---|---|---|---|---|
 | 1 | 0:00 → 4:10 | Contexte et besoin | 1 → 5 | § 2, § 3 | La confidentialité est **dans** le cahier des charges, pas en option |
 | 2 | 4:10 → 8:35 | Gestion de projet | 6 → 8 | § 4 | Lots verticaux + 3 arbitrages + 1 erreur assumée |
-| 3 | 8:35 → 20:30 | Conception | 9 → 16 | § 5 | Le navigateur ne parle **jamais** au modèle |
-| 4 | 20:30 → 27:55 | Réalisation | 17 → 22 | § 6, § 7 | Du code, 3 décisions par extrait |
-| 5 | 27:55 → 32:20 | Sécurité | 23 → 25 | § 8 | La sécurité est une contrainte de **structure** |
-| 6 | 32:20 → 40:00 | Tests, veille, bilan | 26 → 30 | § 9-11 | Je vérifie, je me tiens à jour, j'assume ce qui reste |
+| 3 | 8:35 → 20:30 | Conception | 9 → 17 | § 5 | Le navigateur ne parle **jamais** au modèle |
+| 4 | 20:30 → 27:55 | Réalisation | 18 → 23 | § 6, § 7 | Du code, 3 décisions par extrait |
+| 5 | 27:55 → 32:20 | Sécurité | 24 → 26 | § 8 | La sécurité est une contrainte de **structure** |
+| 6 | 32:20 → 40:00 | Tests, veille, bilan | 27 → 31 | § 9-11 | Je vérifie, je me tiens à jour, j'assume ce qui reste |
 
 **Les 3 phrases de fin** (à savoir par cœur, elles closent l'oral) :
 1. Un prompt est du code.
@@ -137,21 +137,29 @@ Durée : **40 min** d'exposé, questions après.
 - Elles évitent un écran vide et masquent le menu d'admin.
 - **Le contrôle qui compte est côté serveur** — partie sécurité.
 
-### Diapo 14 · Sept tables, UUID, cascades SGBD `[15:30 — 17:45]`
-- Modèle entités-associations. Sept tables. Trois choix à défendre.
+### Diapo 14 · Huit entités, UUID, cascades SGBD `[15:30 — 16:45]`
+- Le modèle conceptuel. **Huit entités**, les cardinalités sur les associations.
+- Trois choix à défendre.
 - **UUID v4, pas d'auto-incrément** → les identifiants ne sont pas énumérables. On ne balaie pas `/documents/1`, `/documents/2`.
 - **Cascades déclarées au niveau du SGBD**, pas seulement dans l'ORM. Suppression via un client SQL → l'intégrité tient. **Une contrainte qui n'existe que dans le code applicatif n'est pas une contrainte.**
 - **La table `ia` journalise avant/après.** Elle sert trois choses : historique affiché, calcul du quota, traçabilité RGPD. **La même donnée rend les trois possibles.**
-- MLD et MPD en § 5.4, script MySQL § 5.5 — **exécuté et vérifié sur un serveur réel**.
+- Si on te pointe « Contient » : **0,1 côté document** — un document peut n'appartenir à aucun dossier. C'est ce que le `ON DELETE SET NULL` produit.
 
-### Diapo 15 · Trois acteurs `[17:45 — 18:45]`
+### Diapo 15 · Les associations deviennent des clés étrangères `[16:45 — 17:45]`
+- Le modèle logique : le même modèle, **associations résolues en clés étrangères** (en bleu).
+- **Toutes les clés étrangères convergent vers `user`** — c'est le cloisonnement par compte, écrit dans le schéma.
+- Sessions, documents, dossiers, appels IA, consentements, réinitialisations : **chaque ligne appartient à quelqu'un, et c'est la base qui le sait**, pas seulement le code.
+- `ia` porte **deux** clés : `id_document` et `user_id`. Le document aurait suffi pour remonter au propriétaire, mais **le quota s'agrège sur l'utilisateur** : redondance assumée, elle évite une jointure à chaque appel. L'index `(user_id, created_at)` est là pour ça.
+- MPD en § 5.4, script MySQL § 5.5 — **exécuté et vérifié sur un serveur réel**.
+
+### Diapo 16 · Trois acteurs `[17:45 — 18:45]`
 - Visiteur, utilisateur authentifié, administrateur.
 - Utilisateur : strictement ses documents, ses dossiers, ses 3 actions IA dans son quota, son historique.
 - Admin : hérite de tout le périmètre utilisateur + back-office.
 - Le moteur apparaît comme **système externe sollicité par l'API, jamais par le navigateur** — cohérence avec l'architecture.
 - Cas le plus significatif : **la génération d'une assistance IA** → diagramme de séquence + jeu d'essai.
 
-### Diapo 16 · Cinq contrôles avant le modèle `[18:45 — 20:30]`
+### Diapo 17 · Cinq contrôles avant le modèle `[18:45 — 20:30]`
 - Séquence du cas le plus significatif.
 - **Suivez l'ordre des contrôles, il n'est pas arbitraire** : authentification → propriété → validation des entrées → quota → **et seulement ensuite l'appel au modèle**.
 - **Chaque contrôle est placé avant celui qui coûte plus cher.**
@@ -164,17 +172,17 @@ Durée : **40 min** d'exposé, questions après.
 
 ## 5. Réalisation — 20:30 → 27:55
 
-### Diapo 17 · Section `[20:30 — 20:40]`
+### Diapo 18 · Section `[20:30 — 20:40]`
 > « Quatrième temps : la réalisation, avec les écrans et le code. »
 
-### Diapo 18 · Supprimer la page blanche `[20:40 — 21:40]`
+### Diapo 19 · Supprimer la page blanche `[20:40 — 21:40]`
 - Tableau de bord. **Capture réelle de l'application en fonctionnement.**
 - Trois compteurs, puis trois portes d'entrée vers la rédaction.
 - Constat d'usage : **devant un éditeur vide, l'utilisateur sans structure en tête abandonne.** Un modèle ou un document existant supprime la page blanche.
 - Deux points techniques : les compteurs viennent de l'API, pas d'un calcul client. La recherche filtre la page courante côté client **parce que la pagination est serveur** — la liste n'est jamais chargée entièrement.
 - Huit captures en annexe § 12.2, avec le code.
 
-### Diapo 19 · Enregistrer 2,5 s après la frappe `[21:40 — 23:25]`
+### Diapo 20 · Enregistrer 2,5 s après la frappe `[21:40 — 23:25]`
 - L'éditeur, écran central. Je m'arrête sur l'enregistrement automatique : **quatre décisions en quelques lignes**.
 - 2,5 s n'est pas arbitraire : à chaque caractère → API saturée, écritures multipliées. Trop long → sauvegarde invisible, travail perdu.
 - **Le minuteur précédent est systématiquement annulé** — sinon une frappe rapide empile les requêtes.
@@ -183,7 +191,7 @@ Durée : **40 min** d'exposé, questions après.
 - Remarque de méthode, écrite dans le dossier : sur la capture C-07 l'indicateur n'apparaît pas, **parce qu'aucune frappe n'a eu lieu**.
 - **Une capture atteste d'un état, pas d'un comportement.** Vérifier une fonctionnalité demande de lire le code ou d'exécuter un scénario. → **C'est la raison d'être du jeu d'essai.**
 
-### Diapo 20 · Compter les appels, jamais les stocker `[23:25 — 25:25]`
+### Diapo 21 · Compter les appels, jamais les stocker `[23:25 — 25:25]`
 - Composant métier : le quota IA. **Dix lignes, trois décisions.**
 - **1 — C'est une agrégation** sur le journal des 24 dernières heures, pas un compteur sur l'utilisateur. Un compteur se désynchronise — il suffit d'un échec entre l'appel et l'incrément. **Une agrégation est juste par construction.**
 - **2 — Fenêtre glissante, pas compteur journalier.** Le cahier des charges dit « 20 requêtes par 24 heures », pas « par jour calendaire ». Remise à zéro à minuit → **40 appels entre 23 h et 1 h**.
@@ -191,14 +199,14 @@ Durée : **40 min** d'exposé, questions après.
 - Contrôle entièrement serveur. Le front affiche le quota restant — **c'est de l'affichage**.
 - Test JE-07. **Mes données contiennent une ligne datée de 25 heures précisément pour vérifier la fenêtre glissante.**
 
-### Diapo 21 · La propriété est dans le WHERE `[25:25 — 26:25]`
+### Diapo 22 · La propriété est dans le WHERE `[25:25 — 26:25]`
 - Accès aux données. **Le motif le plus répété du projet.**
 - **La propriété est dans la clause WHERE.** Je ne charge pas le document pour comparer ensuite son propriétaire : je demande un document qui a cet identifiant **ET** qui appartient à l'utilisateur courant.
 - **Pas stylistique** : avec un contrôle a posteriori, un `if` oublié dans une route ouvre une faille. Ici, oublier la condition **fait échouer le test de propriété**, qui existe pour chaque ressource.
 - Conséquence voulue : **404, pas 403.** Un 403 confirmerait que la ressource existe. Le 404 est indiscernable d'un identifiant inexistant.
 - Tout passe par l'ORM, paramétré, **aucune concaténation de chaîne** — objectif de qualité tenu sans exception.
 
-### Diapo 22 · Conteneurisée, intégrée, pas déployée `[26:25 — 27:55]`
+### Diapo 23 · Conteneurisée, intégrée, pas déployée `[26:25 — 27:55]`
 - **Je préfère l'amener moi-même** : conteneurisée et intégrée en continu depuis le 4 octobre, **mais pas déployée**.
 - Trois services :
   - MySQL 8.4, volume persistant, **sonde de santé** — sans elle le backend démarre avant que la base accepte les connexions.
@@ -215,10 +223,10 @@ Durée : **40 min** d'exposé, questions après.
 
 ## 6. Sécurité — 27:55 → 32:20
 
-### Diapo 23 · Section `[27:55 — 28:05]`
+### Diapo 24 · Section `[27:55 — 28:05]`
 > « Cinquième temps : la sécurité. **C'est le fil rouge du projet, pas un chapitre.** »
 
-### Diapo 24 · La sécurité comme contrainte de conception `[28:05 — 30:05]`
+### Diapo 25 · La sécurité comme contrainte de conception `[28:05 — 30:05]`
 - Grille : **OWASP Top 10 2021**, croisée avec le cahier des charges et l'ANSSI. Le dossier traite les dix ; j'en montre six.
 - Point de méthode : **pas traitée en fin de projet — et pas par vertu, par nécessité pratique.**
 - Filtrage par propriétaire dans le WHERE, stockage d'empreintes, refus de démarrer sans clé : **des choix de structure. Les ajouter après aurait demandé de réécrire les couches.**
@@ -228,7 +236,7 @@ Durée : **40 min** d'exposé, questions après.
 - **A10** : la seule URL sortante est `OLLAMA_URL`, une valeur de configuration. **Aucune entrée utilisateur ne devient une destination HTTP.**
 - Transparence, c'est dans le dossier : **A09, la journalisation applicative est incomplète.** Le journal IA existe, mais pas de journalisation systématique des événements de sécurité.
 
-### Diapo 25 · Deux jetons `[30:05 — 32:20]`
+### Diapo 26 · Deux jetons `[30:05 — 32:20]`
 - Cycle de vie des sessions : **la partie qui m'a demandé le plus de réflexion**.
 - Deux besoins contradictoires : court = sûr mais pénible ; long = confortable mais dangereux.
 - **La combinaison donne les deux propriétés** : access token 15 min, non révocable mais fenêtre courte ; refresh token 7 jours, révocable côté serveur.
@@ -244,10 +252,10 @@ Durée : **40 min** d'exposé, questions après.
 
 ## 7. Tests, veille et bilan — 32:20 → 40:00
 
-### Diapo 26 · Section `[32:20 — 32:30]`
+### Diapo 27 · Section `[32:20 — 32:30]`
 > « Dernier temps : comment je vérifie, comment je me tiens à jour, et ce que je retiens. »
 
-### Diapo 27 · 195 cas au vert `[32:30 — 34:30]`
+### Diapo 28 · 195 cas au vert `[32:30 — 34:30]`
 - Quatre niveaux, **du moins coûteux au plus coûteux** → ce classement détermine ce qui tourne à chaque push et ce qui reste manuel.
 - Campagne du 3 octobre : **195 cas, tous au vert, 59 secondes. 95 % de couverture backend** — 100 % sur `services/` et la persistance, 89-96 % sur les routes.
 - Mon objectif était 80 % sur `services/` et les routes, **sans objectif chiffré ailleurs. C'est volontaire : viser un pourcentage global pousse à écrire des tests faciles sur du code sans risque.**
@@ -257,7 +265,7 @@ Durée : **40 min** d'exposé, questions après.
 - Tests ajoutés ensuite **vérifiés par mutation** : on casse le code exprès pour s'assurer que le test échoue. **Un test qu'on n'a jamais vu échouer ne prouve rien.**
 - Reste : tests système (démon Docker), tests de charge après.
 
-### Diapo 28 · La ligne datée de 25 heures `[34:30 — 36:30]`
+### Diapo 29 · La ligne datée de 25 heures `[34:30 — 36:30]`
 - Jeu d'essai : la génération d'une assistance IA. **Trois raisons :**
   1. il traverse les trois couches et sollicite un système externe ;
   2. il concentre cinq contrôles de nature différente ;
@@ -268,7 +276,7 @@ Durée : **40 min** d'exposé, questions après.
 - **Cette ligne unique est le seul moyen de distinguer une fenêtre glissante d'un compteur journalier.** Sans elle, JE-07 passerait quelle que soit l'implémentation.
 - **Ce que j'ai appris : un jeu de données, ce n'est pas remplir des tables — c'est choisir les valeurs qui font échouer les mauvaises implémentations.**
 
-### Diapo 29 · La sévérité ne prédit pas l'impact `[36:30 — 38:30]`
+### Diapo 30 · La sévérité ne prédit pas l'impact `[36:30 — 38:30]`
 - Trois périmètres : dépendances, sécurité applicative, réglementaire.
 - Principe : **surveiller ce que le projet utilise réellement. Une alerte sur une bibliothèque absente du projet n'est pas une information.**
 - Huit entrées sur six mois, **trois ont appelé une action** — c'est la mesure de l'utilité de l'exercice.
@@ -281,7 +289,7 @@ Durée : **40 min** d'exposé, questions après.
 - Ollama éclaire mon architecture : **héberger soi-même, c'est aussi maintenir soi-même.** La décision reste la bonne au regard du RGPD, **mais elle se paie en maintenance — et le dire est plus honnête que de la présenter comme un choix sans contrepartie**.
 - L'AI Act justifie la veille comme livrable : le cahier des charges, rédigé avant l'entrée en application, ne mentionne que le RGPD. **Sans ce suivi, j'aurais livré une application non conforme à une obligation entrée en vigueur trois semaines avant la fin du développement.**
 
-### Diapo 30 · Ce que je retiens `[38:30 — 40:00]`
+### Diapo 31 · Ce que je retiens `[38:30 — 40:00]`
 - Trois colonnes.
 - **Livré** : l'application complète sur les cinq lots, 195 tests au vert, conteneurisation et pipeline, audits accessibilité et sécurité, journal de veille.
 - **Reste, et je ne le cache pas** : déploiement effectif ; bascule MySQL (schéma exécuté et vérifié, il manque un démon Docker) ; trois compléments AI Act ; journalisation applicative à compléter.
@@ -296,11 +304,11 @@ Durée : **40 min** d'exposé, questions après.
 ## Antisèche — à relire 5 minutes avant
 
 **Chiffres**
-`195` tests au vert · `59 s` · `95 %` couverture backend (100 % services) · `62 %` front · `7` tables · `5` blueprints · `9` planches · `20` requêtes / `24 h` · `429` · `404` pas 403 · `15 min` access · `7 jours` refresh · `2,5 s` autosave · `~50 Mo` image front · `8` entrées de veille, `3` actions · CVE `9,1` Ollama / `5,1` DOMPurify · AI Act `2 août 2026` · `13` lots
+`195` tests au vert · `59 s` · `95 %` couverture backend (100 % services) · `62 %` front · `8` tables · `5` blueprints · `9` planches · `20` requêtes / `24 h` · `429` · `404` pas 403 · `15 min` access · `7 jours` refresh · `2,5 s` autosave · `~50 Mo` image front · `8` entrées de veille, `3` actions · CVE `9,1` Ollama / `5,1` DOMPurify · AI Act `2 août 2026` · `13` lots
 
 **Si tu perds le fil** → reviens à la question « pourquoi ce choix ? ». Chaque diapo a une raison, pas une liste.
 
-**Si tu es en retard** → coupe dans les diapos 12, 13, 15 et 18 (descriptives). Ne coupe jamais 8, 10, 20, 21, 25, 30.
+**Si tu es en retard** → coupe dans les diapos 12, 13, 16 et 19 (descriptives). Ne coupe jamais 8, 10, 21, 22, 26, 31.
 
 **Les quatre « je ne le cache pas »** — à sortir toi-même, jamais à laisser venir :
 1. Pas déployé (il manque un démon Docker, pas une conception).

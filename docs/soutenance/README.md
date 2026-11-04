@@ -1,6 +1,6 @@
 # Support de soutenance
 
-`docs/Soutenance-HelpMeDraft.pptx` — 30 diapositives, notes de l'orateur remplies
+`docs/Soutenance-HelpMeDraft.pptx` — 31 diapositives, notes de l'orateur remplies
 (≈ 4 500 mots, soit environ 40 minutes avec les pauses et les diagrammes commentés).
 Chaque note s'ouvre sur son créneau cumulé ; la suite est continue et se referme
 sur 40:00.
@@ -11,6 +11,11 @@ Script oral télégraphique : [`script-oral.md`](./script-oral.md).
 Le contenu est repris du dossier projet : aucune affirmation du diaporama ne
 contredit `docs/Dossier-projet-HelpMeDraft.pdf`. Les figures sont les fichiers
 d'origine, pas des recopies.
+
+Le modèle de données occupe deux diapositives, 14 et 15 : le modèle conceptuel
+avec ses cardinalités, puis le modèle logique avec ses clés étrangères. Elles
+affichent `docs/dossier/fig/mcd.png` et `mld.png` — remplacer ces deux fichiers
+et relancer le build suffit à les mettre à jour.
 
 ## Charte
 
@@ -31,8 +36,17 @@ la mise en page sur un autre poste.
 
 ```sh
 cd docs/soutenance
-npm install pptxgenjs
-NODE_PATH=$PWD/node_modules node build.js Soutenance-HelpMeDraft.pptx
+npm install
+NODE_PATH=$PWD/node_modules node build.js ../Soutenance-HelpMeDraft.pptx
+```
+
+La version de pptxgenjs est figée dans `package.json`, et `package-lock.json`
+est versionné — pour la raison exposée en § 4 du dossier.
+
+Export PDF de secours, à refaire après chaque build :
+
+```sh
+cd docs && soffice --headless --convert-to pdf --outdir . Soutenance-HelpMeDraft.pptx
 ```
 
 Le script applique ensuite le thème via `apply_theme.js` de la compétence pptx ;

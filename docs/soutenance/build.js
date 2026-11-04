@@ -446,16 +446,29 @@ Je précise tout de suite, parce que c'est la question qu'on pose : ces gardes s
 
 {
   const s = add("MEDIA", "Conception",
-`[15:30 — 17:45]
-Le modèle entités-associations. Sept tables.
+`[15:30 — 16:45]
+Le modèle conceptuel. Huit entités, et les cardinalités portées par les associations.
 Trois choix à défendre.
 Les identifiants sont des UUID v4, pas des entiers auto-incrémentés. Conséquence directe sur la sécurité : les identifiants ne sont pas énumérables. On ne balaie pas /documents/1, /documents/2.
 Les cascades sont déclarées au niveau du SGBD, pas seulement dans l'ORM. Si quelqu'un supprime une ligne avec un client SQL, l'intégrité tient quand même. Une contrainte qui n'existe que dans le code applicatif n'est pas une contrainte.
 La table ia journalise chaque interaction avec le contenu avant et après. Elle sert trois choses à la fois : l'historique affiché dans l'éditeur, le calcul du quota par agrégation, et la traçabilité RGPD. C'est la même donnée qui rend les trois possibles.
-Le modèle logique et le modèle physique sont dans le dossier en § 5.4, et le script de création MySQL en § 5.5 — il a été exécuté et vérifié sur un serveur réel.`);
-  s.addText("Sept tables, des UUID, des cascades côté SGBD", { placeholder: "title" });
-  media(s, { file: `${R}/docs/dossier/fig/mcd.png`, ratio: 2.04, y: 1.45, maxH: 4.9, name: "modele entites-associations" });
-  s.addText("Modèle entités-associations (dossier § 5.4) ; modèle physique et script MySQL en § 5.4 et § 5.5.", { placeholder: "caption" });
+Relevez « Contient » entre dossier et document, en 0,1 côté document : un document peut n'appartenir à aucun dossier. C'est le cas que le ON DELETE SET NULL doit produire quand un dossier est supprimé.`);
+  s.addText("Huit entités, des UUID, des cascades côté SGBD", { placeholder: "title" });
+  media(s, { file: `${R}/docs/dossier/fig/mcd.png`, ratio: 1.608, y: 1.45, maxH: 4.9, name: "modele conceptuel de donnees" });
+  s.addText("Modèle conceptuel de données (dossier § 5.4).", { placeholder: "caption" });
+}
+
+{
+  const s = add("MEDIA", "Conception",
+`[16:45 — 17:45]
+Le modèle logique, c'est-à-dire le même modèle une fois les associations résolues en clés étrangères — en bleu sur la figure.
+Deux choses à relever.
+Toutes les clés étrangères convergent vers user : c'est la traduction, dans le schéma, du cloisonnement par compte. Sessions, documents, dossiers, appels IA, consentements, demandes de réinitialisation — chaque ligne appartient à quelqu'un, et c'est la base qui le sait, pas seulement le code.
+La table ia porte deux clés étrangères, id_document et user_id. Le document aurait suffi pour retrouver son propriétaire, mais le quota se calcule par agrégation sur l'utilisateur : la redondance est assumée, elle évite une jointure sur chaque appel.
+Le modèle physique est en § 5.4 et le script de création MySQL en § 5.5 — il a été exécuté et vérifié sur un serveur réel.`);
+  s.addText("Les associations deviennent des clés étrangères", { placeholder: "title" });
+  media(s, { file: `${R}/docs/dossier/fig/mld.png`, ratio: 1.572, y: 1.45, maxH: 4.9, name: "modele logique de donnees" });
+  s.addText("Modèle logique de données (dossier § 5.4) ; modèle physique et script MySQL en § 5.4 et § 5.5.", { placeholder: "caption" });
 }
 
 {
