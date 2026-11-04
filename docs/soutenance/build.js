@@ -378,13 +378,82 @@ pres.addSection({ title: "Conception" });
 }
 
 {
+  const s = add("CONTENT", "Conception",
+`[8:45 — 9:40]
+La pile, domaine par domaine. Je la mets en regard de l'environnement technique recommandé par le cahier des charges, parce que c'est la première question qu'on pose.
+Sur sept domaines, six sont conformes. Python et Flask côté serveur, JWT pour l'authentification, GitHub Actions pour l'intégration continue, Docker et docker-compose pour la conteneurisation : c'est ce qui était recommandé, et je n'avais aucune raison de m'en écarter.
+Deux lignes sont des choix à l'intérieur d'une alternative que le cahier des charges ouvre lui-même : il dit « MySQL ou MongoDB », et il dit « OpenAI ou un modèle local ». Choisir dans une alternative n'est pas s'écarter d'une recommandation ; c'est trancher, et je justifie les deux à la diapositive suivante.
+Il reste un seul véritable écart, le front : le cahier des charges recommande React, j'ai retenu Vue 3. Je l'argumente aussi à la diapositive suivante.
+Deux lignes ne figurent pas au cahier des charges et sont des ajouts de ma part. CodeMirror 6, parce qu'un éditeur Markdown avec coloration et raccourcis ne s'écrit pas à la main dans un textarea. Et DOMPurify, parce que la prévisualisation rend du HTML produit à partir du texte de l'utilisateur — c'est le seul v-html du projet, et il est assaini.
+Dernière ligne, SQLite : ce n'est pas un second SGBD, c'est le même code SQLAlchemy exécuté sur un moteur de développement. Les tests tournent dessus en mémoire, en quelques secondes et sans serveur.`);
+  s.addText("La pile technique", { placeholder: "title" });
+  s.addText("Comparée à l'environnement technique recommandé au § 4 du cahier des charges.", { placeholder: "lead" });
+
+  // Trois états : conforme à la recommandation, choix dans une alternative
+  // que le cahier des charges ouvre lui-même, écart assumé, ou ajout.
+  const VERT = "1F6F4A", BRIQUE = THEME.colors.accent1, GRIS = THEME.colors.accent5;
+  const pile = [
+    ["Front-end",        "Vue 3 · TypeScript · Vite · Tailwind 4 · Pinia", "écart",       BRIQUE],
+    ["Éditeur",          "CodeMirror 6 · marked · DOMPurify",              "ajout",       GRIS],
+    ["Back-end",         "Python 3.11+ · Flask 3 · SQLAlchemy 2",          "conforme",    VERT],
+    ["Base de données",  "MySQL 8.4  (SQLite en développement et en test)","au choix",    VERT],
+    ["IA",               "Ollama en local · qwen2.5:3b",                   "au choix",    VERT],
+    ["Authentification", "JWT HS256 · refresh httpOnly haché, en rotation","conforme",    VERT],
+    ["Tests",            "pytest · pytest-cov · Vitest",                   "ajout",       GRIS],
+    ["CI / CD",          "GitHub Actions — 3 travaux parallèles",          "conforme",    VERT],
+    ["Conteneurisation", "Docker Compose — MySQL, gunicorn, nginx",        "conforme",    VERT],
+  ];
+  pile.forEach((l, i) => {
+    const y = 1.92 + i * 0.5;
+    if (i % 2 === 0) s.addShape(pres.ShapeType.rect, { x: M, y, w: CW, h: 0.46, fill: { color: C.background2 }, line: { color: C.background2, width: 0.5 }, objectName: `bande ${i}` });
+    s.addText(l[0], { x: M + 0.22, y, w: 2.5, h: 0.46, fontSize: 13.5, bold: true, color: C.text1, valign: "middle", margin: 0, isTextBox: true });
+    s.addText(l[1], { x: M + 2.85, y, w: 7.0, h: 0.46, fontSize: 13, color: C.text1, fontFace: "Courier New", valign: "middle", margin: 0, isTextBox: true });
+    s.addText(l[2].toUpperCase(), { x: 10.3, y, w: 2.4, h: 0.46, fontSize: 10.5, bold: true, color: l[3], fontFace: "Courier New", align: "right", valign: "middle", margin: 0, isTextBox: true });
+  });
+
+  s.addText([
+    { text: "CONFORME", options: { bold: true, color: VERT, fontFace: "Courier New", fontSize: 10.5 } },
+    { text: "  à la recommandation  ·  ", options: { color: GRIS } },
+    { text: "AU CHOIX", options: { bold: true, color: VERT, fontFace: "Courier New", fontSize: 10.5 } },
+    { text: "  dans une alternative ouverte par le cahier des charges  ·  ", options: { color: GRIS } },
+    { text: "ÉCART", options: { bold: true, color: BRIQUE, fontFace: "Courier New", fontSize: 10.5 } },
+    { text: "  assumé  ·  ", options: { color: GRIS } },
+    { text: "AJOUT", options: { bold: true, color: GRIS, fontFace: "Courier New", fontSize: 10.5 } },
+    { text: "  hors cahier des charges", options: { color: GRIS } },
+  ], { x: M, y: 6.5, w: CW, h: 0.4, fontSize: 12, margin: 0, isTextBox: true, objectName: "legende pile" });
+}
+
+{
+  const s = add("CONTENT", "Conception",
+`[9:40 — 10:50]
+Trois choix de technologie, et c'est sur ceux-là qu'on m'attend.
+Le premier est le seul écart à la recommandation. Le cahier des charges recommande React ; j'ai retenu Vue 3. Il recommande, il n'impose pas. La Composition API donne le même modèle de composants, mon niveau de maîtrise y était nettement meilleur — et sur un projet mené seule, la maîtrise est ce qui réduit le risque. L'intégration de CodeMirror 6 y est directe. Et le découpage vues, composants, services, store reste transposable à React tel quel : le choix n'enferme personne.
+Le deuxième, le cahier des charges ouvre lui-même l'alternative : OpenAI ou un modèle local. C'est l'exigence RGPD qui tranche. « Aucune donnée personnelle transmise sans anonymisation » est intenable sur des textes rédigés librement, où l'anonymisation n'est jamais exhaustive. En hébergeant qwen2.5:3b localement, les contenus ne quittent pas l'infrastructure : l'exigence est satisfaite par construction, et non par une clause de contrat. Les contreparties sont réelles — latence, qualité inférieure à GPT-4, un service de plus à maintenir. La couche ia_service isole l'appel : basculer vers un fournisseur distant ne toucherait pas les routes.
+Le troisième, c'est « MySQL ou MongoDB », et j'ai écrit un argumentaire pour celui-là, parce que la compétence 8 demande des composants d'accès aux données SQL et NoSQL. Je n'ai pas ajouté de NoSQL, et ce n'est pas par difficulté — ce serait facile, et c'est précisément ce qui rend l'ajout suspect. Mes données ont un schéma stable, elles sont fortement reliées, et le volume est modeste. Surtout, les clés étrangères en ON DELETE CASCADE mettent en œuvre le droit à l'effacement du RGPD en une seule instruction ; en base documentaire, ce serait du code applicatif à écrire, à tester et à maintenir, pour une obligation légale. Un composant dont la seule justification est de figurer dans une grille est une dette technique déguisée en compétence. Je l'assume, et le jury est libre de considérer le critère comme non couvert.`);
+  s.addText("Trois choix de technologie", { placeholder: "title" });
+  s.addText("Un écart assumé, et deux alternatives que le cahier des charges ouvrait lui-même.", { placeholder: "lead" });
+
+  card(s, { x: M, y: 1.95, w: 3.87, h: 4.1, badge: "écart", title: "Vue 3 plutôt que React",
+    body: "Le cahier des charges recommande, il n'impose pas.\n\nMême modèle de composants ; ma maîtrise y était meilleure, et seule sur un projet la maîtrise réduit le risque.\n\nIntégration directe de CodeMirror 6.\n\nLe découpage services / store reste transposable à React." });
+
+  card(s, { x: M + 4.11, y: 1.95, w: 3.87, h: 4.1, badge: "au choix", title: "Ollama plutôt qu'OpenAI",
+    body: "Le cahier des charges autorise les deux. C'est le RGPD qui tranche.\n\nL'anonymisation n'est jamais exhaustive sur du texte libre. En local, les contenus ne sortent pas : l'exigence est satisfaite par construction.\n\nContreparties assumées — latence, qualité, maintenance." });
+
+  card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 4.1, badge: "au choix", title: "MySQL plutôt que MongoDB",
+    body: "Schéma stable, données fortement reliées, volume modeste.\n\nLes clés étrangères en ON DELETE CASCADE mettent en œuvre le droit à l'effacement en une instruction.\n\nAucun NoSQL ajouté : un composant qui ne sert qu'à remplir une grille est une dette déguisée." });
+
+  s.addText("L'argumentaire NoSQL complet est un livrable à part : docs/argumentaire-nosql.md, daté du 4 octobre.",
+    { x: M, y: 6.2, w: CW, h: 0.4, fontSize: 13, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "renvoi nosql" });
+}
+
+{
   const s = add("MEDIA", "Conception",
-`[8:45 — 11:00]
+`[10:50 — 12:40]
 Architecture client/serveur découplée en trois niveaux, avec un service d'inférence en périphérie.
 Le point à retenir est celui du titre : le navigateur ne dialogue jamais directement avec le moteur d'inférence. Tout passe par l'API, qui vérifie l'authentification, la propriété du document, le quota, puis journalise l'interaction.
 Si le front appelait Ollama directement, ni le quota ni la traçabilité RGPD ne seraient applicables — un utilisateur contournerait le quota en appelant le port 11434 lui-même. L'intermédiaire n'est pas une commodité, c'est ce qui rend les contraintes du cahier des charges opposables.
 Deuxième point : le moteur n'écoute que sur l'interface de bouclage. C'était une habitude implicite ; c'est devenu une consigne écrite après la publication de la CVE sur Ollama.
-Deux écarts à la recommandation du cahier des charges, tous deux argumentés dans le dossier. Vue 3 plutôt que React : le cahier des charges recommande sans imposer, et une meilleure maîtrise réduit le risque sur un projet mené seule. Ollama plutôt qu'OpenAI : le cahier des charges autorise explicitement les deux, et c'est l'exigence RGPD qui tranche.`);
+Les technologies et leurs justifications, je viens de les passer en revue : je ne reviens que sur ce qui se voit ici — le moteur d'inférence est un service en périphérie, atteint par l'API seule, et la bascule vers un fournisseur distant ne toucherait aucune route.`);
   s.addText("Le navigateur ne parle jamais au moteur d'inférence", { placeholder: "title" });
   media(s, { file: `${R}/docs/dossier/fig/archi.png`, ratio: 2.28, y: 1.45, maxH: 4.9, name: "architecture" });
   s.addText("Architecture logicielle — trois niveaux et services périphériques (dossier § 5.2).", { placeholder: "caption" });
@@ -392,7 +461,7 @@ Deux écarts à la recommandation du cahier des charges, tous deux argumentés d
 
 {
   const s = add("CONTENT", "Conception",
-`[11:00 — 13:00]
+`[12:40 — 14:20]
 Le backend est découpé en trois couches, et la règle qui compte est celle de la colonne de droite : ce que chaque couche ne contient jamais.
 Aucun import Flask dans services/. Cette règle n'est pas esthétique, elle est fonctionnelle : c'est elle qui rend les composants métier testables sans démarrer de serveur ni ouvrir de base. Sans elle, tout test d'auth_service ou d'ia_service deviendrait un test d'intégration, plus lent et plus fragile. C'est le socle du plan de tests.
 Je suis honnête sur une nuance, et elle est écrite dans le dossier : la lecture de la configuration passe par current_app, qui est un objet Flask. C'est le seul point où la règle fléchit, et le dossier l'explique en § 7.2.
@@ -423,7 +492,7 @@ Côté front, la même logique : aucune vue n'appelle axios directement, tout pa
 
 {
   const s = add("MEDIA", "Conception",
-`[13:00 — 14:30]
+`[14:20 — 15:25]
 Le maquettage a produit neuf planches, une par écran, construites en trois temps : recensement des écrans à partir du périmètre, charte graphique et composants, puis les planches elles-mêmes. Chaque planche porte sa route, sa garde de routeur, et une colonne « intentions » numérotée.
 Plutôt que la planche, je montre l'écran livré — c'est lui qui prouve que l'intention a été tenue. L'éditeur est l'écran le plus représentatif du produit.
 Trois choses à relever. La barre d'outils Markdown, et les trois modes d'affichage à droite : écrire, partagé, lire. La mention « enregistré automatiquement » sous le titre, qui se déclenche 2,5 secondes après la dernière frappe — je montrerai le code. Et le bouton IA, qui ouvre l'assistant.
@@ -440,7 +509,7 @@ Le maquettage a servi deux objectifs : vérifier la couverture du périmètre, e
   // par niveau d'accès, avec les routes et les gardes telles qu'elles sont
   // déclarées dans frontend/src/index.ts.
   const s = add("CONTENT", "Conception",
-`[14:30 — 15:30]
+`[15:25 — 16:20]
 Seize routes, et trois gardes qui découpent l'application en trois zones : le public, l'espace authentifié, le back-office.
 La première bande, ce sont les pages ouvertes à tous : l'accueil, la vitrine, les pages légales. Aucune garde.
 La deuxième est publique elle aussi, mais réservée au visiteur : connexion, inscription, mot de passe oublié. La garde guestOnly renvoie au tableau de bord quelqu'un qui est déjà connecté — sans elle, un utilisateur connecté pourrait rouvrir le formulaire de connexion.
@@ -483,7 +552,7 @@ Je précise tout de suite, parce que c'est la question qu'on pose : ces gardes s
 
 {
   const s = add("MEDIA", "Conception",
-`[15:30 — 16:45]
+`[16:20 — 17:20]
 Le modèle conceptuel. Huit entités, et les cardinalités portées par les associations.
 Trois choix à défendre.
 Les identifiants sont des UUID v4, pas des entiers auto-incrémentés. Conséquence directe sur la sécurité : les identifiants ne sont pas énumérables. On ne balaie pas /documents/1, /documents/2.
@@ -497,7 +566,7 @@ Relevez « Contient » entre dossier et document, en 0,1 côté document : un do
 
 {
   const s = add("MEDIA", "Conception",
-`[16:45 — 17:45]
+`[17:20 — 18:15]
 Le modèle logique, c'est-à-dire le même modèle une fois les associations résolues en clés étrangères — en bleu sur la figure.
 Deux choses à relever.
 Toutes les clés étrangères convergent vers user : c'est la traduction, dans le schéma, du cloisonnement par compte. Sessions, documents, dossiers, appels IA, consentements, demandes de réinitialisation — chaque ligne appartient à quelqu'un, et c'est la base qui le sait, pas seulement le code.
@@ -510,7 +579,7 @@ Le modèle physique est en § 5.4 et le script de création MySQL en § 5.5 — 
 
 {
   const s = add("MEDIA", "Conception",
-`[17:45 — 18:45]
+`[18:15 — 19:00]
 Trois acteurs : le visiteur, l'utilisateur authentifié, l'administrateur.
 Le périmètre de l'utilisateur est strictement limité à ses propres documents et dossiers, ses trois actions IA dans la limite de son quota, et son historique. L'administrateur hérite de tout le périmètre utilisateur et ajoute le back-office.
 Le moteur d'inférence apparaît comme un système externe sollicité par l'API — jamais par le navigateur, c'est la cohérence avec l'architecture.
@@ -522,7 +591,7 @@ Le cas le plus significatif est la génération d'une assistance IA : c'est celu
 
 {
   const s = add("MEDIA", "Conception",
-`[18:45 — 20:30]
+`[19:00 — 20:30]
 Le diagramme de séquence du cas le plus significatif : la génération d'une assistance IA.
 Suivez l'ordre des contrôles, il n'est pas arbitraire. Authentification, puis propriété du document, puis validation des entrées, puis quota — et seulement ensuite l'appel au modèle. Chaque contrôle est placé avant celui qui coûte plus cher. Vérifier le quota après l'inférence aurait permis de consommer le moteur sans jamais être compté.
 La journalisation intervient après la réponse du modèle, et elle enregistre le contenu avant et après.

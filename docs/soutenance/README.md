@@ -1,6 +1,6 @@
 # Support de soutenance
 
-`docs/Soutenance-HelpMeDraft.pptx` — 32 diapositives, notes de l'orateur remplies
+`docs/Soutenance-HelpMeDraft.pptx` — 34 diapositives, notes de l'orateur remplies
 (≈ 4 500 mots, soit environ 40 minutes avec les pauses et les diagrammes commentés).
 Chaque note s'ouvre sur son créneau cumulé ; la suite est continue et se referme
 sur 40:00.
