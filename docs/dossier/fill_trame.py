@@ -607,6 +607,26 @@ CORRECTIONS = [
      "attente d'une machine disposant d'un démon Docker",
      "Schéma MySQL exécuté et vérifié sur un serveur réel ; pile conteneurisée "
      "jouée sur un démon Docker le 05/10/2026, MySQL 8.4 comprise"),
+
+    # o) La pile n'a pas seulement été écrite : elle a été exécutée. La
+    #    campagne du 5 octobre (docs/validation-docker.md) construit les deux
+    #    images, démarre MySQL 8.4.11, applique les droits au moindre
+    #    privilège et joue une sauvegarde-restauration. Le dossier n'en
+    #    gardait que « déploiement restant », ce qui sous-estimait le CP 11.
+    #    Ce qui reste est l'hébergement, pas l'exécution.
+    ("La conteneurisation et l'intégration continue sont en place depuis le "
+     "4 octobre ; seul le déploiement proprement dit reste à faire",
+     "La conteneurisation et l'intégration continue sont en place depuis le "
+     "4 octobre, et la pile a été exécutée : la campagne du 5 octobre "
+     "(docs/validation-docker.md) construit les deux images, démarre MySQL "
+     "8.4.11 derrière sa sonde de santé, applique les droits au moindre "
+     "privilège et joue un aller-retour de sauvegarde. Reste à héberger "
+     "l'application sur une adresse durable — les points à régler pour cela "
+     "sont des valeurs de configuration, repris dans la liste de contrôle "
+     "ci-dessous"),
+    ("Conteneurisation et CI terminées ; déploiement restant",
+     "Conteneurisation et CI terminées ; pile exécutée et validée le "
+     "05/10/2026 ; hébergement restant"),
 ]
 
 def toutes_cellules():
@@ -895,6 +915,11 @@ STYLES["Heading 1"].paragraph_format.space_before = Pt(6)
 STYLES["Heading 1"].paragraph_format.space_after = Pt(4)
 STYLES["Figure"].paragraph_format.space_before = Pt(8)
 STYLES["Figure"].paragraph_format.space_after = Pt(2)
+# Interligne simple, et surtout pas l'interligne proportionnel de 99 % hérité
+# du style Normal : une image en ligne plus haute que sa ligne déborde alors
+# VERS LE HAUT, et le bord de page la rogne quand elle ouvre une page. C'est
+# ce qui amputait le MCD et le MLD de leur première rangée d'entités.
+STYLES["Figure"].paragraph_format.line_spacing = 1.0
 
 # ─────────────────── 10 bis. mise en forme du texte ───────────────────────
 # a) Le gras d'amorce à l'intérieur des paragraphes est retiré : « bcrypt
