@@ -131,8 +131,11 @@ Durée : **40 min** d'exposé, questions après.
 - Le maquettage a servi à deux choses : vérifier la couverture du périmètre, fixer les intentions **avant d'écrire une ligne de Vue**.
 
 ### Diapo 13 · Trois zones, trois gardes `[14:30 — 15:30]`
-- Trois zones : public, espace authentifié, back-office.
-- Trois gardes correspondantes : `guest`, `auth`, `admin`.
+- **Seize routes**, déclarées dans `frontend/src/index.ts`. Un seul `beforeEach` pour les trois gardes.
+- Bande 1 — **Public, aucune garde** : accueil, vitrine, pages légales.
+- Bande 2 — **Public mais visiteur seul**, garde `guestOnly` : connexion, inscription, mot de passe oublié. **Déjà connecté → renvoyé au tableau de bord** — sinon on pourrait rouvrir le formulaire de connexion en étant connecté.
+- Bande 3 — **Espace personnel**, garde `requiresAuth` : sans jeton → retour à `/login`.
+- Bande 4 — **Back-office**, les deux gardes cumulées. **Le rôle est relu dans le store, qui le tient de l'API — pas du jeton.**
 - **Je le précise tout de suite parce que c'est la question qu'on pose : ces gardes sont du confort d'usage.**
 - Elles évitent un écran vide et masquent le menu d'admin.
 - **Le contrôle qui compte est côté serveur** — partie sécurité.

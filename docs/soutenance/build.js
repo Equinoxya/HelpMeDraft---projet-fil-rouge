@@ -434,14 +434,51 @@ Le maquettage a servi deux objectifs : vérifier la couverture du périmètre, e
 }
 
 {
-  const s = add("MEDIA", "Conception",
+  // Cette diapositive affichait la figure « enchaînement des écrans ». Le
+  // diagramme est dense : réduit à la largeur utile, ses libellés devenaient
+  // illisibles au vidéoprojecteur. Il est redessiné ici en quatre bandes, une
+  // par niveau d'accès, avec les routes et les gardes telles qu'elles sont
+  // déclarées dans frontend/src/index.ts.
+  const s = add("CONTENT", "Conception",
 `[14:30 — 15:30]
-L'enchaînement des écrans. Trois zones : le public, l'espace authentifié, le back-office.
-Le routeur applique trois gardes qui correspondent exactement à ces zones : guest pour les pages de connexion et d'inscription, auth pour l'espace personnel, admin pour le back-office.
+Seize routes, et trois gardes qui découpent l'application en trois zones : le public, l'espace authentifié, le back-office.
+La première bande, ce sont les pages ouvertes à tous : l'accueil, la vitrine, les pages légales. Aucune garde.
+La deuxième est publique elle aussi, mais réservée au visiteur : connexion, inscription, mot de passe oublié. La garde guestOnly renvoie au tableau de bord quelqu'un qui est déjà connecté — sans elle, un utilisateur connecté pourrait rouvrir le formulaire de connexion.
+La troisième est l'espace personnel, derrière requiresAuth : sans jeton, retour à la connexion.
+La quatrième est le back-office, et elle cumule les deux gardes. Le rôle est relu dans le store, qui le tient de l'API — pas du jeton.
 Je précise tout de suite, parce que c'est la question qu'on pose : ces gardes sont du confort d'usage. Elles évitent d'afficher un écran vide et masquent le menu d'administration. Le contrôle qui compte est côté serveur, et je le montrerai dans la partie sécurité.`);
   s.addText("Trois zones, trois gardes de routeur", { placeholder: "title" });
-  media(s, { file: `${R}/docs/conception/diagrammes/enchainement-ecrans.png`, ratio: 1.45, y: 1.45, maxH: 4.9, name: "enchainement des ecrans" });
-  s.addText("Enchaînement des écrans et gardes du routeur (dossier § 5.3).", { placeholder: "caption" });
+  s.addText("Seize routes déclarées dans frontend/src/index.ts, et un seul beforeEach pour les trois gardes.", { placeholder: "lead" });
+
+  const zones = [
+    ["Public", "ouvert à tous", "aucune",
+     "/   ·   /fonctionnalites   ·   /tarifs   ·   /modeles\n/mentions-legales   ·   /cgu   ·   /confidentialite"],
+    ["Public — visiteur seul", "déjà connecté → /dashboard", "guestOnly",
+     "/login   ·   /register   ·   /forgot-password   ·   /reset-password"],
+    ["Espace authentifié", "sans jeton → /login", "requiresAuth",
+     "/dashboard   ·   /documents\n/documents/nouveau   ·   /documents/:id"],
+    ["Back-office", "rôle ≠ admin → /dashboard", "requiresAuth + requiresAdmin",
+     "/admin"],
+  ];
+
+  zones.forEach((z, i) => {
+    const y = 1.92 + i * 1.1;
+    bloc(s, { x: M, y, w: CW, h: 1.02, fill: C.background2, name: `zone ${z[0]}` });
+
+    s.addText(z[0], { x: M + 0.26, y: y + 0.15, w: 2.3, h: 0.34, fontSize: 14.5, bold: true, color: C.text1, margin: 0, isTextBox: true });
+    s.addText(z[1], { x: M + 0.26, y: y + 0.52, w: 2.4, h: 0.34, fontSize: 10, color: THEME.colors.accent5, fontFace: "Courier New", margin: 0, isTextBox: true });
+
+    // La garde, dans une pastille encadrée : c'est le mot que le jury cherche.
+    s.addShape(pres.ShapeType.rect, { x: 3.15, y: y + 0.24, w: 2.35, h: 0.54, fill: { color: C.background1 }, line: { ...BORD }, objectName: `garde ${z[2]}` });
+    s.addText(z[2], { x: 3.18, y: y + 0.24, w: 2.29, h: 0.54, fontSize: z[2].length > 20 ? 9.5 : 11.5, bold: true, color: THEME.colors.accent1, fontFace: "Courier New", align: "center", valign: "middle", margin: 0, isTextBox: true });
+
+    s.addText(z[3], { x: 5.75, y: y + 0.13, w: 6.72, h: 0.78, fontSize: 11.5, color: C.text1, fontFace: "Courier New", lineSpacing: 16, valign: "middle", margin: 0, isTextBox: true });
+  });
+
+  s.addText([
+    { text: "Ces trois gardes sont du confort d'usage. ", options: { bold: true, color: THEME.colors.accent1 } },
+    { text: "Elles évitent un écran vide et masquent le menu d'administration. Le contrôle qui compte est côté serveur — § 8.", options: { color: THEME.colors.accent5 } },
+  ], { x: M, y: 6.38, w: CW, h: 0.45, fontSize: 13, margin: 0, isTextBox: true, objectName: "avertissement gardes" });
 }
 
 {
