@@ -524,6 +524,89 @@ CORRECTIONS = [
      "conception numérotées — la raison d'être de chaque bloc, et non seulement sa "
      "présence. Le fichier source est docs/maquettes-helpmedraft.html dans le dépôt.",
      "Le fichier source des planches est docs/maquettes-helpmedraft.html dans le dépôt."),
+
+    # ── Relecture du 4 novembre 2026 ──────────────────────────────────────
+    # j) Le modèle compte HUIT tables depuis l'ajout de journal_admin
+    #    (migration_journal_admin.sql), postérieur à la campagne de validation
+    #    du 5 octobre. Vérifié sur backend/database/schema_mysql.sql :
+    #    8 CREATE TABLE, 9 CONSTRAINT fk_, 7 CONSTRAINT ck_. Les figures MCD
+    #    et MLD du dossier montrent bien les huit entités.
+    ("modèle physique à sept tables",
+     "modèle physique à huit tables"),
+    ("Sept entités, huit associations, toutes de type un-à-plusieurs.",
+     "Huit entités, neuf associations, toutes de type un-à-plusieurs."),
+    ("Sept tables. Les clés primaires sont notées PK, les clés étrangères FK, "
+     "les contraintes d'unicité U.",
+     "Huit tables. Les clés primaires sont notées PK, les clés étrangères FK, "
+     "les contraintes d'unicité U. La huitième, journal_admin, journalise les "
+     "actions d'administration ; ajoutée après la campagne de validation du "
+     "5 octobre, elle n'est pas détaillée colonne par colonne ci-dessous et "
+     "son schéma figure dans backend/database/schema_mysql.sql."),
+    ("présence des sept tables en InnoDB/utf8mb4",
+     "présence des huit tables en InnoDB/utf8mb4"),
+    ("backend/database/schema_mysql.sql, sept tables, MySQL 8",
+     "backend/database/schema_mysql.sql, huit tables, MySQL 8"),
+
+    # k) L'image du frontend a été mesurée à 82,9 Mo lors de la campagne du
+    #    5 octobre (docs/validation-docker.md § « Poids des images »), qui
+    #    corrige explicitement l'estimation « ~50 Mo ».
+    ("image finale d'environ 50 Mo",
+     "image finale de 82,9 Mo mesurés"),
+
+    # l) Chiffres des suites automatisées, rejouées le 4 novembre 2026 sur le
+    #    dépôt à jour : 403 cas backend (185 unitaires, 151 d'intégration,
+    #    17 de sécurité, 50 restés à la racine de tests/) et 58 cas Vitest.
+    #    Couverture backend 95 % hors database/jeu_essai.py, script de
+    #    peuplement non couvert ; 90 % en l'incluant. Couverture frontend
+    #    mesurée à 55 %, et six modules de service sont à 0 %, non cinq.
+    #    La durée est retirée : elle dépend de la machine.
+    ("État d'exécution — campagne du 3 octobre 2026. Les suites automatisées ont été "
+     "écrites et exécutées : 146 cas backend (50 unitaires, 79 d'intégration, 17 de "
+     "sécurité) et 42 cas Vitest, soit 188 cas, tous au vert en 59 secondes ; une "
+     "seconde campagne le même jour a ajouté 7 cas couvrant les correctifs de "
+     "sécurité — purge des sessions, limitation de débit sur le rafraîchissement, "
+     "clé de session Flask — pour un total de 195. La couverture backend est de "
+     "95 % : 100 % sur services/ et sur database/db.py, 89 à 96 % sur routes/. La "
+     "couverture frontend, à 62 %, est tirée vers le bas par les cinq modules de "
+     "service, qui sont des enveloppes d'une ligne autour d'axios : les tester "
+     "reviendrait à tester axios.",
+     "État d'exécution — campagne rejouée le 4 novembre 2026. Les suites "
+     "automatisées comptent 403 cas backend — 185 unitaires, 151 d'intégration, "
+     "17 de sécurité et 50 cas plus anciens restés à la racine du dossier de "
+     "tests — et 58 cas Vitest, soit 461 cas, tous au vert. La couverture backend "
+     "est de 95 % : 100 % sur auth_service et email_service, 93 à 97 % sur "
+     "routes/. Ce taux exclut database/jeu_essai.py, script de peuplement que "
+     "rien n'exécute en test ; en l'incluant, la couverture tombe à 90 %. La "
+     "couverture frontend, à 55 %, est tirée vers le bas par les six modules de "
+     "service, qui sont des enveloppes d'une ligne autour d'axios : les tester "
+     "reviendrait à tester axios."),
+
+    # m) La campagne système sur la pile conteneurisée a été jouée le 5 octobre
+    #    (docs/validation-docker.md § 5) : sept scénarios au vert sur dix.
+    #    ATTENTION au préfixe : dans CE dossier, TS- désigne les tests de
+    #    SÉCURITÉ (TS-02 = injection SQL). validation-docker.md emploie TS-
+    #    pour ses tests SYSTÈME, qui sont un autre jeu. La phrase n'emprunte
+    #    donc aucun numéro à l'autre document.
+    ("Ce qui reste. Les tests système TS-01 à TS-10 attendent la validation de la "
+     "pile conteneurisée sur une machine disposant d'un démon Docker ; les tests "
+     "d'acceptation attendent le point de validation avec le formateur ; les tests "
+     "de charge viennent après. Ces trois lots sont les seuls critères de sortie "
+     "non satisfaits.",
+     "Ce qui reste. La campagne système sur la pile conteneurisée a été jouée le "
+     "5 octobre (docs/validation-docker.md) : sept scénarios de bout en bout au "
+     "vert sur dix, un en échec sur le parcours de réinitialisation de mot de "
+     "passe, et deux hors de portée de l'environnement d'intégration, dont celui "
+     "qui exige un Ollama joignable. Restent la reprise du parcours en échec, les "
+     "tests d'acceptation, qui attendent le point de validation avec le "
+     "formateur, et les tests de charge."),
+
+    # n) Même correction dans le tableau d'avancement du § 4.
+    ("Terminé — 195 cas au vert, 95 % de couverture backend",
+     "Terminé — 461 cas au vert, 95 % de couverture backend"),
+    ("Schéma MySQL exécuté et vérifié sur un serveur réel ; bascule complète en "
+     "attente d'une machine disposant d'un démon Docker",
+     "Schéma MySQL exécuté et vérifié sur un serveur réel ; pile conteneurisée "
+     "jouée sur un démon Docker le 05/10/2026, MySQL 8.4 comprise"),
 ]
 
 def toutes_cellules():
@@ -612,7 +695,7 @@ REMPLACEMENTS = [
     ("ZONE PUBLIQUE", f"{FIG}/planches/image9.png",
      "Encha\u00eenement des \u00e9crans \u2014 planche W-09, reprise en annexe \u00a7 12.1."),
     ("USER", f"{FIG}/mcd.png",
-     "Mod\u00e8le conceptuel des donn\u00e9es (MCD) \u2014 sept entit\u00e9s, huit associations, cardinalit\u00e9s Merise."),
+     "Mod\u00e8le conceptuel des donn\u00e9es (MCD) \u2014 huit entit\u00e9s, neuf associations, cardinalit\u00e9s Merise."),
     ("HelpMeDra", f"{FIG}/usecase.png", "Diagramme de cas d\u2019utilisation."),
     ("DocumentEditor", f"{FIG}/seq-uc10.png",
      "Diagramme de s\u00e9quence \u2014 g\u00e9n\u00e9rer une assistance IA, sc\u00e9nario nominal."),
@@ -637,7 +720,7 @@ if mpd_titre is not None:
     fp._p.addnext(el2)
     cap = Paragraph(el2, fp._parent)
     cap.style = STYLES["Image Caption"]
-    cap.add_run("Mod\u00e8le logique des donn\u00e9es (MLD) \u2014 les sept relations apr\u00e8s application des r\u00e8gles de passage.")
+    cap.add_run("Mod\u00e8le logique des donn\u00e9es (MLD) \u2014 les huit relations apr\u00e8s application des r\u00e8gles de passage.")
 
 # MPD : après la phrase d'introduction des sept tables
 sept = para_contenant("Sept tables.")

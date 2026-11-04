@@ -286,7 +286,7 @@ Durée : **40 min** d'exposé, questions après.
 - Objectif fixé : 80 % sur `services/` et les routes, **sans objectif chiffré ailleurs. Viser un pourcentage global pousse à écrire des tests faciles sur du code sans risque.**
 - Les **55 %** du front : tirés vers le bas par six modules qui sont des enveloppes d'une ligne autour d'axios — **les tester reviendrait à tester axios**.
 - Trois zones concentrent l'effort : authentification, propriété, quota. **Les trois endroits où une régression coûte cher.**
-- Le quatrième niveau, **les tests système, joué le 5 octobre sur la pile conteneurisée : 7 au vert sur 10.** Un échec réel sur la réinitialisation (TS-02), deux cas hors de portée dont celui qui demande un Ollama joignable.
+- Le quatrième niveau, **les tests système, joué le 5 octobre sur la pile conteneurisée : 7 au vert sur 10.** Un échec réel sur le parcours de réinitialisation de mot de passe, deux cas hors de portée dont celui qui demande un Ollama joignable.
 - Restent les **tests de charge**.
 
 ### Diapo 32 · La ligne datée de 25 heures `[34:30 — 36:30]`
