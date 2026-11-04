@@ -328,7 +328,7 @@ pres.addSection({ title: "Gestion de projet" });
 `[4:20 — 6:20]
 J'ai travaillé en itérations d'une semaine, chacune close par un lot utilisable de bout en bout.
 Le point de méthode est le découpage : des lots verticaux — une fonctionnalité qui traverse le front, l'API et la base — plutôt que des couches horizontales. Avec des couches horizontales, on ne valide rien avant l'assemblage final ; avec des lots verticaux, chaque fin d'itération produit quelque chose de démontrable.
-Le planning reprend celui du cahier des charges. Tout est terminé sauf trois choses, que j'assume et qui sont écrites dans le dossier : le déploiement effectif, la bascule complète vers MySQL — le schéma est exécuté et vérifié, il me manque une machine avec un démon Docker — et la mention de transparence AI Act.
+Le planning reprend celui du cahier des charges. Les six étapes sont engagées et les treize lots fonctionnels sont terminés. La pile conteneurisée a été exécutée pour de vrai : une campagne complète sur un démon Docker réel le 5 octobre, MySQL 8.4 comprise, puis la pile relancée sur mon poste. Restent deux compléments, que j'assume et qui sont écrits dans le dossier : la mention de transparence AI Act, et une journalisation applicative à étoffer.
 Sur la gestion de versions : une branche par fonctionnalité, des commits conventionnés, le .env ignoré. Et le package-lock.json commité — ce n'est pas un détail d'organisation, c'est une mesure de sécurité, et la compromission d'axios que je présenterai en fin d'exposé montre pourquoi.
 Travaillant seule, j'ai remplacé les rituels d'équipe par un point hebdomadaire avec mon référent et des revues croisées avec la promotion sur la chaîne d'authentification.`);
   s.addText("Des lots verticaux, pas des couches horizontales", { placeholder: "title" });
@@ -336,7 +336,7 @@ Travaillant seule, j'ai remplacé les rituels d'équipe par un point hebdomadair
   stat(s, { x: M, y: 1.42, w: 2.9, h: 1.25, value: "1 semaine", label: "durée d'une itération" });
   stat(s, { x: M + 3.07, y: 1.42, w: 2.9, h: 1.25, value: "6 / 6", label: "étapes du plan engagées" });
   stat(s, { x: M + 6.14, y: 1.42, w: 2.9, h: 1.25, value: "13", label: "lots fonctionnels terminés" });
-  stat(s, { x: M + 9.21, y: 1.42, w: 2.89, h: 1.25, value: "3", label: "points restants, documentés" });
+  stat(s, { x: M + 9.21, y: 1.42, w: 2.89, h: 1.25, value: "2", label: "points restants, documentés" });
 
   media(s, { file: `${R}/docs/conception/diagrammes/planning-initial-gantt.png`, ratio: 2.48, y: 2.95, maxH: 3.4, name: "planning initial" });
   s.addText("Planning initial repris du cahier des charges et découpé en lots verticaux.", { placeholder: "caption" });
@@ -672,21 +672,21 @@ Et toutes les requêtes passent par l'ORM, paramétrées, sans aucune concaténa
 {
   const s = add("CONTENT", "Réalisation",
 `[26:25 — 27:55]
-Dernier point de la réalisation, et je préfère l'amener moi-même : l'application est conteneurisée et intégrée en continu depuis le 4 octobre, mais elle n'est pas déployée.
-La composition compte trois services. MySQL 8.4 avec un volume persistant et une sonde de santé — sans la sonde, le backend démarre avant que la base accepte les connexions. Le backend tourne sous Gunicorn, pas sous le serveur de développement de Flask, avec un utilisateur non privilégié. Le frontend est construit par Vite en deux étapes puis servi par Nginx : l'image finale fait une cinquantaine de mégaoctets, parce qu'elle ne contient que des fichiers statiques et pas la chaîne de construction.
+Dernier point de la réalisation : l'application est conteneurisée, intégrée en continu depuis le 4 octobre, et la pile a été exécutée. Pas seulement décrite — jouée, le 5 octobre sur un démon Docker réel, et de nouveau depuis sur mon poste.
+La composition compte trois services. MySQL 8.4 avec un volume persistant et une sonde de santé — sans la sonde, le backend démarre avant que la base accepte les connexions. Le backend tourne sous Gunicorn, pas sous le serveur de développement de Flask, avec un utilisateur non privilégié. Le frontend est construit par Vite en deux étapes puis servi par Nginx : l'image finale pèse 82,9 mégaoctets mesurés, parce qu'elle ne contient que des fichiers statiques et pas la chaîne de construction.
 Un détail qui compte : les secrets sont déclarés sous la forme dollar-accolade VAR deux-points point d'interrogation message. La composition échoue immédiatement si la variable manque, au lieu de démarrer avec une valeur inventée.
 Ollama reste hors composition, sur l'hôte, atteint par host.docker.internal : son image pèse plusieurs gigaoctets et le modèle se télécharge à part.
 La CI tourne à chaque push et chaque pull request, en trois travaux parallèles. Le parallélisme n'est pas une optimisation de performance : enchaînés, un échec du frontend masquait l'état du backend et il fallait deux exécutions pour connaître les deux.
 Et la troisième carte est celle que je tiens à montrer, parce que ce sont des changements de configuration et pas de code — c'est précisément pour ça qu'ils s'oublient. Le plus traître est en bas : SameSite=Strict raisonne en sites, pas en origines. En développement, front et API sont tous deux sur localhost, donc le cookie passe. En production, deux domaines distincts casseraient le rafraîchissement du jeton sans qu'aucun test local ne le voie.
-Ce qui manque pour déployer est une machine disposant d'un démon Docker, pas une étape de conception.`);
-  s.addText("Conteneurisée, intégrée en continu, pas déployée", { placeholder: "title" });
-  s.addText("Trois services, trois travaux de CI, et une liste de contrôle avant la mise en production (dossier § 6).", { placeholder: "lead" });
+La troisième carte est la liste de contrôle d'une mise en ligne : passer APP_ENV à production, une clé distincte, CORS_ORIGINS au domaine réel, TLS devant l'application. Ce sont des valeurs de configuration, pas des développements — l'application est prête à être hébergée le jour où on lui donne un domaine.`);
+  s.addText("Conteneurisée, intégrée en continu, exécutée", { placeholder: "title" });
+  s.addText("Trois services, trois travaux de CI, et une liste de contrôle pour une mise en ligne (dossier § 6).", { placeholder: "lead" });
 
   card(s, { x: M, y: 1.95, w: 3.87, h: 3.15, badge: "3×", title: "Conteneurisation",
-    body: "MySQL 8.4, volume persistant et sonde de santé.\nBackend sous Gunicorn, utilisateur non privilégié.\nFrontend Vite puis Nginx, ~50 Mo.\n\nSecrets en ${VAR:?} : la composition échoue si la variable manque." });
+    body: "MySQL 8.4, volume persistant et sonde de santé.\nBackend sous Gunicorn, utilisateur non privilégié.\nFrontend Vite puis Nginx, 82,9 Mo.\n\nSecrets en ${VAR:?} : la composition échoue si la variable manque." });
   card(s, { x: M + 4.11, y: 1.95, w: 3.87, h: 3.15, badge: "CI", title: "Intégration continue",
     body: "GitHub Actions à chaque push et chaque pull request, en trois travaux parallèles : backend (Ruff, pytest), frontend (ESLint, vue-tsc, Vitest, build), Docker (composition et images).\n\nInstallation par npm ci --ignore-scripts." });
-  card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 3.15, badge: "!", accent: THEME.colors.accent4, title: "Avant la mise en production",
+  card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 3.15, badge: "→", accent: THEME.colors.accent4, title: "Le jour d'une mise en ligne",
     body: "APP_ENV=production, qui active Secure sur le cookie.\nUne JWT_SECRET_KEY distincte.\nCORS_ORIGINS au domaine réel.\nCompte MySQL sans droits DDL.\nTLS devant l'application.\nRedis pour le limiteur de débit." });
 
   s.addText([
@@ -803,7 +803,7 @@ Les chiffres de la campagne du 3 octobre : 195 cas, tous au vert, en 59 secondes
 Mon objectif de couverture était 80 % sur services/ et sur les routes, sans objectif chiffré ailleurs. C'est volontaire : viser un pourcentage global pousse à écrire des tests faciles sur du code sans risque. Les 62 % du front sont tirés vers le bas par cinq modules de service qui sont des enveloppes d'une ligne autour d'axios — les tester reviendrait à tester axios.
 Trois zones concentrent l'effort : la chaîne d'authentification, le contrôle de propriété, et le quota. Ce sont les trois endroits où une régression coûte cher.
 Et la leçon que je retiens de la campagne : les doubles de test mentent. Trois défauts de la chaîne IA sont passés sous un faux requests.post qui acceptait json() à tout moment et ne fermait jamais de connexion. Il a fallu un vrai serveur HTTP local pour les voir. Les tests ajoutés ensuite ont été vérifiés par mutation : on casse le code exprès pour s'assurer que le test échoue. Un test qu'on n'a jamais vu échouer ne prouve rien.
-Ce qui reste : les tests système attendent une machine avec un démon Docker, et les tests de charge viennent après.`);
+Le quatrième niveau, les tests système, a été joué le 5 octobre sur la pile conteneurisée : sept cas au vert sur dix. Un échec réel sur la réinitialisation de mot de passe, et deux cas hors de portée de cet environnement, dont celui qui demande un Ollama joignable. Restent les tests de charge, qui viennent après.`);
   s.addText("195 cas au vert, 95 % de couverture backend", { placeholder: "title" });
   s.addText("Campagne du 3 octobre 2026 — quatre niveaux, du moins coûteux au plus coûteux à exécuter.", { placeholder: "lead" });
 
@@ -888,7 +888,7 @@ Et l'AI Act justifie à lui seul la veille comme livrable : le cahier des charge
 `[38:30 — 40:00]
 Pour conclure, trois colonnes.
 Ce qui est livré : l'application complète sur les cinq lots fonctionnels, 195 tests au vert, la conteneurisation et le pipeline, les audits d'accessibilité et de sécurité, et le journal de veille.
-Ce qui reste, et je ne le cache pas : le déploiement effectif, la bascule complète vers MySQL — le schéma est exécuté et vérifié, il me manque une machine avec un démon Docker —, les trois compléments AI Act, et une journalisation applicative à compléter.
+Ce qui reste, et je ne le cache pas : les trois compléments AI Act, une journalisation applicative à compléter, les tests de charge, et une mise en ligne — l'application tourne en conteneurs, il lui manque un domaine et les quelques valeurs de configuration que j'ai listées.
 Ce que je retiens, ce sont trois phrases que ce projet m'a apprises et pas un cours.
 Un prompt est du code : il part en production, il oriente le comportement, et il se teste.
 Une mesure de sécurité est un composant comme un autre : ajouter DOMPurify n'a pas clos le sujet XSS, ça l'a déplacé vers sa maintenance.
@@ -897,8 +897,8 @@ Je vous remercie, je suis à votre disposition pour vos questions.`);
   s.addText("Ce que je retiens", { placeholder: "title" });
 
   const cols = [
-    ["Livré", "5FBF8F", "Cinq lots fonctionnels complets\n195 tests automatisés au vert\nDocker Compose et pipeline CI\nAudits accessibilité et sécurité\nJournal de veille et dossier projet"],
-    ["Reste à faire", ACCENT_SOMBRE, "Déploiement effectif\nBascule complète SQLite → MySQL\nTrois compléments AI Act\nJournalisation applicative\nTests système et de charge"],
+    ["Livré", "5FBF8F", "Cinq lots fonctionnels complets\n195 tests automatisés au vert\nPile Docker exécutée, MySQL 8.4\nAudits accessibilité et sécurité\nJournal de veille et dossier projet"],
+    ["Reste à faire", ACCENT_SOMBRE, "Trois compléments AI Act\nJournalisation applicative\nTests de charge\nTS-02 : réinitialisation à reprendre\nMise en ligne sur un hébergement"],
     ["Appris", "F4F1EA", "Un prompt est du code : il se teste\nUne mesure de sécurité est un composant comme un autre\nUn jeu de données, c'est choisir les valeurs qui font échouer"],
   ];
   cols.forEach((c, i) => {

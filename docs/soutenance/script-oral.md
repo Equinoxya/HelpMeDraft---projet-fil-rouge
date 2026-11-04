@@ -82,7 +82,9 @@ Durée : **40 min** d'exposé, questions après.
 - Itérations d'une semaine, chacune close par un lot utilisable de bout en bout.
 - Le point de méthode : **lots verticaux — front + API + base — plutôt que couches horizontales.**
 - Horizontal : on ne valide rien avant l'assemblage. Vertical : chaque fin d'itération est démontrable.
-- Planning repris du cahier des charges. Tout terminé **sauf trois choses, écrites dans le dossier** : déploiement, bascule MySQL (schéma exécuté et vérifié, il manque un démon Docker), mention AI Act.
+- Planning repris du cahier des charges. Six étapes engagées, **13 lots terminés**.
+- **La pile conteneurisée a été exécutée pour de vrai** : campagne complète sur un démon Docker réel le 5 octobre, MySQL 8.4 comprise, puis relancée sur mon poste.
+- Restent **deux compléments, écrits dans le dossier** : la mention AI Act, et la journalisation applicative à étoffer.
 - Versions : une branche par fonctionnalité, commits conventionnés, `.env` ignoré.
 - `package-lock.json` commité : **pas un détail d'organisation, une mesure de sécurité** — la compromission d'axios le montrera.
 - Seule → point hebdo avec mon référent + revues croisées avec la promo sur l'authentification.
@@ -209,22 +211,19 @@ Durée : **40 min** d'exposé, questions après.
 - Conséquence voulue : **404, pas 403.** Un 403 confirmerait que la ressource existe. Le 404 est indiscernable d'un identifiant inexistant.
 - Tout passe par l'ORM, paramétré, **aucune concaténation de chaîne** — objectif de qualité tenu sans exception.
 
-### Diapo 23 · Conteneurisée, intégrée, pas déployée `[26:25 — 27:55]`
-- **Je préfère l'amener moi-même** : conteneurisée et intégrée en continu depuis le 4 octobre, **mais pas déployée**.
+### Diapo 23 · Conteneurisée, intégrée, exécutée `[26:25 — 27:55]`
+- Conteneurisée, intégrée en continu depuis le 4 octobre, **et la pile a été exécutée**.
+- **Pas seulement décrite — jouée** : le 5 octobre sur un démon Docker réel, et de nouveau depuis sur mon poste.
 - Trois services :
   - MySQL 8.4, volume persistant, **sonde de santé** — sans elle le backend démarre avant que la base accepte les connexions.
   - Backend sous **Gunicorn**, pas le serveur de dev de Flask, utilisateur non privilégié.
-  - Frontend : build Vite en deux étapes, servi par Nginx → **~50 Mo**, parce que l'image ne contient que du statique, pas la chaîne de construction.
+  - Frontend : build Vite en deux étapes, servi par Nginx → **82,9 Mo mesurés**, parce que l'image ne contient que du statique, pas la chaîne de construction.
 - Détail qui compte : secrets en `${VAR:?message}` → **la composition échoue si la variable manque, au lieu de démarrer avec une valeur inventée**.
-- Ollama hors composition, sur l'hôte, via `host.docker.internal` : image de plusieurs Go, modèle téléchargé à part.
-- CI à chaque push et chaque PR, **trois travaux parallèles**. Le parallélisme n'est pas de la performance : **enchaînés, un échec du frontend masquait l'état du backend** — il fallait deux exécutions.
-- Troisième carte, à montrer : ce sont **des changements de configuration, pas de code — c'est pour ça qu'ils s'oublient**.
+- Ollama hors composition, sur l'hôte, via `host.docker.internal`.
+- CI à chaque push et chaque PR, **trois travaux parallèles**. **Enchaînés, un échec du frontend masquait l'état du backend** — il fallait deux exécutions.
+- Troisième carte, la liste de contrôle d'une mise en ligne : ce sont **des valeurs de configuration, pas des développements**.
 - Le plus traître : **`SameSite=Strict` raisonne en sites, pas en origines.** En dev, front et API sur localhost → le cookie passe. En prod, deux domaines distincts **casseraient le rafraîchissement sans qu'aucun test local ne le voie**.
-- **Ce qui manque pour déployer est une machine avec un démon Docker, pas une étape de conception.**
-
----
-
-## 6. Sécurité — 27:55 → 32:20
+- **L'application est prête à être hébergée le jour où on lui donne un domaine.**
 
 ### Diapo 24 · Section `[27:55 — 28:05]`
 > « Cinquième temps : la sécurité. **C'est le fil rouge du projet, pas un chapitre.** »
@@ -266,7 +265,8 @@ Durée : **40 min** d'exposé, questions après.
 - Trois zones concentrent l'effort : authentification, propriété, quota. **Les trois endroits où une régression coûte cher.**
 - La leçon : **les doubles de test mentent.** Trois défauts de la chaîne IA sont passés sous un faux `requests.post` qui acceptait `json()` à tout moment et ne fermait jamais de connexion. **Il a fallu un vrai serveur HTTP local pour les voir.**
 - Tests ajoutés ensuite **vérifiés par mutation** : on casse le code exprès pour s'assurer que le test échoue. **Un test qu'on n'a jamais vu échouer ne prouve rien.**
-- Reste : tests système (démon Docker), tests de charge après.
+- Le quatrième niveau, **les tests système, a été joué le 5 octobre sur la pile conteneurisée : 7 au vert sur 10.** Un échec réel sur la réinitialisation de mot de passe (TS-02), deux cas hors de portée de cet environnement dont celui qui demande un Ollama joignable.
+- Restent les **tests de charge**, qui viennent après.
 
 ### Diapo 29 · La ligne datée de 25 heures `[34:30 — 36:30]`
 - Jeu d'essai : la génération d'une assistance IA. **Trois raisons :**
@@ -295,7 +295,7 @@ Durée : **40 min** d'exposé, questions après.
 ### Diapo 31 · Ce que je retiens `[38:30 — 40:00]`
 - Trois colonnes.
 - **Livré** : l'application complète sur les cinq lots, 195 tests au vert, conteneurisation et pipeline, audits accessibilité et sécurité, journal de veille.
-- **Reste, et je ne le cache pas** : déploiement effectif ; bascule MySQL (schéma exécuté et vérifié, il manque un démon Docker) ; trois compléments AI Act ; journalisation applicative à compléter.
+- **Reste, et je ne le cache pas** : les trois compléments AI Act ; la journalisation applicative ; les tests de charge ; TS-02 à reprendre ; et une mise en ligne — **l'application tourne en conteneurs, il lui manque un domaine et quelques valeurs de configuration**.
 - **Ce que je retiens — trois phrases que ce projet m'a apprises, pas un cours :**
   1. **Un prompt est du code** : il part en production, il oriente le comportement, il se teste.
   2. **Une mesure de sécurité est un composant comme un autre** : ajouter DOMPurify n'a pas clos le sujet XSS, ça l'a déplacé vers sa maintenance.
@@ -307,14 +307,14 @@ Durée : **40 min** d'exposé, questions après.
 ## Antisèche — à relire 5 minutes avant
 
 **Chiffres**
-`195` tests au vert · `59 s` · `95 %` couverture backend (100 % services) · `62 %` front · `8` tables · `5` blueprints · `9` planches · `20` requêtes / `24 h` · `429` · `404` pas 403 · `15 min` access · `7 jours` refresh · `2,5 s` autosave · `~50 Mo` image front · `8` entrées de veille, `3` actions · CVE `9,1` Ollama / `5,1` DOMPurify · AI Act `2 août 2026` · `13` lots
+`195` tests au vert · `59 s` · `95 %` couverture backend (100 % services) · `62 %` front · `8` tables · `5` blueprints · `9` planches · `20` requêtes / `24 h` · `429` · `404` pas 403 · `15 min` access · `7 jours` refresh · `2,5 s` autosave · `82,9 Mo` image front · `8` entrées de veille, `3` actions · CVE `9,1` Ollama / `5,1` DOMPurify · AI Act `2 août 2026` · `13` lots
 
 **Si tu perds le fil** → reviens à la question « pourquoi ce choix ? ». Chaque diapo a une raison, pas une liste.
 
 **Si tu es en retard** → coupe dans les diapos 12, 13, 16 et 19 (descriptives). Ne coupe jamais 8, 10, 21, 22, 26, 31.
 
 **Les quatre « je ne le cache pas »** — à sortir toi-même, jamais à laisser venir :
-1. Pas déployé (il manque un démon Docker, pas une conception).
+1. Pas encore mise en ligne : la pile tourne en conteneurs, il manque un domaine et des valeurs de configuration.
 2. A09 journalisation incomplète.
 3. `current_app` dans `services/` : seul point où la règle fléchit.
 4. La dérive éditoriale « juridique », corrigée, cas TU-04.
