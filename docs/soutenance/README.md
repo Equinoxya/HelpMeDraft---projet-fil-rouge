@@ -1,6 +1,6 @@
 # Support de soutenance
 
-`docs/Soutenance-HelpMeDraft.pptx` — 31 diapositives, notes de l'orateur remplies
+`docs/Soutenance-HelpMeDraft.pptx` — 32 diapositives, notes de l'orateur remplies
 (≈ 4 500 mots, soit environ 40 minutes avec les pauses et les diagrammes commentés).
 Chaque note s'ouvre sur son créneau cumulé ; la suite est continue et se referme
 sur 40:00.
@@ -11,6 +11,24 @@ Script oral télégraphique : [`script-oral.md`](./script-oral.md).
 Le contenu est repris du dossier projet : aucune affirmation du diaporama ne
 contredit `docs/Dossier-projet-HelpMeDraft.pdf`. Les figures sont les fichiers
 d'origine, pas des recopies.
+
+La diapositive 19 présente les douze captures d'interfaces en vignettes. Elles
+sont lues dans `docs/captures/vignettes/`, rognées PAR LE HAUT au rapport de la
+case : un recadrage centré ferait disparaître l'en-tête des pages longues
+(accueil, tableau de bord). Les régénérer après un changement de captures :
+
+```sh
+python3 -c "
+from PIL import Image
+import glob, os
+RATIO, LARGE = 1.8667 / 1.45, 620
+for f in sorted(glob.glob('docs/captures/C-*.png')):
+    im = Image.open(f).convert('RGB')
+    im = im.crop((0, 0, im.width, min(round(im.width / RATIO), im.height)))
+    im = im.resize((LARGE, round(LARGE * im.height / im.width)), Image.LANCZOS)
+    im.save('docs/captures/vignettes/' + os.path.basename(f), 'PNG', optimize=True)
+"
+```
 
 Le modèle de données occupe deux diapositives, 14 et 15 : le modèle conceptuel
 avec ses cardinalités, puis le modèle logique avec ses clés étrangères. Elles

@@ -547,8 +547,56 @@ pres.addSection({ title: "Réalisation" });
 }
 
 {
+  // Vue d'ensemble des écrans livrés. Les captures n'ont pas toutes le même
+  // rapport : les pages entières (accueil, tableau de bord) sont bien plus
+  // hautes que les captures de fenêtre. Les vignettes de
+  // docs/captures/vignettes/ sont rognées PAR LE HAUT au rapport de la case —
+  // un recadrage centré ferait disparaître l'en-tête des pages longues. Elles
+  // se régénèrent avec la commande donnée dans docs/soutenance/README.md.
+  const s = add("MEDIA", "Réalisation",
+`[20:40 — 21:30]
+Avant d'entrer dans le code, la série complète des écrans livrés. Onze écrans, douze captures — l'accueil figure deux fois, en version large et en version mobile, parce que l'adaptation aux petits écrans fait partie des exigences.
+La première ligne est la zone publique et les pages réservées au visiteur : accueil, accueil mobile, connexion, inscription, mot de passe oublié, réinitialisation.
+La seconde est l'espace authentifié puis le back-office : tableau de bord, liste des documents, nouveau document, éditeur, assistant IA, administration. C'est le découpage que je vous ai montré sur les gardes du routeur.
+Ces douze captures sont en annexe § 12.2, et chacune y est accompagnée du code qui la produit. Je m'arrête maintenant sur trois d'entre elles et sur leur code.`);
+  s.addText("Onze écrans, douze captures", { placeholder: "title" });
+
+  const vignettes = [
+    ["C-01-accueil", "C-01 Accueil"],
+    ["C-01b-accueil-mobile", "C-01b Mobile"],
+    ["C-02-connexion", "C-02 Connexion"],
+    ["C-03-inscription", "C-03 Inscription"],
+    ["C-04-mot-de-passe-oublie", "C-04 Mot de passe"],
+    ["C-11-reinitialisation", "C-11 Réinitialisation"],
+    ["C-05-tableau-de-bord", "C-05 Tableau de bord"],
+    ["C-06-liste-documents", "C-06 Mes documents"],
+    ["C-07-nouveau-document", "C-07 Nouveau document"],
+    ["C-08-editeur-document", "C-08 Éditeur"],
+    ["C-09-assistant-ia", "C-09 Assistant IA"],
+    ["C-10-back-office", "C-10 Back-office"],
+  ];
+
+  const VW = 1.8667, VH = 1.45, PAS = 2.0467;
+  vignettes.forEach((v, i) => {
+    const x = M + (i % 6) * PAS;
+    const y = 2.05 + Math.floor(i / 6) * 2.0;
+    s.addImage({
+      path: `${R}/docs/captures/vignettes/${v[0]}.png`,
+      x, y, w: VW, h: VH,
+      objectName: `vignette ${v[0]}`,
+    });
+    s.addShape(pres.ShapeType.rect, { x, y, w: VW, h: VH, fill: { type: "none" }, line: { ...BORD }, objectName: `cadre ${v[0]}` });
+    s.addText(v[1], { x, y: y + VH + 0.04, w: VW, h: 0.26, fontSize: 9.5, color: THEME.colors.accent5, fontFace: "Courier New", align: "center", margin: 0, isTextBox: true });
+  });
+
+  s.addText("Ligne 1 : zone publique et pages réservées au visiteur.  ·  Ligne 2 : espace authentifié, puis back-office.",
+    { x: M, y: 6.1, w: CW, h: 0.35, fontSize: 13, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "legende zones" });
+  s.addText("Captures d'interfaces (dossier § 12.2) — chacune est accompagnée du code correspondant.", { placeholder: "caption" });
+}
+
+{
   const s = add("SPLIT", "Réalisation",
-`[20:40 — 21:40]
+`[21:30 — 22:25]
 Le tableau de bord, capture réelle de l'application en fonctionnement.
 Trois compteurs en haut, puis trois portes d'entrée vers la rédaction. Ce choix répond à un constat d'usage : devant un éditeur vide, l'utilisateur qui n'a pas de structure en tête abandonne. Proposer un modèle ou un document existant supprime la page blanche.
 Techniquement, deux choses. Les compteurs viennent de l'API, pas d'un calcul côté client. Et la recherche filtre la page courante côté client, parce que la pagination est serveur : la liste n'est jamais chargée entièrement.
@@ -570,7 +618,7 @@ Huit captures figurent en annexe § 12.2, avec le code correspondant.`);
 
 {
   const s = add("SPLIT", "Réalisation",
-`[21:40 — 23:25]
+`[22:25 — 24:00]
 L'éditeur, l'écran central du produit.
 Je m'arrête sur l'enregistrement automatique, parce que quatre décisions tiennent dans quelques lignes.
 Le délai de 2,5 secondes n'est pas arbitraire : enregistrer à chaque caractère saturerait l'API et multiplierait les écritures ; un délai trop long rendrait la sauvegarde invisible et ferait perdre du travail.
@@ -595,7 +643,7 @@ Une remarque de méthode, que j'ai tenu à écrire dans le dossier : sur la capt
 
 {
   const s = add("CONTENT", "Réalisation",
-`[23:25 — 25:25]
+`[24:00 — 25:50]
 Un composant métier : le quota IA. Dix lignes, et trois décisions.
 Première décision : c'est une agrégation. Je compte les lignes du journal des appels sur les vingt-quatre dernières heures. Je ne lis pas un compteur stocké sur l'utilisateur. Un compteur se désynchronise — il suffit d'un échec entre l'appel et l'incrément ; une agrégation est toujours juste par construction.
 Deuxième décision : c'est une fenêtre glissante, pas un compteur journalier. Le cahier des charges dit « 20 requêtes par 24 heures », pas « par jour calendaire ». Avec un compteur remis à zéro à minuit, un utilisateur fait quarante appels entre 23 h et 1 h.
@@ -635,7 +683,7 @@ Le test correspondant est le cas JE-07 du jeu d'essai, et mes données de test c
 
 {
   const s = add("CONTENT", "Réalisation",
-`[25:25 — 26:25]
+`[25:50 — 26:45]
 Un composant d'accès aux données, et c'est le motif le plus répété du projet.
 La propriété est dans la clause WHERE. Je ne charge pas le document puis ne compare son propriétaire : je demande à la base un document qui a cet identifiant ET qui appartient à l'utilisateur courant.
 La différence n'est pas stylistique. Avec un contrôle a posteriori, il suffit d'oublier un if dans une route pour ouvrir une faille. Ici, oublier la condition fait échouer le test de propriété, qui existe pour chaque ressource.
@@ -671,7 +719,7 @@ Et toutes les requêtes passent par l'ORM, paramétrées, sans aucune concaténa
 
 {
   const s = add("CONTENT", "Réalisation",
-`[26:25 — 27:55]
+`[26:45 — 27:55]
 Dernier point de la réalisation : l'application est conteneurisée, intégrée en continu depuis le 4 octobre, et la pile a été exécutée. Pas seulement décrite — jouée, le 5 octobre sur un démon Docker réel, et de nouveau depuis sur mon poste.
 La composition compte trois services. MySQL 8.4 avec un volume persistant et une sonde de santé — sans la sonde, le backend démarre avant que la base accepte les connexions. Le backend tourne sous Gunicorn, pas sous le serveur de développement de Flask, avec un utilisateur non privilégié. Le frontend est construit par Vite en deux étapes puis servi par Nginx : l'image finale pèse 82,9 mégaoctets mesurés, parce qu'elle ne contient que des fichiers statiques et pas la chaîne de construction.
 Un détail qui compte : les secrets sont déclarés sous la forme dollar-accolade VAR deux-points point d'interrogation message. La composition échoue immédiatement si la variable manque, au lieu de démarrer avec une valeur inventée.
