@@ -17,12 +17,9 @@ Durée : **40 min** d'exposé, questions après.
 | 3 | 8:35 → 20:30 | Conception | 9 → 17 | § 5 | Le navigateur ne parle **jamais** au modèle |
 | 4 | 20:30 → 27:55 | Réalisation | 18 → 24 | § 6, § 7 | Du code, 3 décisions par extrait |
 | 5 | 27:55 → 32:20 | Sécurité | 25 → 27 | § 8 | La sécurité est une contrainte de **structure** |
-| 6 | 32:20 → 40:00 | Tests, veille, bilan | 28 → 32 | § 9-11 | Je vérifie, je me tiens à jour, j'assume ce qui reste |
+| 6 | 32:20 → 40:00 | Tests, veille, clôture | 28 → 32 | § 9-11 | Je vérifie, je me tiens à jour, et je réponds à la commande |
 
-**Les 3 phrases de fin** (à savoir par cœur, elles closent l'oral) :
-1. Une contrainte se tient par la structure, pas par une vérification.
-2. Une mesure de sécurité est un composant comme un autre.
-3. Un jeu de données, c'est le choix des valeurs qui font échouer les mauvaises implémentations.
+**La clôture** : les quatre objectifs du cahier des charges, repris dans les termes de l'ouverture, et les six mesures de sécurité qui les tiennent. **Tu réponds à la commande, tu ne récites pas un bilan.**
 
 **Les 4 points restants** (les dire avant qu'on te les demande) : déploiement effectif · bascule MySQL complète · 3 compléments AI Act · journalisation applicative.
 
@@ -295,14 +292,20 @@ Durée : **40 min** d'exposé, questions après.
 - Ollama éclaire mon architecture : **héberger soi-même, c'est aussi maintenir soi-même.** La décision reste la bonne au regard du RGPD, **mais elle se paie en maintenance — et le dire est plus honnête que de la présenter comme un choix sans contrepartie**.
 - L'AI Act justifie la veille comme livrable : le cahier des charges, rédigé avant l'entrée en application, ne mentionne que le RGPD. **Sans ce suivi, j'aurais livré une application non conforme à une obligation entrée en vigueur trois semaines avant la fin du développement.**
 
-### Diapo 32 · Ce que je retiens `[38:30 — 40:00]`
-- Trois colonnes.
-- **Livré** : les cinq lots fonctionnels, **461 tests au vert**, la pile Docker exécutée sur MySQL 8.4, les audits accessibilité et sécurité, le journal de veille.
-- **Reste, et je ne le cache pas** : les trois compléments AI Act, la journalisation applicative, les tests de charge, TS-02 à reprendre, et une mise en ligne.
-- **Ce que je retiens — trois choses qu'un cours ne m'aurait pas apprises :**
-  1. **Une contrainte se tient par la structure, pas par une vérification.** La propriété est dans le `WHERE`, le quota est une agrégation, la confidentialité est une question d'hébergement du modèle. À chaque fois, **le code ne peut pas faire autrement** — ce n'est pas que j'ai pensé à vérifier.
-  2. **Une mesure de sécurité est un composant comme un autre.** Ajouter DOMPurify n'a pas clos le sujet XSS, ça l'a déplacé vers la maintenance de DOMPurify. D'où la défense en profondeur : **je stocke du Markdown brut, pas du HTML**.
-  3. **Un jeu de données, c'est le choix des valeurs qui font échouer les mauvaises implémentations.** Sans la ligne à 25 heures, mon test de quota passait quelle que soit l'implémentation.
+### Diapo 32 · Ce qui était demandé, ce qui le tient `[38:30 — 40:00]`
+- « Pour conclure, **je reprends les quatre objectifs du cahier des charges, dans les termes mêmes de l'ouverture**, et je dis pour chacun ce qui le tient. »
+- **Rédiger et stocker** → éditeur Markdown, CRUD, dossiers, enregistrement automatique à 2,5 s.
+- **Suggérer et reformuler** → trois commandes, quota 20 / 24 h par agrégation, chaque interaction journalisée avec l'avant et l'après.
+- **Un espace sécurisé** → deux jetons, sessions révocables, cloisonnement par compte dans la clause `WHERE`.
+- **Se conformer** → RGPD par l'architecture (les contenus ne sortent pas), RGAA vérifié sur 15 écrans, 0 violation axe-core, AI Act tracé en base.
+- « À droite, **les six mesures qui tiennent tout cela**. Je les reprends vite, chacune a déjà été montrée. »
+  1. La propriété est dans le `WHERE` — **404, jamais 403** : un 403 confirmerait que la ressource existe.
+  2. **Le rôle est relu en base** à chaque requête, jamais lu dans le jeton.
+  3. **bcrypt salé** pour les mots de passe, **empreinte SHA-256** pour les jetons — une fuite de la base ne rejoue pas une session.
+  4. **Refus de démarrer sans `JWT_SECRET_KEY`** : pas de clé de secours en dur.
+  5. Refresh dans un cookie **httpOnly** ; **rejouer un jeton consommé révoque tout le compte**.
+  6. **Markdown brut stocké, jamais de HTML** : si DOMPurify échoue, la donnée n'est toujours pas exécutable.
+- **Si on te demande ce qui manque** : la journalisation des événements de sécurité est incomplète — **A09 de l'OWASP**, et c'est écrit dans le dossier. Dis-le toi-même si la question vient.
 - Je vous remercie, je suis à votre disposition pour vos questions.
 
 ## Antisèche — à relire 5 minutes avant

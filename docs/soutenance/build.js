@@ -925,32 +925,65 @@ Et l'AI Act justifie à lui seul la veille comme livrable : le cahier des charge
 }
 
 {
+  // Diapositive de clôture : on reprend les QUATRE OBJECTIFS du cahier des
+  // charges dans les mêmes termes qu'à la diapositive 4, pour que la fin
+  // réponde mot pour mot à l'ouverture, et on adosse à chacun la mesure de
+  // sécurité qui le tient.
   const s = add("CLOSE", "Tests, veille et bilan",
 `[38:30 — 40:00]
-Pour conclure, trois colonnes.
-Ce qui est livré : l'application complète sur les cinq lots fonctionnels, 461 tests automatisés au vert, la pile conteneurisée exécutée sur MySQL 8.4, les audits d'accessibilité et de sécurité, et le journal de veille.
-Ce qui reste, et je ne le cache pas : les trois compléments AI Act, une journalisation applicative à compléter, les tests de charge, et une mise en ligne — l'application tourne en conteneurs, il lui manque un domaine et les quelques valeurs de configuration que j'ai listées.
-Ce que je retiens, ce sont trois choses que ce projet m'a apprises, et qu'un cours ne m'aurait pas apprises.
-La première : une contrainte se tient par la structure, pas par une vérification. La propriété est dans la clause WHERE, le quota est une agrégation, la confidentialité est une question d'hébergement du modèle. À chaque fois, l'exigence est satisfaite parce que le code ne peut pas faire autrement — pas parce que j'ai pensé à la vérifier.
-La deuxième : une mesure de sécurité est un composant comme un autre. Ajouter DOMPurify n'a pas clos le sujet XSS, ça l'a déplacé vers la maintenance de DOMPurify. D'où la défense en profondeur : je stocke du Markdown brut, pas du HTML.
-La troisième : un jeu de données, c'est le choix des valeurs qui font échouer les mauvaises implémentations. Sans la ligne datée de vingt-cinq heures, mon test de quota passait quelle que soit l'implémentation.
+Pour conclure, je reprends les quatre objectifs du cahier des charges, dans les termes mêmes où je vous les ai présentés en ouverture, et je dis pour chacun ce qui le tient.
+Rédiger et stocker : l'éditeur Markdown, le CRUD complet, les dossiers, et l'enregistrement automatique deux secondes et demie après la dernière frappe.
+Suggérer et reformuler : les trois commandes — reformuler, corriger, compléter — un quota de vingt appels par vingt-quatre heures compté par agrégation, et chaque interaction journalisée avec l'avant et l'après.
+Un espace sécurisé : deux jetons, un court et un long révocable, et le cloisonnement par compte écrit dans la clause WHERE de chaque requête.
+Se conformer : le RGPD obtenu par l'architecture puisque les contenus ne sortent pas, l'accessibilité RGAA vérifiée sur quinze écrans sans aucune violation axe-core, et la traçabilité AI Act enregistrée en base.
+À droite, les six mesures de sécurité qui tiennent tout cela. Je les reprends vite, parce que chacune a déjà été montrée.
+La propriété est dans la clause WHERE, et une ressource qui ne vous appartient pas renvoie 404 — pas 403, qui confirmerait son existence. Le rôle est relu en base à chaque requête, jamais lu dans le jeton. Les mots de passe sont en bcrypt salé, les jetons stockés en empreinte SHA-256 : une fuite de la base ne permet pas de rejouer une session. L'application refuse de démarrer sans sa clé de signature. Le refresh token est dans un cookie inaccessible au JavaScript, et rejouer un jeton déjà consommé révoque tout le compte. Enfin je stocke du Markdown brut et non du HTML : si DOMPurify échoue un jour, la donnée stockée n'est toujours pas exécutable.
+Si vous me demandez ce qui manque : la journalisation des événements de sécurité est incomplète, c'est la catégorie A09 de l'OWASP, et c'est écrit dans le dossier.
 Je vous remercie, je suis à votre disposition pour vos questions.`);
-  s.addText("Ce que je retiens", { placeholder: "title" });
+  s.addText("Ce qui était demandé, ce qui le tient", { placeholder: "title" });
 
-  const cols = [
-    ["Livré", "5FBF8F", "Cinq lots fonctionnels complets\n461 tests automatisés au vert\nPile Docker exécutée, MySQL 8.4\nAudits accessibilité et sécurité\nJournal de veille et dossier projet"],
-    ["Reste à faire", ACCENT_SOMBRE, "Trois compléments AI Act\nJournalisation applicative\nTests de charge\nTS-02 : réinitialisation à reprendre\nMise en ligne sur un hébergement"],
-    ["Appris", "F4F1EA", "Une contrainte se tient par la structure, pas par une vérification ajoutée\nUne mesure de sécurité est un composant comme un autre\nUn jeu de données, c'est choisir les valeurs qui font échouer"],
-  ];
-  cols.forEach((c, i) => {
-    const x = M + i * 4.11;
-    const w = i === 2 ? 3.88 : 3.87;
-    s.addShape(pres.ShapeType.rect, { x, y: 1.85, w, h: 3.05, fill: { color: "111111" }, line: { color: "F4F1EA", width: 1.25 }, objectName: `bilan ${c[0]}` });
-    s.addText(c[0], { x: x + 0.3, y: 2.1, w: w - 0.6, h: 0.45, fontSize: 19, bold: true, color: c[1], margin: 0, isTextBox: true });
-    s.addText(c[2], { x: x + 0.3, y: 2.62, w: w - 0.6, h: 2.55, fontSize: 14.5, color: "F4F1EA", lineSpacing: 23, valign: "top", margin: 0, isTextBox: true });
+  // ── Les quatre objectifs du cahier des charges ────────────────────
+  s.addText("LES QUATRE OBJECTIFS DU CAHIER DES CHARGES", {
+    x: M, y: 1.62, w: 7.3, h: 0.3, fontSize: 11, bold: true, color: ACCENT_SOMBRE,
+    fontFace: "Courier New", charSpacing: 2, margin: 0, isTextBox: true,
   });
 
-  s.addText("Merci de votre attention.", { x: M, y: 5.35, w: CW, h: 0.6, fontSize: 24, bold: true, color: ACCENT_SOMBRE, margin: 0, isTextBox: true, objectName: "merci" });
+  const objectifs = [
+    ["Rédiger et stocker", "Éditeur Markdown, CRUD, dossiers, enregistrement automatique"],
+    ["Suggérer et reformuler", "Trois commandes, quota 20 / 24 h, chaque appel journalisé"],
+    ["Un espace sécurisé", "Deux jetons, sessions révocables, cloisonnement par compte"],
+    ["Se conformer", "RGPD par l'architecture, RGAA 0 violation, AI Act tracé en base"],
+  ];
+  objectifs.forEach((o, i) => {
+    const y = 2.02 + i * 0.92;
+    s.addShape(pres.ShapeType.rect, { x: M, y: y + 0.08, w: 0.34, h: 0.34, fill: { color: "5FBF8F" }, line: { color: "5FBF8F", width: 1 }, objectName: `coche ${i}` });
+    s.addText("✓", { x: M, y: y + 0.08, w: 0.34, h: 0.34, fontSize: 15, bold: true, color: "111111", align: "center", valign: "middle", margin: 0, isTextBox: true });
+    s.addText(o[0], { x: M + 0.52, y, w: 6.7, h: 0.34, fontSize: 17, bold: true, color: "F4F1EA", margin: 0, isTextBox: true });
+    s.addText(o[1], { x: M + 0.52, y: y + 0.36, w: 6.7, h: 0.46, fontSize: 13.5, color: "A8A194", margin: 0, isTextBox: true });
+  });
+
+  // ── Les mesures de sécurité ───────────────────────────────────────
+  s.addShape(pres.ShapeType.rect, { x: 8.3, y: 1.52, w: 4.4, h: 4.26, fill: { color: "111111" }, line: { color: "F4F1EA", width: 1.25 }, objectName: "cadre securite" });
+  s.addText("LA SÉCURITÉ, EN SIX POINTS", {
+    x: 8.58, y: 1.78, w: 3.84, h: 0.3, fontSize: 11, bold: true, color: ACCENT_SOMBRE,
+    fontFace: "Courier New", charSpacing: 2, margin: 0, isTextBox: true,
+  });
+
+  const securite = [
+    "La propriété est dans le WHERE — 404, jamais 403",
+    "Le rôle est relu en base, jamais dans le jeton",
+    "bcrypt salé ; jetons stockés en empreinte SHA-256",
+    "Refus de démarrer sans JWT_SECRET_KEY",
+    "Refresh httpOnly ; un rejeu révoque le compte",
+    "Markdown brut stocké, jamais de HTML",
+  ];
+  securite.forEach((t, i) => {
+    const y = 2.22 + i * 0.58;
+    s.addText("—", { x: 8.58, y, w: 0.26, h: 0.3, fontSize: 13, bold: true, color: ACCENT_SOMBRE, valign: "top", margin: 0, isTextBox: true });
+    s.addText(t, { x: 8.9, y, w: 3.56, h: 0.52, fontSize: 12.5, color: "F4F1EA", lineSpacing: 15, valign: "top", margin: 0, isTextBox: true });
+  });
+
+  s.addText("Merci de votre attention.", { x: M, y: 6.0, w: 7.3, h: 0.6, fontSize: 24, bold: true, color: ACCENT_SOMBRE, margin: 0, isTextBox: true, objectName: "merci" });
 }
 
 (async () => {
