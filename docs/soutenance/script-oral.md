@@ -20,7 +20,7 @@ Durée : **40 min** d'exposé, questions après.
 | 6 | 32:20 → 40:00 | Tests, veille, bilan | 27 → 31 | § 9-11 | Je vérifie, je me tiens à jour, j'assume ce qui reste |
 
 **Les 3 phrases de fin** (à savoir par cœur, elles closent l'oral) :
-1. Un prompt est du code.
+1. Une contrainte se tient par la structure, pas par une vérification.
 2. Une mesure de sécurité est un composant comme un autre.
 3. Un jeu de données, c'est le choix des valeurs qui font échouer les mauvaises implémentations.
 
@@ -89,18 +89,13 @@ Durée : **40 min** d'exposé, questions après.
 - `package-lock.json` commité : **pas un détail d'organisation, une mesure de sécurité** — la compromission d'axios le montrera.
 - Seule → point hebdo avec mon référent + revues croisées avec la promo sur l'authentification.
 
-### Diapo 8 · Trois arbitrages, et une erreur `[6:20 — 8:35]`
+### Diapo 8 · Trois arbitrages `[6:20 — 8:35]`
 - **1 — Un JWT seul ne se révoque pas.** → table `user_session` + rotation des refresh tokens. Un jeton déjà consommé qui revient = vol → toutes les sessions révoquées.
 - **2 — Le quota par agrégation**, pas par compteur. Un compteur se désynchronise, une agrégation non. Bonus : historique auditable (RGPD).
 - **3 — La confidentialité.** Plutôt qu'anonymiser du texte libre → modèle en local, Ollama. **L'exigence est satisfaite par construction.**
   - Contreparties assumées : latence, qualité < GPT-4, prérequis d'installation, un service de plus à maintenir.
   - Ma veille l'a confirmé : CVE critique sur Ollama en avril.
-- **L'erreur, que j'ai gardée dans le dossier** : mes textes avaient dérivé vers un positionnement « juridique » absent du cahier des charges. 20 libellés, 9 fichiers.
-  - Le dernier résidu n'était pas dans l'interface : **dans les gabarits de prompt du backend** — « Tu es un assistant de rédaction juridique ».
-  - Invisible, mais envoyé au modèle à chaque appel → effet réel sur les sorties.
-  - **Règle : un prompt est du code, il se teste comme du code.** Cas TU-04.
-
----
+- **Le fil commun** : les trois tiennent une exigence du cahier des charges **par la structure du code**, pas par une vérification ajoutée après coup.
 
 ## 4. Conception — 8:35 → 20:30
 
@@ -124,13 +119,13 @@ Durée : **40 min** d'exposé, questions après.
 - Cinq blueprints : auth, documents, dossiers, IA, admin.
 - Front, même logique : **aucune vue n'appelle axios.** Donc l'intercepteur qui rejoue après un 401 est écrit une seule fois.
 
-### Diapo 12 · Neuf planches, une intention par écran `[13:00 — 14:30]`
-- Neuf planches, une par écran. Trois temps : recensement → charte et composants → planches.
-- Celle-ci : l'éditeur, **l'écran le plus représentatif du produit**.
+### Diapo 12 · L'éditeur de document `[13:00 — 14:30]`
+- Le maquettage a produit **neuf planches**, une par écran. Trois temps : recensement → charte et composants → planches.
 - Chaque planche porte sa route, sa garde de routeur, et une colonne « intentions » numérotée.
-- Intention 4 : enregistrement auto 2,5 s après la dernière frappe + bouton explicite — je montrerai le code.
-- Intention 5 : historique IA — action, avant, après, tokens. **Pas un confort : la traçabilité exigée.**
-- Le maquettage a servi à deux choses : vérifier la couverture du périmètre, fixer les intentions **avant d'écrire une ligne de Vue**.
+- **Je montre l'écran livré plutôt que la planche — c'est lui qui prouve que l'intention a été tenue.**
+- Trois choses à relever : la barre d'outils Markdown ; les **trois modes d'affichage** (écrire, partagé, lire) ; la mention « enregistré automatiquement » sous le titre.
+- Le maquettage a servi à deux choses : vérifier la couverture du périmètre, et fixer les intentions **avant d'écrire une ligne de Vue**.
+- Planches en annexe § 12.1, captures en § 12.2.
 
 ### Diapo 13 · Trois zones, trois gardes `[14:30 — 15:30]`
 - **Seize routes**, déclarées dans `frontend/src/index.ts`. Un seul `beforeEach` pour les trois gardes.
@@ -180,7 +175,7 @@ Durée : **40 min** d'exposé, questions après.
 ### Diapo 18 · Section `[20:30 — 20:40]`
 > « Quatrième temps : la réalisation, avec les écrans et le code. »
 
-### Diapo 19 · Supprimer la page blanche `[20:40 — 21:40]`
+### Diapo 19 · Le tableau de bord `[20:40 — 21:40]`
 - Tableau de bord. **Capture réelle de l'application en fonctionnement.**
 - Trois compteurs, puis trois portes d'entrée vers la rédaction.
 - Constat d'usage : **devant un éditeur vide, l'utilisateur sans structure en tête abandonne.** Un modèle ou un document existant supprime la page blanche.
@@ -222,7 +217,6 @@ Durée : **40 min** d'exposé, questions après.
 - Ollama hors composition, sur l'hôte, via `host.docker.internal`.
 - CI à chaque push et chaque PR, **trois travaux parallèles**. **Enchaînés, un échec du frontend masquait l'état du backend** — il fallait deux exécutions.
 - Troisième carte, la liste de contrôle d'une mise en ligne : ce sont **des valeurs de configuration, pas des développements**.
-- Le plus traître : **`SameSite=Strict` raisonne en sites, pas en origines.** En dev, front et API sur localhost → le cookie passe. En prod, deux domaines distincts **casseraient le rafraîchissement sans qu'aucun test local ne le voie**.
 - **L'application est prête à être hébergée le jour où on lui donne un domaine.**
 
 ### Diapo 24 · Section `[27:55 — 28:05]`
@@ -257,16 +251,16 @@ Durée : **40 min** d'exposé, questions après.
 ### Diapo 27 · Section `[32:20 — 32:30]`
 > « Dernier temps : comment je vérifie, comment je me tiens à jour, et ce que je retiens. »
 
-### Diapo 28 · 195 cas au vert `[32:30 — 34:30]`
+### Diapo 28 · 461 cas au vert `[32:30 — 34:30]`
 - Quatre niveaux, **du moins coûteux au plus coûteux** → ce classement détermine ce qui tourne à chaque push et ce qui reste manuel.
-- Campagne du 3 octobre : **195 cas, tous au vert, 59 secondes. 95 % de couverture backend** — 100 % sur `services/` et la persistance, 89-96 % sur les routes.
-- Mon objectif était 80 % sur `services/` et les routes, **sans objectif chiffré ailleurs. C'est volontaire : viser un pourcentage global pousse à écrire des tests faciles sur du code sans risque.**
-- Les 62 % du front : tirés vers le bas par cinq modules qui sont des enveloppes d'une ligne autour d'axios — **les tester reviendrait à tester axios**.
+- Campagne rejouée le 4 novembre : **461 cas automatisés, tous au vert — 403 backend, 58 frontend.**
+- **95 % de couverture backend**, 100 % sur `auth_service` et `email_service`, 93 à 97 % sur les routes.
+- Si on te demande comment c'est calculé : **hors `jeu_essai.py`**, qui est un script de peuplement, pas du code applicatif. En l'incluant, on tombe à 90 % — dis-le toi-même, c'est plus solide.
+- Objectif fixé : 80 % sur `services/` et les routes, **sans objectif chiffré ailleurs. Viser un pourcentage global pousse à écrire des tests faciles sur du code sans risque.**
+- Les **55 %** du front : tirés vers le bas par six modules qui sont des enveloppes d'une ligne autour d'axios — **les tester reviendrait à tester axios**.
 - Trois zones concentrent l'effort : authentification, propriété, quota. **Les trois endroits où une régression coûte cher.**
-- La leçon : **les doubles de test mentent.** Trois défauts de la chaîne IA sont passés sous un faux `requests.post` qui acceptait `json()` à tout moment et ne fermait jamais de connexion. **Il a fallu un vrai serveur HTTP local pour les voir.**
-- Tests ajoutés ensuite **vérifiés par mutation** : on casse le code exprès pour s'assurer que le test échoue. **Un test qu'on n'a jamais vu échouer ne prouve rien.**
-- Le quatrième niveau, **les tests système, a été joué le 5 octobre sur la pile conteneurisée : 7 au vert sur 10.** Un échec réel sur la réinitialisation de mot de passe (TS-02), deux cas hors de portée de cet environnement dont celui qui demande un Ollama joignable.
-- Restent les **tests de charge**, qui viennent après.
+- Le quatrième niveau, **les tests système, joué le 5 octobre sur la pile conteneurisée : 7 au vert sur 10.** Un échec réel sur la réinitialisation (TS-02), deux cas hors de portée dont celui qui demande un Ollama joignable.
+- Restent les **tests de charge**.
 
 ### Diapo 29 · La ligne datée de 25 heures `[34:30 — 36:30]`
 - Jeu d'essai : la génération d'une assistance IA. **Trois raisons :**
@@ -279,7 +273,7 @@ Durée : **40 min** d'exposé, questions après.
 - **Cette ligne unique est le seul moyen de distinguer une fenêtre glissante d'un compteur journalier.** Sans elle, JE-07 passerait quelle que soit l'implémentation.
 - **Ce que j'ai appris : un jeu de données, ce n'est pas remplir des tables — c'est choisir les valeurs qui font échouer les mauvaises implémentations.**
 
-### Diapo 30 · La sévérité ne prédit pas l'impact `[36:30 — 38:30]`
+### Diapo 30 · La veille technologique `[36:30 — 38:30]`
 - Trois périmètres : dépendances, sécurité applicative, réglementaire.
 - Principe : **surveiller ce que le projet utilise réellement. Une alerte sur une bibliothèque absente du projet n'est pas une information.**
 - Huit entrées sur six mois, **trois ont appelé une action** — c'est la mesure de l'utilité de l'exercice.
@@ -294,20 +288,18 @@ Durée : **40 min** d'exposé, questions après.
 
 ### Diapo 31 · Ce que je retiens `[38:30 — 40:00]`
 - Trois colonnes.
-- **Livré** : l'application complète sur les cinq lots, 195 tests au vert, conteneurisation et pipeline, audits accessibilité et sécurité, journal de veille.
-- **Reste, et je ne le cache pas** : les trois compléments AI Act ; la journalisation applicative ; les tests de charge ; TS-02 à reprendre ; et une mise en ligne — **l'application tourne en conteneurs, il lui manque un domaine et quelques valeurs de configuration**.
-- **Ce que je retiens — trois phrases que ce projet m'a apprises, pas un cours :**
-  1. **Un prompt est du code** : il part en production, il oriente le comportement, il se teste.
-  2. **Une mesure de sécurité est un composant comme un autre** : ajouter DOMPurify n'a pas clos le sujet XSS, ça l'a déplacé vers sa maintenance.
-  3. **Un jeu de données, c'est le choix des valeurs qui font échouer les mauvaises implémentations.**
+- **Livré** : les cinq lots fonctionnels, **461 tests au vert**, la pile Docker exécutée sur MySQL 8.4, les audits accessibilité et sécurité, le journal de veille.
+- **Reste, et je ne le cache pas** : les trois compléments AI Act, la journalisation applicative, les tests de charge, TS-02 à reprendre, et une mise en ligne.
+- **Ce que je retiens — trois choses qu'un cours ne m'aurait pas apprises :**
+  1. **Une contrainte se tient par la structure, pas par une vérification.** La propriété est dans le `WHERE`, le quota est une agrégation, la confidentialité est une question d'hébergement du modèle. À chaque fois, **le code ne peut pas faire autrement** — ce n'est pas que j'ai pensé à vérifier.
+  2. **Une mesure de sécurité est un composant comme un autre.** Ajouter DOMPurify n'a pas clos le sujet XSS, ça l'a déplacé vers la maintenance de DOMPurify. D'où la défense en profondeur : **je stocke du Markdown brut, pas du HTML**.
+  3. **Un jeu de données, c'est le choix des valeurs qui font échouer les mauvaises implémentations.** Sans la ligne à 25 heures, mon test de quota passait quelle que soit l'implémentation.
 - Je vous remercie, je suis à votre disposition pour vos questions.
-
----
 
 ## Antisèche — à relire 5 minutes avant
 
 **Chiffres**
-`195` tests au vert · `59 s` · `95 %` couverture backend (100 % services) · `62 %` front · `8` tables · `5` blueprints · `9` planches · `20` requêtes / `24 h` · `429` · `404` pas 403 · `15 min` access · `7 jours` refresh · `2,5 s` autosave · `82,9 Mo` image front · `8` entrées de veille, `3` actions · CVE `9,1` Ollama / `5,1` DOMPurify · AI Act `2 août 2026` · `13` lots
+`461` tests au vert (403 back + 58 front) · `95 %` couverture backend (90 % brut, `jeu_essai.py` inclus) · `55 %` front · `8` tables · `5` blueprints · `9` planches · `20` requêtes / `24 h` · `429` · `404` pas 403 · `15 min` access · `7 jours` refresh · `2,5 s` autosave · `82,9 Mo` image front · `8` entrées de veille, `3` actions · CVE `9,1` Ollama / `5,1` DOMPurify · AI Act `2 août 2026` · `13` lots
 
 **Si tu perds le fil** → reviens à la question « pourquoi ce choix ? ». Chaque diapo a une raison, pas une liste.
 
@@ -317,6 +309,6 @@ Durée : **40 min** d'exposé, questions après.
 1. Pas encore mise en ligne : la pile tourne en conteneurs, il manque un domaine et des valeurs de configuration.
 2. A09 journalisation incomplète.
 3. `current_app` dans `services/` : seul point où la règle fléchit.
-4. La dérive éditoriale « juridique », corrigée, cas TU-04.
+4. La couverture backend est de 95 % hors `jeu_essai.py` ; 90 % en l'incluant.
 
 **Posture** → une respiration à chaque diapo de section. Les trois phrases finales : lentement, en regardant le jury.

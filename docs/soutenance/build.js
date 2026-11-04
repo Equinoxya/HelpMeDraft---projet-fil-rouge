@@ -349,19 +349,19 @@ Trois arbitrages résument le projet.
 Le premier : un JWT seul ne se révoque pas. J'ai donc ajouté une table user_session côté serveur et une rotation des refresh tokens. Chaque usage invalide le précédent ; si un jeton déjà consommé revient, c'est qu'il a été volé, et toutes les sessions du compte sont révoquées.
 Le deuxième : le quota. Je le calcule par agrégation sur le journal des appels IA, pas avec un compteur stocké sur l'utilisateur. Un compteur peut se désynchroniser ; une agrégation, non. Et l'historique reste auditable, ce qui sert aussi la traçabilité RGPD.
 Le troisième est le plus structurant : la confidentialité. Plutôt que d'anonymiser des textes libres — ce qui n'est jamais exhaustif —, j'héberge le modèle en local avec Ollama. L'exigence est satisfaite par construction. Les contreparties sont réelles et je les assume : plus de latence, une qualité inférieure à GPT-4, un prérequis d'installation, et un service de plus à maintenir. Ma veille l'a confirmé : une CVE critique sur Ollama en avril.
-La quatrième carte est un échec que j'ai choisi de garder dans le dossier. Mes textes d'interface avaient dérivé vers un positionnement « juridique » que le cahier des charges ne demande pas. Vingt libellés dans neuf fichiers. Le dernier résidu n'était pas dans l'interface : il était dans les gabarits de prompt du backend — « Tu es un assistant de rédaction juridique ». Invisible, mais envoyé au modèle à chaque appel, donc avec un effet réel sur les sorties. J'en tire une règle : un prompt est du code, et il se teste comme du code. C'est le cas de test TU-04.`);
-  s.addText("Trois arbitrages, et une erreur corrigée", { placeholder: "title" });
-  s.addText("Les décisions que je défends, et celle que j'ai dû reprendre.", { placeholder: "lead" });
+Les trois se rejoignent sur un même point, et c'est le fil du projet : chaque exigence du cahier des charges est tenue par la structure du code, et non par une vérification ajoutée après coup.`);
+  s.addText("Trois arbitrages", { placeholder: "title" });
+  s.addText("Les trois décisions qui structurent le projet.", { placeholder: "lead" });
 
-  card(s, { x: M, y: 1.95, w: 3.87, h: 2.5, badge: "1", title: "Session révocable",
-    body: "Un JWT seul ne se révoque pas. Table user_session + rotation des refresh tokens : rejouer un jeton consommé est traité comme un vol." });
-  card(s, { x: M + 4.11, y: 1.95, w: 3.87, h: 2.5, badge: "2", title: "Quota par agrégation",
-    body: "Comptage sur le journal des appels, pas un compteur sur l'utilisateur : la valeur ne peut pas se désynchroniser et l'historique reste auditable." });
-  card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 2.5, badge: "3", title: "Confidentialité",
-    body: "Inférence locale : les contenus ne quittent pas l'infrastructure. Contreparties assumées — latence, qualité, maintenance." });
+  card(s, { x: M, y: 2.15, w: 3.87, h: 3.25, badge: "1", title: "Session révocable",
+    body: "Un JWT seul ne se révoque pas.\n\nTable user_session et rotation des refresh tokens : rejouer un jeton déjà consommé est traité comme un vol, et toutes les sessions du compte tombent." });
+  card(s, { x: M + 4.11, y: 2.15, w: 3.87, h: 3.25, badge: "2", title: "Quota par agrégation",
+    body: "Comptage sur le journal des appels, pas un compteur stocké sur l'utilisateur.\n\nLa valeur ne peut pas se désynchroniser, et l'historique reste auditable — ce qui sert aussi la traçabilité." });
+  card(s, { x: M + 8.22, y: 2.15, w: 3.88, h: 3.25, badge: "3", title: "Confidentialité",
+    body: "Inférence locale : les contenus ne quittent pas l'infrastructure. L'exigence est satisfaite par construction.\n\nContreparties assumées — latence, qualité, maintenance." });
 
-  card(s, { x: M, y: 4.68, w: 12.1, h: 1.6, badge: "!", accent: THEME.colors.accent4, title: "L'erreur : une dérive du positionnement éditorial",
-    body: "Vingt libellés avaient glissé vers un positionnement « juridique » absent du cahier des charges. Le dernier résidu n'était pas visible : les gabarits de prompt du backend. Invisibles, mais envoyés au modèle à chaque appel — donc avec un effet réel. Un prompt est du code : il se teste comme du code (cas TU-04)." });
+  s.addText("Les trois tiennent une exigence du cahier des charges par la structure du code, et non par une vérification ajoutée après coup.",
+    { x: M, y: 5.66, w: CW, h: 0.5, fontSize: 14, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "fil des arbitrages" });
 }
 
 // ═══════════════════════════ 4. Conception ═══════════════════════════
@@ -424,13 +424,13 @@ Côté front, la même logique : aucune vue n'appelle axios directement, tout pa
 {
   const s = add("MEDIA", "Conception",
 `[13:00 — 14:30]
-Neuf planches de maquettage, une par écran, construites en trois temps : recensement des écrans à partir du périmètre, charte graphique et composants, puis les planches elles-mêmes.
-Celle-ci est l'écran le plus représentatif du produit : l'éditeur. Chaque planche porte sa route, sa garde de routeur, et une colonne « intentions » numérotée qui explique pourquoi l'écran est fait comme ça.
-Deux intentions à relever ici. La quatrième : l'enregistrement automatique 2,5 secondes après la dernière frappe, doublé d'un bouton explicite — je montrerai le code. La cinquième : l'historique des interactions IA, avec l'action, l'avant, l'après et le nombre de tokens. Ce n'est pas un confort, c'est la traçabilité exigée par le cahier des charges.
-Le maquettage a servi deux objectifs : vérifier la couverture du périmètre, et fixer les intentions avant d'écrire la moindre ligne de Vue.`);
-  s.addText("Neuf planches, une intention par écran", { placeholder: "title" });
-  media(s, { file: `${R}/docs/dossier/fig/planches/image6.png`, ratio: 1.88, y: 1.45, maxH: 4.9, name: "planche W-06" });
-  s.addText("Planche W-06 — éditeur de document, l'écran le plus représentatif (dossier § 5.3, § 12.1).", { placeholder: "caption" });
+Le maquettage a produit neuf planches, une par écran, construites en trois temps : recensement des écrans à partir du périmètre, charte graphique et composants, puis les planches elles-mêmes. Chaque planche porte sa route, sa garde de routeur, et une colonne « intentions » numérotée.
+Plutôt que la planche, je montre l'écran livré — c'est lui qui prouve que l'intention a été tenue. L'éditeur est l'écran le plus représentatif du produit.
+Trois choses à relever. La barre d'outils Markdown, et les trois modes d'affichage à droite : écrire, partagé, lire. La mention « enregistré automatiquement » sous le titre, qui se déclenche 2,5 secondes après la dernière frappe — je montrerai le code. Et le bouton IA, qui ouvre l'assistant.
+Le maquettage a servi deux objectifs : vérifier la couverture du périmètre, et fixer les intentions avant d'écrire la moindre ligne de Vue. Les planches sont en annexe § 12.1, les captures en § 12.2.`);
+  s.addText("L'éditeur de document", { placeholder: "title" });
+  media(s, { file: `${R}/docs/captures/C-08-editeur-document.png`, ratio: 1.3, y: 1.45, maxH: 4.9, name: "capture editeur" });
+  s.addText("Capture C-08 — éditeur de document, écran livré (dossier § 12.2). Neuf planches de maquettage l'ont précédé (§ 12.1).", { placeholder: "caption" });
 }
 
 {
@@ -553,7 +553,7 @@ Le tableau de bord, capture réelle de l'application en fonctionnement.
 Trois compteurs en haut, puis trois portes d'entrée vers la rédaction. Ce choix répond à un constat d'usage : devant un éditeur vide, l'utilisateur qui n'a pas de structure en tête abandonne. Proposer un modèle ou un document existant supprime la page blanche.
 Techniquement, deux choses. Les compteurs viennent de l'API, pas d'un calcul côté client. Et la recherche filtre la page courante côté client, parce que la pagination est serveur : la liste n'est jamais chargée entièrement.
 Huit captures figurent en annexe § 12.2, avec le code correspondant.`);
-  s.addText("Supprimer la page blanche", { placeholder: "title" });
+  s.addText("Le tableau de bord", { placeholder: "title" });
   s.addText([
     ...li([
       "Trois compteurs — documents créés, brouillons, finalisés — servis par l'API, jamais recalculés côté client.",
@@ -677,7 +677,6 @@ La composition compte trois services. MySQL 8.4 avec un volume persistant et une
 Un détail qui compte : les secrets sont déclarés sous la forme dollar-accolade VAR deux-points point d'interrogation message. La composition échoue immédiatement si la variable manque, au lieu de démarrer avec une valeur inventée.
 Ollama reste hors composition, sur l'hôte, atteint par host.docker.internal : son image pèse plusieurs gigaoctets et le modèle se télécharge à part.
 La CI tourne à chaque push et chaque pull request, en trois travaux parallèles. Le parallélisme n'est pas une optimisation de performance : enchaînés, un échec du frontend masquait l'état du backend et il fallait deux exécutions pour connaître les deux.
-Et la troisième carte est celle que je tiens à montrer, parce que ce sont des changements de configuration et pas de code — c'est précisément pour ça qu'ils s'oublient. Le plus traître est en bas : SameSite=Strict raisonne en sites, pas en origines. En développement, front et API sont tous deux sur localhost, donc le cookie passe. En production, deux domaines distincts casseraient le rafraîchissement du jeton sans qu'aucun test local ne le voie.
 La troisième carte est la liste de contrôle d'une mise en ligne : passer APP_ENV à production, une clé distincte, CORS_ORIGINS au domaine réel, TLS devant l'application. Ce sont des valeurs de configuration, pas des développements — l'application est prête à être hébergée le jour où on lui donne un domaine.`);
   s.addText("Conteneurisée, intégrée en continu, exécutée", { placeholder: "title" });
   s.addText("Trois services, trois travaux de CI, et une liste de contrôle pour une mise en ligne (dossier § 6).", { placeholder: "lead" });
@@ -689,13 +688,8 @@ La troisième carte est la liste de contrôle d'une mise en ligne : passer APP_E
   card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 3.15, badge: "→", accent: THEME.colors.accent4, title: "Le jour d'une mise en ligne",
     body: "APP_ENV=production, qui active Secure sur le cookie.\nUne JWT_SECRET_KEY distincte.\nCORS_ORIGINS au domaine réel.\nCompte MySQL sans droits DDL.\nTLS devant l'application.\nRedis pour le limiteur de débit." });
 
-  s.addText([
-    { text: "Le piège.  ", options: { bold: true } },
-    { text: "SameSite=Strict raisonne en sites, pas en origines. En développement, front et API sont tous deux sur localhost : le cookie passe. En production, il faut deux sous-domaines d'un même domaine, ou l'API derrière un reverse proxy — deux domaines distincts casseraient le rafraîchissement du jeton, et aucun test local ne le verrait.", options: {} },
-  ], { x: M, y: 5.3, w: CW, h: 1.0, fontSize: 14, color: THEME.colors.dk1, margin: 0, isTextBox: true, objectName: "piege samesite" });
-
   s.addText("Ollama reste hors composition, sur l'hôte : son image pèse plusieurs gigaoctets et le modèle se télécharge à part.",
-    { x: M, y: 6.4, w: CW, h: 0.4, fontSize: 12.5, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "note ollama" });
+    { x: M, y: 5.45, w: CW, h: 0.4, fontSize: 13, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "note ollama" });
 }
 
 // ═══════════════════════════ 6. Sécurité ═══════════════════════════
@@ -799,18 +793,17 @@ pres.addSection({ title: "Tests, veille et bilan" });
   const s = add("CONTENT", "Tests, veille et bilan",
 `[32:30 — 34:30]
 Le plan de tests est organisé en quatre niveaux, du moins coûteux au plus coûteux. Ce classement détermine ce qui tourne à chaque push et ce qui reste manuel.
-Les chiffres de la campagne du 3 octobre : 195 cas, tous au vert, en 59 secondes. 95 % de couverture backend — 100 % sur services/ et sur la couche de persistance, 89 à 96 % sur les routes.
-Mon objectif de couverture était 80 % sur services/ et sur les routes, sans objectif chiffré ailleurs. C'est volontaire : viser un pourcentage global pousse à écrire des tests faciles sur du code sans risque. Les 62 % du front sont tirés vers le bas par cinq modules de service qui sont des enveloppes d'une ligne autour d'axios — les tester reviendrait à tester axios.
+Les chiffres, rejoués le 4 novembre : 461 cas automatisés, tous au vert — 403 côté backend, 58 côté frontend. 95 % de couverture backend, avec 100 % sur auth_service et sur email_service, et 93 à 97 % sur les routes. Le chiffre est calculé hors jeu_essai.py, qui est un script de peuplement et non du code applicatif ; en l'incluant, la couverture tombe à 90 %.
+Mon objectif de couverture était 80 % sur services/ et sur les routes, sans objectif chiffré ailleurs. C'est volontaire : viser un pourcentage global pousse à écrire des tests faciles sur du code sans risque. Les 55 % du front sont tirés vers le bas par six modules de service qui sont des enveloppes d'une ligne autour d'axios — les tester reviendrait à tester axios.
 Trois zones concentrent l'effort : la chaîne d'authentification, le contrôle de propriété, et le quota. Ce sont les trois endroits où une régression coûte cher.
-Et la leçon que je retiens de la campagne : les doubles de test mentent. Trois défauts de la chaîne IA sont passés sous un faux requests.post qui acceptait json() à tout moment et ne fermait jamais de connexion. Il a fallu un vrai serveur HTTP local pour les voir. Les tests ajoutés ensuite ont été vérifiés par mutation : on casse le code exprès pour s'assurer que le test échoue. Un test qu'on n'a jamais vu échouer ne prouve rien.
 Le quatrième niveau, les tests système, a été joué le 5 octobre sur la pile conteneurisée : sept cas au vert sur dix. Un échec réel sur la réinitialisation de mot de passe, et deux cas hors de portée de cet environnement, dont celui qui demande un Ollama joignable. Restent les tests de charge, qui viennent après.`);
-  s.addText("195 cas au vert, 95 % de couverture backend", { placeholder: "title" });
-  s.addText("Campagne du 3 octobre 2026 — quatre niveaux, du moins coûteux au plus coûteux à exécuter.", { placeholder: "lead" });
+  s.addText("461 cas au vert, 95 % de couverture backend", { placeholder: "title" });
+  s.addText("Campagne rejouée le 4 novembre 2026 — quatre niveaux, du moins coûteux au plus coûteux à exécuter.", { placeholder: "lead" });
 
-  stat(s, { x: M, y: 1.9, w: 2.9, h: 1.3, value: "195", label: "cas automatisés, tous au vert" });
-  stat(s, { x: M + 3.07, y: 1.9, w: 2.9, h: 1.3, value: "95 %", label: "couverture backend" });
-  stat(s, { x: M + 6.14, y: 1.9, w: 2.9, h: 1.3, value: "59 s", label: "durée de la campagne" });
-  stat(s, { x: M + 9.21, y: 1.9, w: 2.89, h: 1.3, value: "100 %", label: "sur services/ et la persistance" });
+  stat(s, { x: M, y: 1.9, w: 2.9, h: 1.3, value: "461", label: "cas automatisés, tous au vert" });
+  stat(s, { x: M + 3.07, y: 1.9, w: 2.9, h: 1.3, value: "403", label: "backend  ·  58 frontend" });
+  stat(s, { x: M + 6.14, y: 1.9, w: 2.9, h: 1.3, value: "95 %", label: "couverture backend" });
+  stat(s, { x: M + 9.21, y: 1.9, w: 2.89, h: 1.3, value: "100 %", label: "sur la chaîne d'authentification" });
 
   const niv = [
     ["Analyse statique", "vue-tsc, Ruff", "à chaque push"],
@@ -826,8 +819,8 @@ Le quatrième niveau, les tests système, a été joué le 5 octobre sur la pile
     s.addText(v[2], { x: x + 0.22, y: 4.5, w: 2.46, h: 0.34, fontSize: 12.5, bold: true, color: THEME.colors.accent3, fontFace: "Courier New", margin: 0, isTextBox: true });
   });
 
-  card(s, { x: M, y: 5.2, w: CW, h: 1.42, badge: "!", accent: THEME.colors.accent4, title: "Les doubles de test mentent",
-    body: "Trois défauts sont passés sous un faux requests.post trop permissif. Il a fallu un vrai serveur HTTP pour les voir. Les tests ajoutés ensuite ont été vérifiés par mutation — un test qu'on n'a jamais vu échouer ne prouve rien." });
+  s.addText("Trois zones concentrent l'effort : la chaîne d'authentification, le contrôle de propriété et le quota — les trois endroits où une régression coûte cher.",
+    { x: M, y: 5.3, w: CW, h: 0.5, fontSize: 14, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "zones d effort" });
 }
 
 {
@@ -863,11 +856,11 @@ C'est ce que j'ai appris en construisant ce jeu : un jeu de données, ce n'est p
 `[36:30 — 38:30]
 Ma veille porte sur trois périmètres : les dépendances, la sécurité applicative, le réglementaire. Le principe est de surveiller ce que le projet utilise réellement — une alerte sur une bibliothèque absente du projet n'est pas une information.
 Huit entrées sur six mois, trois ont appelé une action. C'est la mesure de l'utilité de l'exercice.
-Le premier constat est dans le titre : la sévérité publiée ne prédit pas l'impact réel. La CVE la plus sévère de ma liste, 9,1 sur Ollama, était atténuée par ma configuration — le serveur n'écoutait que sur localhost. La plus modérée, 5,1 sur DOMPurify, affectait directement ma version.
+Le premier constat est que la sévérité publiée ne prédit pas l'impact réel. La CVE la plus sévère de ma liste, 9,1 sur Ollama, était atténuée par ma configuration — le serveur n'écoutait que sur localhost. La plus modérée, 5,1 sur DOMPurify, affectait directement ma version.
 DOMPurify est l'entrée la plus instructive, parce que c'est la bibliothèque que j'avais ajoutée précisément pour corriger une faille XSS. Découvrir qu'elle porte elle-même une vulnérabilité de contournement établit un principe : une mesure de sécurité est un composant comme un autre, avec sa propre surface d'attaque. Ajouter une bibliothèque d'assainissement ne clôt pas le sujet XSS, elle le déplace vers la maintenance de cette bibliothèque. D'où la valeur de la défense en profondeur : je stocke du Markdown brut, pas du HTML — si DOMPurify échoue, la donnée stockée n'est toujours pas exécutable.
 Ollama éclaire rétrospectivement mon choix d'architecture : héberger soi-même, c'est aussi maintenir soi-même. La décision reste la bonne au regard du RGPD, mais elle se paie en maintenance, et le dire est plus honnête que de la présenter comme un choix sans contrepartie.
 Et l'AI Act justifie à lui seul la veille comme livrable : le cahier des charges, rédigé avant l'entrée en application, ne mentionne que le RGPD. Sans ce suivi, j'aurais livré une application non conforme à une obligation entrée en vigueur trois semaines avant la fin du développement.`);
-  s.addText("La sévérité publiée ne prédit pas l'impact réel", { placeholder: "title" });
+  s.addText("La veille technologique", { placeholder: "title" });
   s.addText("Huit entrées entre avril et septembre 2026, trois ont appelé une action. Journal complet : docs/veille-helpmedraft.html", { placeholder: "lead" });
 
   card(s, { x: M, y: 1.95, w: 3.87, h: 2.9, badge: "5.1", accent: THEME.colors.accent3, title: "DOMPurify — corrigé",
@@ -887,19 +880,19 @@ Et l'AI Act justifie à lui seul la veille comme livrable : le cahier des charge
   const s = add("CLOSE", "Tests, veille et bilan",
 `[38:30 — 40:00]
 Pour conclure, trois colonnes.
-Ce qui est livré : l'application complète sur les cinq lots fonctionnels, 195 tests au vert, la conteneurisation et le pipeline, les audits d'accessibilité et de sécurité, et le journal de veille.
+Ce qui est livré : l'application complète sur les cinq lots fonctionnels, 461 tests automatisés au vert, la pile conteneurisée exécutée sur MySQL 8.4, les audits d'accessibilité et de sécurité, et le journal de veille.
 Ce qui reste, et je ne le cache pas : les trois compléments AI Act, une journalisation applicative à compléter, les tests de charge, et une mise en ligne — l'application tourne en conteneurs, il lui manque un domaine et les quelques valeurs de configuration que j'ai listées.
-Ce que je retiens, ce sont trois phrases que ce projet m'a apprises et pas un cours.
-Un prompt est du code : il part en production, il oriente le comportement, et il se teste.
-Une mesure de sécurité est un composant comme un autre : ajouter DOMPurify n'a pas clos le sujet XSS, ça l'a déplacé vers sa maintenance.
-Et un jeu de données, c'est le choix des valeurs qui font échouer les mauvaises implémentations.
+Ce que je retiens, ce sont trois choses que ce projet m'a apprises, et qu'un cours ne m'aurait pas apprises.
+La première : une contrainte se tient par la structure, pas par une vérification. La propriété est dans la clause WHERE, le quota est une agrégation, la confidentialité est une question d'hébergement du modèle. À chaque fois, l'exigence est satisfaite parce que le code ne peut pas faire autrement — pas parce que j'ai pensé à la vérifier.
+La deuxième : une mesure de sécurité est un composant comme un autre. Ajouter DOMPurify n'a pas clos le sujet XSS, ça l'a déplacé vers la maintenance de DOMPurify. D'où la défense en profondeur : je stocke du Markdown brut, pas du HTML.
+La troisième : un jeu de données, c'est le choix des valeurs qui font échouer les mauvaises implémentations. Sans la ligne datée de vingt-cinq heures, mon test de quota passait quelle que soit l'implémentation.
 Je vous remercie, je suis à votre disposition pour vos questions.`);
   s.addText("Ce que je retiens", { placeholder: "title" });
 
   const cols = [
-    ["Livré", "5FBF8F", "Cinq lots fonctionnels complets\n195 tests automatisés au vert\nPile Docker exécutée, MySQL 8.4\nAudits accessibilité et sécurité\nJournal de veille et dossier projet"],
+    ["Livré", "5FBF8F", "Cinq lots fonctionnels complets\n461 tests automatisés au vert\nPile Docker exécutée, MySQL 8.4\nAudits accessibilité et sécurité\nJournal de veille et dossier projet"],
     ["Reste à faire", ACCENT_SOMBRE, "Trois compléments AI Act\nJournalisation applicative\nTests de charge\nTS-02 : réinitialisation à reprendre\nMise en ligne sur un hébergement"],
-    ["Appris", "F4F1EA", "Un prompt est du code : il se teste\nUne mesure de sécurité est un composant comme un autre\nUn jeu de données, c'est choisir les valeurs qui font échouer"],
+    ["Appris", "F4F1EA", "Une contrainte se tient par la structure, pas par une vérification ajoutée\nUne mesure de sécurité est un composant comme un autre\nUn jeu de données, c'est choisir les valeurs qui font échouer"],
   ];
   cols.forEach((c, i) => {
     const x = M + i * 4.11;
