@@ -235,7 +235,83 @@ critère comme non couvert. »**
 
 ---
 
-## ▣ Fiche 25 — Gestion du temps
+## ▣ Fiche 26 — À quoi sert chaque brique
+
+Pour la question « pourquoi avoir utilisé ça ? ». Une ligne par outil : **ce que
+c'est**, **ce qu'il fait chez toi**, et la phrase qui justifie sa présence.
+
+> **La règle qui répond à tout** : *« je ne l'ai pas ajouté parce que ça existe,
+> je l'ai ajouté parce que sans lui j'aurais dû l'écrire moi-même — et moins
+> bien. »* Si on te demande pour une bibliothèque que tu ne saurais pas
+> défendre, c'est qu'elle n'a rien à faire là.
+
+### Les deux langages
+
+| | |
+|---|---|
+| **TypeScript** 6 | JavaScript **plus les types**. Le navigateur ne comprend que JavaScript : TypeScript est vérifié à la compilation, puis effacé. **Chez moi** : tout le front. **Pourquoi** — une faute de frappe sur un champ (`titre` / `title`) devient une erreur avant l'exécution, au lieu d'un `undefined` affiché à l'utilisateur. Sur un projet mené seule, c'est le relecteur que je n'avais pas. |
+| **Python** 3.13 | Le langage du back. **Pourquoi** — recommandé par le cahier des charges, et c'est l'écosystème où SQLAlchemy, bcrypt et PyJWT sont les références. |
+
+Et les trois autres langages du projet, qu'on oublie de citer : **SQL** (le schéma
+et les requêtes), **HTML/CSS** (les gabarits Vue et Tailwind), **Markdown** (le
+format de stockage des documents).
+
+### Le front
+
+| Outil | Ce que c'est | Ce qu'il fait chez moi |
+|---|---|---|
+| **Vue 3** | Framework de composants | Les 15 vues et les composants `MarkdownEditor`, `Nav`, `Footer`. L'interface se redessine quand la donnée change, sans que je touche au DOM. |
+| **Vite** | Serveur de développement et empaqueteur | Recharge l'écran à chaque sauvegarde, et produit le paquet optimisé servi par Nginx. Il porte aussi le **proxy `/api`** vers le back. |
+| **Vue Router** | Routeur de la SPA | Les 16 routes et les **trois gardes** (`guestOnly`, `requiresAuth`, `requiresAdmin`). |
+| **Pinia** | Magasin d'état | Tient la session en mémoire — **l'access token n'est jamais dans `localStorage`**, et c'est voulu : une faille XSS ne peut pas le lire. |
+| **axios** | Client HTTP | Les appels à l'API. Son **intercepteur** rafraîchit le jeton après un 401 et rejoue la requête — écrit une seule fois pour toute l'application. |
+| **Tailwind CSS 4** | Styles par classes utilitaires | La charte. **Pourquoi** — pas de fichier CSS qui grossit sans qu'on sache ce qui sert encore ; le style est là où il s'applique. Recommandé par le cahier des charges. |
+| **CodeMirror 6** | Composant d'édition de texte | L'éditeur Markdown : coloration, raccourcis, annulation. **Pourquoi** — un `<textarea>` n'a rien de tout ça, et le réécrire aurait été plusieurs semaines pour un résultat inférieur. |
+| **marked** | Markdown → HTML | Produit l'aperçu à droite de l'éditeur, et le HTML envoyé au moteur PDF. |
+| **DOMPurify** | Nettoyeur de HTML | **Le point de sécurité du front.** L'aperçu est le seul `v-html` du projet : il affiche du HTML fabriqué à partir du texte de l'utilisateur. DOMPurify en retire tout ce qui peut s'exécuter. **17 tests de non-régression.** |
+
+### Le back
+
+| Outil | Ce que c'est | Ce qu'il fait chez moi |
+|---|---|---|
+| **Flask 3** | Micro-framework web | Les 5 blueprints et les routes de l'API. **Pourquoi** — recommandé, et **micro** : il n'impose ni structure ni ORM, ce qui m'a laissée découper en trois couches comme je le voulais. |
+| **SQLAlchemy 2** | ORM | Les 8 modèles, les relations, et **toutes les requêtes paramétrées**. **Pourquoi** — c'est lui qui rend l'injection SQL impossible par construction, et qui permet de développer sur SQLite en visant MySQL. |
+| **bcrypt** | Fonction de hachage à coût réglable | Les mots de passe. **Pourquoi pas SHA-256** — SHA-256 est *rapide*, donc facile à attaquer par force brute. bcrypt est **lent exprès** et sale chaque empreinte. |
+| **PyJWT** | Jetons signés | Émet et vérifie les access tokens (HS256, 15 min). |
+| **requests** | Client HTTP | Le seul appel sortant du projet : vers Ollama, en **flux** (`/api/chat`). |
+| **Flask-Limiter** | Limitation de débit | Freine `/register`, `/login`, `/forgot-password`. **Pourquoi** — sans lui, rien n'empêche d'essayer des mots de passe en boucle. |
+| **Flask-Mail** | Envoi de courriels | Le lien de réinitialisation. Mailtrap en développement : **aucun mail ne part vraiment**. |
+| **Flask-CORS** | Politique d'origine croisée | Autorise le front à appeler l'API, **et lui seul**. |
+| **python-dotenv** | Lecture du `.env` | Charge la configuration. **Aucun secret dans le code.** |
+| **markdown** + **WeasyPrint** | Markdown → HTML → PDF | L'export des documents terminés. **Pourquoi ce détour par HTML** — le PDF ressemble alors exactement à l'aperçu que l'utilisateur a relu ; composer le PDF autrement aurait voulu dire réimplémenter titres, listes et tableaux, et les maintenir en double. |
+| **gunicorn** | Serveur d'application | Sert Flask en conteneur. **Pourquoi** — le serveur intégré de Flask est un outil de développement, mono-processus et non durci ; il l'écrit lui-même au démarrage. |
+| **PyMySQL** | Pilote MySQL | Le dialogue avec MySQL 8.4. `cryptography` l'accompagne pour l'authentification `caching_sha2_password`. |
+
+### Données, exécution, qualité
+
+| Outil | À quoi il sert |
+|---|---|
+| **MySQL 8.4** | La base de production, en conteneur. |
+| **SQLite** | **Pas un second SGBD** : le même code SQLAlchemy sur un moteur de développement. Les tests tournent dessus **en mémoire**, en quelques secondes, sans serveur. |
+| **Ollama** + **qwen2.5:3b** | Le moteur d'inférence, **sur la machine**. Le modèle est choisi pour son **absence de mode raisonnement** — mesuré, qwen3 produisait 1 443 jetons là où qwen2.5 en produit 9. |
+| **Docker / Compose** | Trois services — MySQL, backend, frontend — qui démarrent ensemble et à l'identique sur n'importe quelle machine. |
+| **Nginx** | Sert les fichiers statiques du front dans le conteneur, et relaie `/api` vers le back. |
+| **GitHub Actions** | L'intégration continue : 3 travaux **parallèles** à chaque push. |
+| **pytest** + **pytest-cov** | Les 403 tests backend et la mesure de couverture. |
+| **Vitest** + **@vue/test-utils** + **jsdom** | Les 58 tests frontend. jsdom simule un navigateur pour monter les composants sans en ouvrir un. |
+| **Ruff** | Analyse et formatage Python, en une seule passe. |
+| **ESLint** + **Prettier** | Analyse et formatage côté front. **Deux rôles distincts** : ESLint cherche les erreurs, Prettier impose la forme. |
+| **vue-tsc** | Vérifie les types **dans les fichiers `.vue`**, ce que `tsc` seul ne sait pas faire. |
+
+### Les trois pièges de cette question
+
+1. **« Pourquoi pas du JavaScript simple ? »** → Je l'ai écrit en TypeScript parce que le projet est seul de son espèce : personne pour relire mes appels d'API. Les types sont ce relecteur.
+2. **« Vous avez beaucoup de dépendances. »** → Douze côté front, quatorze côté back — plus les outils de développement, qui ne partent pas en production. **Toutes à version figée** et `package-lock.json` commité. Chacune remplace du code que j'aurais écrit moins bien — et la compromission d'axios m'a appris que les figer est une mesure de sécurité.
+3. **« DOMPurify suffit-il ? »** → Non, et c'est pour ça que **je stocke du Markdown brut, jamais du HTML**. Si DOMPurify échoue un jour, la donnée en base n'est toujours pas exécutable.
+
+---
+
+## ▣ Fiche 27 — Gestion du temps
 
 | Si tu es en retard | Coupe les diapos **14, 15, 18, 22** (descriptives). La **21** se survole en 20 s. |
 |---|---|
