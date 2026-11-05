@@ -13,7 +13,7 @@ Durée : **40 min** d'exposé, questions après.
 | # | Temps | Partie | Diapos | Dossier | Message unique à faire passer |
 |---|---|---|---|---|---|
 | 1 | 0:00 → 4:10 | Contexte et besoin | 1 → 5 | § 2, § 3 | La confidentialité est **dans** le cahier des charges, pas en option |
-| 2 | 4:10 → 8:35 | Gestion de projet | 6 → 8 | § 4 | Lots verticaux + 3 arbitrages + 1 erreur assumée |
+| 2 | 4:10 → 8:35 | Gestion de projet | 6 → 8 | § 4 | Lots verticaux, et trois arbitrages tenus par la structure du code |
 | 3 | 8:35 → 20:30 | Conception | 9 → 19 | § 5 | Le navigateur ne parle **jamais** au modèle |
 | 4 | 20:30 → 27:55 | Réalisation | 20 → 26 | § 6, § 7 | Du code, 3 décisions par extrait |
 | 5 | 27:55 → 32:20 | Sécurité | 27 → 29 | § 8 | La sécurité est une contrainte de **structure** |
