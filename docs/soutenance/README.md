@@ -5,6 +5,8 @@
 Chaque note s'ouvre sur son créneau cumulé ; la suite est continue et se referme
 sur 40:00.
 Script oral télégraphique : [`script-oral.md`](./script-oral.md).
+Fiches de révision : [`fiches-revision.md`](./fiches-revision.md) — 26 fiches, une par
+temps fort, à réviser une fois le script connu.
 
 `docs/Soutenance-HelpMeDraft.pdf` en est l'export, à garder comme secours le jour J.
 

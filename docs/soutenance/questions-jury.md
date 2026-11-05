@@ -79,16 +79,16 @@ le droit à l'effacement RGPD : supprimer un compte supprime documents, dossiers
 IA, consentements et sessions, sans code dédié. (§ 5.4, § 8)
 
 **Combien de tables, et à quoi sert chacune ?**
-Sept dans le modèle du dossier : `user`, `dossier`, `document`, `ia` (journal des
-interactions), `consentement`, `user_session` (refresh tokens) et `password_reset`. Le
-script en crée une huitième, `journal_admin`, qui trace les actions d'administration —
-elle a été ajoutée après la rédaction du § 5.4 et n'y figure pas. Si la question vient,
-dis-le comme ça : c'est une omission de documentation, pas une incohérence de code. (§ 5.4, § 5.5)
+Huit : `user`, `dossier`, `document`, `ia` (journal des interactions), `consentement`,
+`user_session` (refresh tokens), `password_reset`, et `journal_admin`, qui trace les
+actions d'administration. Cette dernière a été ajoutée après la campagne de validation
+du 5 octobre : le § 5.4 la compte et la situe, mais ne la détaille pas colonne par
+colonne comme les sept autres. Si la question vient, dis-le toi-même. (§ 5.4, § 5.5)
 
 **Pourquoi SQLite en développement et MySQL en cible ?**
 SQLAlchemy 2 permet de travailler sur SQLite en local et de viser MySQL sans réécrire la
-couche d'accès. Le script `schema_mysql.sql` a été exécuté et vérifié sur un serveur réel ;
-la bascule complète attend une machine avec un démon Docker. (§ 5.5, § 4)
+couche d'accès. Le script `schema_mysql.sql` a été exécuté et vérifié sur un serveur réel, et la pile
+conteneurisée a tourné sur MySQL 8.4.11 lors de la campagne du 5 octobre. (§ 5.5, § 4)
 
 **Quelles différences avez-vous dû gérer entre SQLite et MySQL ?**
 Les types (`CHAR(36)` pour les UUID), les contraintes `CHECK` que SQLite ignore longtemps,
@@ -212,12 +212,13 @@ Trois zones concentrent l'effort : la chaîne d'authentification, le contrôle d
 le quota. (§ 9)
 
 **Vos chiffres ?**
-195 cas automatisés tous au vert en 59 secondes, campagne du 3 octobre 2026 : 146 backend
-(50 unitaires, 79 d'intégration, 17 de sécurité) et 42 Vitest, plus 7 ajoutés sur les
-correctifs. Couverture backend 95 %, dont 100 % sur `services/` et la persistance. (§ 9)
+461 cas automatisés, tous au vert, suites rejouées le 4 novembre 2026 : 403 backend
+(185 unitaires, 151 d'intégration, 17 de sécurité, 50 restés à la racine de `tests/`) et
+58 Vitest. Couverture backend 95 %, hors `database/jeu_essai.py` qui est un script de
+peuplement ; 90 % en l'incluant — dis-le toi-même, c'est plus solide. (§ 9)
 
-**Pourquoi seulement 62 % côté frontend ?**
-Le chiffre est tiré vers le bas par cinq modules de service qui sont des enveloppes d'une
+**Pourquoi seulement 55 % côté frontend ?**
+Le chiffre est tiré vers le bas par six modules de service qui sont des enveloppes d'une
 ligne autour d'axios : les tester reviendrait à tester axios. Mon objectif était 80 % sur
 `services/` et sur les routes, sans objectif global — viser un pourcentage global pousse à
 écrire des tests faciles sur du code sans risque. (§ 9)
@@ -296,7 +297,7 @@ la leçon directe de l'incident axios. (§ 6, § 11)
 **Comment est conteneurisée l'application ?**
 Trois services dans `docker-compose.yml` : MySQL 8.4 avec volume persistant et sonde de santé ;
 le backend sous Gunicorn avec un utilisateur non privilégié ; le frontend construit par Vite
-puis servi par Nginx, image finale d'environ 50 Mo. Les secrets sont déclarés `${VAR:?message}` :
+puis servi par Nginx, image finale de 82,9 Mo mesurés. Les secrets sont déclarés `${VAR:?message}` :
 la composition échoue si la variable manque, au lieu de démarrer avec une valeur inventée. (§ 6)
 
 **Pourquoi Ollama n'est-il pas dans la composition ?**

@@ -336,7 +336,7 @@ Durée : **40 min** d'exposé, questions après.
 
 **Si tu perds le fil** → reviens à la question « pourquoi ce choix ? ». Chaque diapo a une raison, pas une liste.
 
-**Si tu es en retard** → coupe dans les diapos 14, 15, 18 et 22 (descriptives). La 21, la planche des écrans, se survole en 20 s. Ne coupe jamais 8, 11, 12, 23, 24, 29, 34.
+**Si tu es en retard** → coupe dans les diapos 14, 15, 18 et 22 (descriptives). La 21, la planche des écrans, se survole en 20 s. Ne coupe jamais 8, 11, 12, 24, 25, 29, 34.
 
 **Les quatre « je ne le cache pas »** — à sortir toi-même, jamais à laisser venir :
 1. Pas encore mise en ligne : la pile tourne en conteneurs, il manque un domaine et des valeurs de configuration.
