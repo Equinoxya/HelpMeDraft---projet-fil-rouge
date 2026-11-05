@@ -1,6 +1,6 @@
 # Script oral — soutenance HelpMeDraft
 
-Support : `docs/Soutenance-HelpMeDraft.pptx` (34 diapos) · PDF de secours : `docs/Soutenance-HelpMeDraft.pdf`
+Support : `docs/Soutenance-HelpMeDraft.pptx` (34 diapos + 1 de secours) · PDF de secours : `docs/Soutenance-HelpMeDraft.pdf`
 Durée : **40 min** d'exposé, questions après.
 
 > Mode d'emploi : les notes du .pptx sont rédigées en phrases complètes (à lire si tu bloques).
@@ -328,6 +328,15 @@ Durée : **40 min** d'exposé, questions après.
   6. **Markdown brut stocké, jamais de HTML** : si DOMPurify échoue, la donnée n'est toujours pas exécutable.
 - **Si on te demande ce qui manque** : la journalisation des événements de sécurité est incomplète — **A09 de l'OWASP**, et c'est écrit dans le dossier. Dis-le toi-même si la question vient.
 - Je vous remercie, je suis à votre disposition pour vos questions.
+
+### Diapo 35 · La démonstration `[hors minutage]`
+- **Diapositive de secours — ne pas la montrer pendant l'exposé.**
+- Deux usages :
+  1. **En projection d'attente**, pendant que le jury s'installe.
+  2. **Après les questions**, si on te demande à voir l'application tourner.
+- **1 min 12**, du premier écran au back-office, avec musique.
+- La vidéo est **embarquée dans le fichier** : rien à brancher, aucun chemin à retrouver. Un clic sur l'image la lance.
+- Si le lecteur refuse de la jouer : le fichier est dans le dépôt (`docs/soutenance/demo-pub-helpmedraft.mp4`), et le PDF de secours en montre l'affiche.
 
 ## Antisèche — à relire 5 minutes avant
 

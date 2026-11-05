@@ -1,6 +1,6 @@
 # Support de soutenance
 
-`docs/Soutenance-HelpMeDraft.pptx` — 34 diapositives, notes de l'orateur remplies
+`docs/Soutenance-HelpMeDraft.pptx` — 35 diapositives, notes de l'orateur remplies
 (≈ 4 500 mots, soit environ 40 minutes avec les pauses et les diagrammes commentés).
 Chaque note s'ouvre sur son créneau cumulé ; la suite est continue et se referme
 sur 40:00.
@@ -156,6 +156,15 @@ Enregistré ici sans Ollama, comme la démonstration : la génération affichée
 réelle côté application — appel, attente, flux, insertion — mais le texte vient
 d'un substitut. À refaire sur une machine équipée avant de la diffuser hors
 soutenance.
+
+La trente-cinquième diapositive porte la vidéo de démonstration, **embarquée
+dans le fichier** : le `.pptx` est autonome, sans chemin à conserver le jour J.
+Elle vient après le remerciement et ne compte pas dans les quarante minutes —
+projection d'attente, ou réponse si le jury demande à voir l'application. Les
+lecteurs qui ne jouent pas la vidéo, l'export PDF compris, montrent
+`affiche-demo.png`.
+
+C'est elle qui fait passer le fichier de 3 à 7 Mo.
 
 ## Vidéo de démonstration musicale
 

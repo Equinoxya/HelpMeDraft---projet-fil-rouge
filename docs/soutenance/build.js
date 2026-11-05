@@ -1055,6 +1055,33 @@ Je vous remercie, je suis à votre disposition pour vos questions.`);
   s.addText("Merci de votre attention.", { x: M, y: 6.0, w: 7.3, h: 0.6, fontSize: 24, bold: true, color: ACCENT_SOMBRE, margin: 0, isTextBox: true, objectName: "merci" });
 }
 
+{
+  // Diapositive de bonus, APRÈS le remerciement : elle ne compte pas dans les
+  // quarante minutes. Elle existe pour le moment où le jury demande à voir
+  // l'application, et pour la projection d'attente avant l'exposé.
+  //
+  // La vidéo est EMBARQUÉE dans le fichier : le .pptx devient autonome, sans
+  // chemin à conserver le jour J. L'affiche est ce que montrent les lecteurs
+  // qui ne jouent pas la vidéo — l'export PDF, notamment.
+  const s = add("CLOSE", "Tests, veille et bilan",
+`[hors minutage]
+Diapositive de secours, à ne pas montrer pendant l'exposé.
+Elle sert à deux moments. Avant de commencer, en projection d'attente pendant que le jury s'installe. Et après les questions, si on vous demande à voir l'application tourner : une minute douze, du premier écran au back-office.
+La vidéo est embarquée dans le fichier : rien à brancher, aucun chemin à retrouver. Un clic sur l'image la lance.
+Si le lecteur du jour refuse de la jouer, le fichier est aussi dans le dépôt, sous docs/soutenance/demo-pub-helpmedraft.mp4, et le PDF de secours en montre l'affiche.`);
+  s.addText("La démonstration", { placeholder: "title" });
+
+  bloc(s, { x: 2.03, y: 1.56, w: 9.24, h: 5.2, fill: "111111", line: { color: "F4F1EA", width: 1.25 }, name: "cadre video" });
+  s.addMedia({
+    type: "video",
+    path: `${R}/docs/soutenance/demo-pub-helpmedraft.mp4`,
+    // `cover` attend l'image encodée, pas un chemin.
+    cover: "data:image/png;base64," + require("fs").readFileSync(`${R}/docs/soutenance/affiche-demo.png`).toString("base64"),
+    x: 2.03, y: 1.56, w: 9.24, h: 5.2,
+    objectName: "video demonstration",
+  });
+}
+
 (async () => {
   await pres.writeFile({ fileName: OUT });
   await applyTheme(OUT, THEME);
