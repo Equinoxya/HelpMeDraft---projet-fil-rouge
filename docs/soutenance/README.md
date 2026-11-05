@@ -156,3 +156,39 @@ Enregistré ici sans Ollama, comme la démonstration : la génération affichée
 réelle côté application — appel, attente, flux, insertion — mais le texte vient
 d'un substitut. À refaire sur une machine équipée avant de la diffuser hors
 soutenance.
+
+## Vidéo de démonstration musicale
+
+`demo-pub-helpmedraft.mp4` — 1 min 12, 1600 × 900, avec nappe musicale.
+
+Onze plans montés serré, de la page d'accueil au back-office, chacun porté par
+une phrase posée dans la page. C'est la version à montrer : la démonstration
+complète (`demo-helpmedraft.mp4`) explique, celle-ci donne envie.
+
+`demo-pub.mjs` enregistre, monte et sonorise en une passe. Le parcours est joué
+au rythme naturel, le script relève les bornes de chaque plan, ffmpeg règle les
+vitesses, puis `musique.py` synthétise la nappe **à la durée exacte du montage**
+avant le mixage. Le rythme se règle dans le tableau `MONTAGE`.
+
+Une prise est toujours enregistrée plus longue que sa durée au montage : le
+script ne ralentit jamais un plan — un ralenti se voit, une accélération non —
+et signale « prise trop courte » s'il manque du métrage.
+
+### La musique
+
+`musique.py` la synthétise : nappe d'accords, arpège discret, pulsation sourde,
+100 BPM. Aucune mélodie, par choix — l'image porte le propos, le son ne fait
+que tenir le rythme des coupes. Étant synthétisée, elle est libre de droits et
+reproductible, là où une piste téléchargée demanderait de vérifier sa licence
+avant toute diffusion.
+
+```sh
+python3 docs/soutenance/musique.py musique.wav 72
+```
+
+```sh
+node docs/soutenance/demo-pub.mjs
+```
+
+Enregistrée sans Ollama, comme les autres : la carte finale le dit, et le
+script retire la mention s'il détecte un moteur réel.
