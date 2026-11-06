@@ -71,6 +71,13 @@ Export PDF de secours, à refaire après chaque build :
 cd docs && soffice --headless --convert-to pdf --outdir . Soutenance-HelpMeDraft.pptx
 ```
 
+Le build renomme enfin les médias selon la convention de PowerPoint
+(`normaliser-pptx.py`) : pptxgenjs les appelle `image-16-1.png` là où
+PowerPoint écrit `image1.png`. Les deux sont valides — le lien passe par les
+relations — mais des lecteurs simplifiés, dont l'aperçu d'iOS, réconcilient les
+médias sur leur nom et affichent alors la même image sur plusieurs
+diapositives.
+
 Le script applique ensuite le thème via `apply_theme.js` de la compétence pptx ;
 sans elle, retirer l'appel `applyTheme` en fin de fichier (les couleurs de thème
 repassent alors sur la palette Office par défaut).

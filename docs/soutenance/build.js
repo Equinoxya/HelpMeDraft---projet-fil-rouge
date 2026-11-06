@@ -1085,5 +1085,11 @@ Si le lecteur du jour refuse de la jouer, le fichier est aussi dans le dépôt, 
 (async () => {
   await pres.writeFile({ fileName: OUT });
   await applyTheme(OUT, THEME);
+  // pptxgenjs nomme ses médias « image-16-1.png » ; PowerPoint écrit
+  // « image1.png ». Le fichier est valide dans les deux cas, mais des lecteurs
+  // simplifiés réconcilient les médias sur leur nom plutôt que sur la
+  // relation, et affichent alors la même image sur plusieurs diapositives.
+  require("child_process").execFileSync("python3",
+    ["-I", `${__dirname}/normaliser-pptx.py`, OUT], { stdio: "inherit" });
   console.log(`écrit : ${OUT} — ${n} diapositives`);
 })();
