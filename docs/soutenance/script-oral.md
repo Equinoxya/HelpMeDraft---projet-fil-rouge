@@ -48,7 +48,7 @@ Durée : **40 min** d'exposé, questions après.
 ### Diapo 3 · Section `[1:00 — 1:10]`
 > « Premier temps : d'où vient la demande. »
 
-### Diapo 4 · Aider à écrire, pas seulement à classer `[1:10 — 2:40]`
+### Diapo 4 · Le constat et la demande `[1:10 — 2:40]`
 - LexiCorp : outils de gestion documentaire pour PME.
 - **Son catalogue sait classer et retrouver. Il ne sait pas aider à écrire.**
 - Le constat : courriels, notes, comptes rendus — rédigés par des gens dont ce n'est pas le métier.
@@ -75,7 +75,7 @@ Durée : **40 min** d'exposé, questions après.
 ### Diapo 6 · Section `[4:10 — 4:20]`
 > « Deuxième temps : comment j'ai conduit le projet. »
 
-### Diapo 7 · Des lots verticaux `[4:20 — 6:20]`
+### Diapo 7 · La méthode et le planning `[4:20 — 6:20]`
 - Itérations d'une semaine, chacune close par un lot utilisable de bout en bout.
 - Le point de méthode : **lots verticaux — front + API + base — plutôt que couches horizontales.**
 - Horizontal : on ne valide rien avant l'assemblage. Vertical : chaque fin d'itération est démontrable.
@@ -86,7 +86,7 @@ Durée : **40 min** d'exposé, questions après.
 - `package-lock.json` commité : **pas un détail d'organisation, une mesure de sécurité** — la compromission d'axios le montrera.
 - Seule → point hebdo avec mon référent + revues croisées avec la promo sur l'authentification.
 
-### Diapo 8 · Trois arbitrages `[6:20 — 8:35]`
+### Diapo 8 · Les arbitrages techniques `[6:20 — 8:35]`
 - **1 — Un JWT seul ne se révoque pas.** → table `user_session` + rotation des refresh tokens. Un jeton déjà consommé qui revient = vol → toutes les sessions révoquées.
 - **2 — Le quota par agrégation**, pas par compteur. Un compteur se désynchronise, une agrégation non. Bonus : historique auditable (RGPD).
 - **3 — La confidentialité.** Plutôt qu'anonymiser du texte libre → modèle en local, Ollama. **L'exigence est satisfaite par construction.**
@@ -121,14 +121,14 @@ Durée : **40 min** d'exposé, questions après.
   - **Je n'ai pas ajouté de NoSQL, et ce n'est pas par difficulté : ce serait facile, et c'est ce qui rend l'ajout suspect.** Un composant qui ne sert qu'à remplir une grille est une dette déguisée en compétence.
   - **Je l'assume, et le jury est libre de considérer le critère comme non couvert.** L'argumentaire est un livrable à part : `docs/argumentaire-nosql.md`.
 
-### Diapo 12 · Le navigateur ne parle jamais au moteur `[10:50 — 12:40]`
+### Diapo 12 · L'architecture logicielle `[10:50 — 12:40]`
 - Client/serveur découplé, trois niveaux, service d'inférence en périphérie.
 - **Le navigateur ne dialogue jamais directement avec le moteur.** Tout passe par l'API : authentification → propriété → quota → journalisation.
 - Si le front appelait Ollama : **un utilisateur contournerait le quota en appelant le port 11434 lui-même.**
 - **L'intermédiaire n'est pas une commodité : il rend les contraintes opposables.**
 - Le moteur n'écoute que sur l'interface de bouclage. Habitude implicite → consigne écrite après la CVE Ollama.
 
-### Diapo 13 · Aucun import Flask dans services/ `[12:40 — 14:20]`
+### Diapo 13 · Le découpage en couches `[12:40 — 14:20]`
 - Trois couches. **La règle qui compte est la colonne de droite : ce que chaque couche ne contient jamais.**
 - **Aucun import Flask dans `services/`.** Pas esthétique — fonctionnel.
 - C'est elle qui rend le métier testable **sans démarrer de serveur ni ouvrir de base**.
@@ -145,7 +145,7 @@ Durée : **40 min** d'exposé, questions après.
 - Le maquettage a servi à deux choses : vérifier la couverture du périmètre, et fixer les intentions **avant d'écrire une ligne de Vue**.
 - Planches en annexe § 12.1, captures en § 12.2.
 
-### Diapo 15 · Trois zones, trois gardes `[15:25 — 16:20]`
+### Diapo 15 · Les zones d'accès et les gardes du routeur `[15:25 — 16:20]`
 - **Seize routes**, déclarées dans `frontend/src/index.ts`. Un seul `beforeEach` pour les trois gardes.
 - Bande 1 — **Public, aucune garde** : accueil, vitrine, pages légales.
 - Bande 2 — **Public mais visiteur seul**, garde `guestOnly` : connexion, inscription, mot de passe oublié. **Déjà connecté → renvoyé au tableau de bord** — sinon on pourrait rouvrir le formulaire de connexion en étant connecté.
@@ -155,7 +155,7 @@ Durée : **40 min** d'exposé, questions après.
 - Elles évitent un écran vide et masquent le menu d'admin.
 - **Le contrôle qui compte est côté serveur** — partie sécurité.
 
-### Diapo 16 · Huit entités, UUID, cascades SGBD `[16:20 — 17:20]`
+### Diapo 16 · Le modèle conceptuel de données `[16:20 — 17:20]`
 - Le modèle conceptuel. **Huit entités**, les cardinalités sur les associations.
 - Trois choix à défendre.
 - **UUID v4, pas d'auto-incrément** → les identifiants ne sont pas énumérables. On ne balaie pas `/documents/1`, `/documents/2`.
@@ -163,21 +163,21 @@ Durée : **40 min** d'exposé, questions après.
 - **La table `ia` journalise avant/après.** Elle sert trois choses : historique affiché, calcul du quota, traçabilité RGPD. **La même donnée rend les trois possibles.**
 - Si on te pointe « Contient » : **0,1 côté document** — un document peut n'appartenir à aucun dossier. C'est ce que le `ON DELETE SET NULL` produit.
 
-### Diapo 17 · Les associations deviennent des clés étrangères `[17:20 — 18:15]`
+### Diapo 17 · Le modèle logique de données `[17:20 — 18:15]`
 - Le modèle logique : le même modèle, **associations résolues en clés étrangères** (en bleu).
 - **Toutes les clés étrangères convergent vers `user`** — c'est le cloisonnement par compte, écrit dans le schéma.
 - Sessions, documents, dossiers, appels IA, consentements, réinitialisations : **chaque ligne appartient à quelqu'un, et c'est la base qui le sait**, pas seulement le code.
 - `ia` porte **deux** clés : `id_document` et `user_id`. Le document aurait suffi pour remonter au propriétaire, mais **le quota s'agrège sur l'utilisateur** : redondance assumée, elle évite une jointure à chaque appel. L'index `(user_id, created_at)` est là pour ça.
 - MPD en § 5.4, script MySQL § 5.5 — **exécuté et vérifié sur un serveur réel**.
 
-### Diapo 18 · Trois acteurs `[18:15 — 19:00]`
+### Diapo 18 · Les cas d'utilisation `[18:15 — 19:00]`
 - Visiteur, utilisateur authentifié, administrateur.
 - Utilisateur : strictement ses documents, ses dossiers, ses 3 actions IA dans son quota, son historique.
 - Admin : hérite de tout le périmètre utilisateur + back-office.
 - Le moteur apparaît comme **système externe sollicité par l'API, jamais par le navigateur** — cohérence avec l'architecture.
 - Cas le plus significatif : **la génération d'une assistance IA** → diagramme de séquence + jeu d'essai.
 
-### Diapo 19 · Cinq contrôles avant le modèle `[19:00 — 20:30]`
+### Diapo 19 · Le diagramme de séquence — génération IA `[19:00 — 20:30]`
 - Séquence du cas le plus significatif.
 - **Suivez l'ordre des contrôles, il n'est pas arbitraire** : authentification → propriété → validation des entrées → quota → **et seulement ensuite l'appel au modèle**.
 - **Chaque contrôle est placé avant celui qui coûte plus cher.**
@@ -193,7 +193,7 @@ Durée : **40 min** d'exposé, questions après.
 ### Diapo 20 · Section `[20:30 — 20:40]`
 > « Quatrième temps : la réalisation, avec les écrans et le code. »
 
-### Diapo 21 · Onze écrans, douze captures `[20:40 — 21:30]`
+### Diapo 21 · Les écrans livrés `[20:40 — 21:30]`
 - Avant le code, **la série complète des écrans livrés**. Onze écrans, douze captures.
 - L'accueil figure deux fois : **version large et version mobile** — l'adaptation aux petits écrans est une exigence du cahier des charges.
 - **Ligne 1** : zone publique et pages réservées au visiteur — accueil, mobile, connexion, inscription, mot de passe oublié, réinitialisation.
@@ -209,7 +209,7 @@ Durée : **40 min** d'exposé, questions après.
 - Deux points techniques : les compteurs viennent de l'API, pas d'un calcul client. La recherche filtre la page courante côté client **parce que la pagination est serveur** — la liste n'est jamais chargée entièrement.
 - Huit captures en annexe § 12.2, avec le code.
 
-### Diapo 23 · Enregistrer 2,5 s après la frappe `[22:25 — 24:00]`
+### Diapo 23 · L'éditeur et l'enregistrement automatique `[22:25 — 24:00]`
 - L'éditeur, écran central. Je m'arrête sur l'enregistrement automatique : **quatre décisions en quelques lignes**.
 - 2,5 s n'est pas arbitraire : à chaque caractère → API saturée, écritures multipliées. Trop long → sauvegarde invisible, travail perdu.
 - **Le minuteur précédent est systématiquement annulé** — sinon une frappe rapide empile les requêtes.
@@ -218,7 +218,7 @@ Durée : **40 min** d'exposé, questions après.
 - Remarque de méthode, écrite dans le dossier : sur la capture C-07 l'indicateur n'apparaît pas, **parce qu'aucune frappe n'a eu lieu**.
 - **Une capture atteste d'un état, pas d'un comportement.** Vérifier une fonctionnalité demande de lire le code ou d'exécuter un scénario. → **C'est la raison d'être du jeu d'essai.**
 
-### Diapo 24 · Compter les appels, jamais les stocker `[24:00 — 25:50]`
+### Diapo 24 · Un composant métier — le quota IA `[24:00 — 25:50]`
 - Composant métier : le quota IA. **Dix lignes, trois décisions.**
 - **1 — C'est une agrégation** sur le journal des 24 dernières heures, pas un compteur sur l'utilisateur. Un compteur se désynchronise — il suffit d'un échec entre l'appel et l'incrément. **Une agrégation est juste par construction.**
 - **2 — Fenêtre glissante, pas compteur journalier.** Le cahier des charges dit « 20 requêtes par 24 heures », pas « par jour calendaire ». Remise à zéro à minuit → **40 appels entre 23 h et 1 h**.
@@ -226,14 +226,14 @@ Durée : **40 min** d'exposé, questions après.
 - Contrôle entièrement serveur. Le front affiche le quota restant — **c'est de l'affichage**.
 - Test JE-07. **Mes données contiennent une ligne datée de 25 heures précisément pour vérifier la fenêtre glissante.**
 
-### Diapo 25 · La propriété est dans le WHERE `[25:50 — 26:45]`
+### Diapo 25 · Un composant d'accès aux données `[25:50 — 26:45]`
 - Accès aux données. **Le motif le plus répété du projet.**
 - **La propriété est dans la clause WHERE.** Je ne charge pas le document pour comparer ensuite son propriétaire : je demande un document qui a cet identifiant **ET** qui appartient à l'utilisateur courant.
 - **Pas stylistique** : avec un contrôle a posteriori, un `if` oublié dans une route ouvre une faille. Ici, oublier la condition **fait échouer le test de propriété**, qui existe pour chaque ressource.
 - Conséquence voulue : **404, pas 403.** Un 403 confirmerait que la ressource existe. Le 404 est indiscernable d'un identifiant inexistant.
 - Tout passe par l'ORM, paramétré, **aucune concaténation de chaîne** — objectif de qualité tenu sans exception.
 
-### Diapo 26 · Conteneurisée, intégrée, exécutée `[26:45 — 27:55]`
+### Diapo 26 · La conteneurisation et l'intégration continue `[26:45 — 27:55]`
 - Conteneurisée, intégrée en continu depuis le 4 octobre, **et la pile a été exécutée**.
 - **Pas seulement décrite — jouée** : le 5 octobre sur un démon Docker réel, et de nouveau depuis sur mon poste.
 - Trois services :
@@ -249,7 +249,7 @@ Durée : **40 min** d'exposé, questions après.
 ### Diapo 27 · Section `[27:55 — 28:05]`
 > « Cinquième temps : la sécurité. **C'est le fil rouge du projet, pas un chapitre.** »
 
-### Diapo 28 · La sécurité comme contrainte de conception `[28:05 — 30:05]`
+### Diapo 28 · Les risques OWASP et leur traitement `[28:05 — 30:05]`
 - Grille : **OWASP Top 10 2021**, croisée avec le cahier des charges et l'ANSSI. Le dossier traite les dix ; j'en montre six.
 - Point de méthode : **pas traitée en fin de projet — et pas par vertu, par nécessité pratique.**
 - Filtrage par propriétaire dans le WHERE, stockage d'empreintes, refus de démarrer sans clé : **des choix de structure. Les ajouter après aurait demandé de réécrire les couches.**
@@ -259,7 +259,7 @@ Durée : **40 min** d'exposé, questions après.
 - **A10** : la seule URL sortante est `OLLAMA_URL`, une valeur de configuration. **Aucune entrée utilisateur ne devient une destination HTTP.**
 - Transparence, c'est dans le dossier : **A09, la journalisation applicative est incomplète.** Le journal IA existe, mais pas de journalisation systématique des événements de sécurité.
 
-### Diapo 29 · Deux jetons `[30:05 — 32:20]`
+### Diapo 29 · Le cycle de vie des sessions `[30:05 — 32:20]`
 - Cycle de vie des sessions : **la partie qui m'a demandé le plus de réflexion**.
 - Deux besoins contradictoires : court = sûr mais pénible ; long = confortable mais dangereux.
 - **La combinaison donne les deux propriétés** : access token 15 min, non révocable mais fenêtre courte ; refresh token 7 jours, révocable côté serveur.
@@ -278,7 +278,7 @@ Durée : **40 min** d'exposé, questions après.
 ### Diapo 30 · Section `[32:20 — 32:30]`
 > « Dernier temps : comment je vérifie, comment je me tiens à jour, et ce que je retiens. »
 
-### Diapo 31 · 461 cas au vert `[32:30 — 34:30]`
+### Diapo 31 · Le plan de tests et ses résultats `[32:30 — 34:30]`
 - Quatre niveaux, **du moins coûteux au plus coûteux** → ce classement détermine ce qui tourne à chaque push et ce qui reste manuel.
 - Campagne rejouée le 4 novembre : **461 cas automatisés, tous au vert — 403 backend, 58 frontend.**
 - **95 % de couverture backend**, 100 % sur `auth_service` et `email_service`, 93 à 97 % sur les routes.
@@ -289,7 +289,7 @@ Durée : **40 min** d'exposé, questions après.
 - Le quatrième niveau, **les tests système, joué le 5 octobre sur la pile conteneurisée : 7 au vert sur 10.** Un échec réel sur le parcours de réinitialisation de mot de passe, deux cas hors de portée dont celui qui demande un Ollama joignable.
 - Restent les **tests de charge**.
 
-### Diapo 32 · La ligne datée de 25 heures `[34:30 — 36:30]`
+### Diapo 32 · Le jeu d'essai `[34:30 — 36:30]`
 - Jeu d'essai : la génération d'une assistance IA. **Trois raisons :**
   1. il traverse les trois couches et sollicite un système externe ;
   2. il concentre cinq contrôles de nature différente ;
@@ -313,7 +313,7 @@ Durée : **40 min** d'exposé, questions après.
 - Ollama éclaire mon architecture : **héberger soi-même, c'est aussi maintenir soi-même.** La décision reste la bonne au regard du RGPD, **mais elle se paie en maintenance — et le dire est plus honnête que de la présenter comme un choix sans contrepartie**.
 - L'AI Act justifie la veille comme livrable : le cahier des charges, rédigé avant l'entrée en application, ne mentionne que le RGPD. **Sans ce suivi, j'aurais livré une application non conforme à une obligation entrée en vigueur trois semaines avant la fin du développement.**
 
-### Diapo 34 · Ce qui était demandé, ce qui le tient `[38:30 — 40:00]`
+### Diapo 34 · Le bilan au regard du cahier des charges `[38:30 — 40:00]`
 - « Pour conclure, **je reprends les quatre objectifs du cahier des charges, dans les termes mêmes de l'ouverture**, et je dis pour chacun ce qui le tient. »
 - **Rédiger et stocker** → éditeur Markdown, CRUD, dossiers, enregistrement automatique à 2,5 s.
 - **Suggérer et reformuler** → trois commandes, quota 20 / 24 h par agrégation, chaque interaction journalisée avec l'avant et l'après.

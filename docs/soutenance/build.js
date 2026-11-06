@@ -263,7 +263,7 @@ Le constat de départ est banal et c'est ce qui en fait la force : dans une PME,
 D'où la commande : une application web qui assiste la rédaction avec un modèle de langage, dans un espace personnel sécurisé. Pour LexiCorp, c'est un déplacement de positionnement : passer de l'organisation des documents à l'assistance à leur production.
 Le cahier des charges fixe quatre objectifs. Retenez surtout le quatrième : la sécurité, l'accessibilité et la confidentialité ne sont pas des options en fin de projet, elles sont dans les objectifs. C'est ce qui m'a conduite à l'arbitrage que je présenterai sur l'inférence locale.
 Un mot sur mon positionnement : j'étais seule sur toute la chaîne — analyse, conception, front, back, base de données, sécurisation, documentation. Ça a orienté deux choix : une architecture volontairement lisible, et une documentation écrite au fil de l'eau.`);
-  s.addText("Aider à écrire, pas seulement à classer", { placeholder: "title" });
+  s.addText("Le constat et la demande", { placeholder: "title" });
   s.addText("LexiCorp, éditeur d'outils de gestion documentaire pour les PME, ouvre un nouveau service.", { placeholder: "lead" });
 
   card(s, { x: M, y: 1.95, w: 3.87, h: 2.55, badge: "1", title: "Le constat",
@@ -331,7 +331,7 @@ Le point de méthode est le découpage : des lots verticaux — une fonctionnali
 Le planning reprend celui du cahier des charges. Les six étapes sont engagées et les treize lots fonctionnels sont terminés. La pile conteneurisée a été exécutée pour de vrai : une campagne complète sur un démon Docker réel le 5 octobre, MySQL 8.4 comprise, puis la pile relancée sur mon poste. Restent deux compléments, que j'assume et qui sont écrits dans le dossier : la mention de transparence AI Act, et une journalisation applicative à étoffer.
 Sur la gestion de versions : une branche par fonctionnalité, des commits conventionnés, le .env ignoré. Et le package-lock.json commité — ce n'est pas un détail d'organisation, c'est une mesure de sécurité, et la compromission d'axios que je présenterai en fin d'exposé montre pourquoi.
 Travaillant seule, j'ai remplacé les rituels d'équipe par un point hebdomadaire avec mon référent et des revues croisées avec la promotion sur la chaîne d'authentification.`);
-  s.addText("Des lots verticaux, pas des couches horizontales", { placeholder: "title" });
+  s.addText("La méthode et le planning", { placeholder: "title" });
 
   stat(s, { x: M, y: 1.42, w: 2.9, h: 1.25, value: "1 semaine", label: "durée d'une itération" });
   stat(s, { x: M + 3.07, y: 1.42, w: 2.9, h: 1.25, value: "6 / 6", label: "étapes du plan engagées" });
@@ -350,7 +350,7 @@ Le premier : un JWT seul ne se révoque pas. J'ai donc ajouté une table user_se
 Le deuxième : le quota. Je le calcule par agrégation sur le journal des appels IA, pas avec un compteur stocké sur l'utilisateur. Un compteur peut se désynchroniser ; une agrégation, non. Et l'historique reste auditable, ce qui sert aussi la traçabilité RGPD.
 Le troisième est le plus structurant : la confidentialité. Plutôt que d'anonymiser des textes libres — ce qui n'est jamais exhaustif —, j'héberge le modèle en local avec Ollama. L'exigence est satisfaite par construction. Les contreparties sont réelles et je les assume : plus de latence, une qualité inférieure à GPT-4, un prérequis d'installation, et un service de plus à maintenir. Ma veille l'a confirmé : une CVE critique sur Ollama en avril.
 Les trois se rejoignent sur un même point, et c'est le fil du projet : chaque exigence du cahier des charges est tenue par la structure du code, et non par une vérification ajoutée après coup.`);
-  s.addText("Trois arbitrages", { placeholder: "title" });
+  s.addText("Les arbitrages techniques", { placeholder: "title" });
   s.addText("Les trois décisions qui structurent le projet.", { placeholder: "lead" });
 
   card(s, { x: M, y: 2.15, w: 3.87, h: 3.25, badge: "1", title: "Session révocable",
@@ -454,7 +454,7 @@ Le point à retenir est celui du titre : le navigateur ne dialogue jamais direct
 Si le front appelait Ollama directement, ni le quota ni la traçabilité RGPD ne seraient applicables — un utilisateur contournerait le quota en appelant le port 11434 lui-même. L'intermédiaire n'est pas une commodité, c'est ce qui rend les contraintes du cahier des charges opposables.
 Deuxième point : le moteur n'écoute que sur l'interface de bouclage. C'était une habitude implicite ; c'est devenu une consigne écrite après la publication de la CVE sur Ollama.
 Les technologies et leurs justifications, je viens de les passer en revue : je ne reviens que sur ce qui se voit ici — le moteur d'inférence est un service en périphérie, atteint par l'API seule, et la bascule vers un fournisseur distant ne toucherait aucune route.`);
-  s.addText("Le navigateur ne parle jamais au moteur d'inférence", { placeholder: "title" });
+  s.addText("L'architecture logicielle", { placeholder: "title" });
   media(s, { file: `${R}/docs/dossier/fig/archi.png`, ratio: 2.28, y: 1.45, maxH: 4.9, name: "architecture" });
   s.addText("Architecture logicielle — trois niveaux et services périphériques (dossier § 5.2).", { placeholder: "caption" });
 }
@@ -467,7 +467,7 @@ Aucun import Flask dans services/. Cette règle n'est pas esthétique, elle est 
 Je suis honnête sur une nuance, et elle est écrite dans le dossier : la lecture de la configuration passe par current_app, qui est un objet Flask. C'est le seul point où la règle fléchit, et le dossier l'explique en § 7.2.
 Cinq blueprints structurent l'API : auth, documents, dossiers, IA, admin.
 Côté front, la même logique : aucune vue n'appelle axios directement, tout passe par la couche services. L'intercepteur qui rafraîchit l'access token après un 401 et rejoue la requête est donc écrit une seule fois, à un seul endroit.`);
-  s.addText("Aucun import Flask dans services/", { placeholder: "title" });
+  s.addText("Le découpage en couches", { placeholder: "title" });
   s.addText("La règle d'architecture qui rend le plan de tests possible.", { placeholder: "lead" });
 
   const rows = [
@@ -516,7 +516,7 @@ La deuxième est publique elle aussi, mais réservée au visiteur : connexion, i
 La troisième est l'espace personnel, derrière requiresAuth : sans jeton, retour à la connexion.
 La quatrième est le back-office, et elle cumule les deux gardes. Le rôle est relu dans le store, qui le tient de l'API — pas du jeton.
 Je précise tout de suite, parce que c'est la question qu'on pose : ces gardes sont du confort d'usage. Elles évitent d'afficher un écran vide et masquent le menu d'administration. Le contrôle qui compte est côté serveur, et je le montrerai dans la partie sécurité.`);
-  s.addText("Trois zones, trois gardes de routeur", { placeholder: "title" });
+  s.addText("Les zones d'accès et les gardes du routeur", { placeholder: "title" });
   s.addText("Seize routes déclarées dans frontend/src/index.ts, et un seul beforeEach pour les trois gardes.", { placeholder: "lead" });
 
   const zones = [
@@ -559,7 +559,7 @@ Les identifiants sont des UUID v4, pas des entiers auto-incrémentés. Conséque
 Les cascades sont déclarées au niveau du SGBD, pas seulement dans l'ORM. Si quelqu'un supprime une ligne avec un client SQL, l'intégrité tient quand même. Une contrainte qui n'existe que dans le code applicatif n'est pas une contrainte.
 La table ia journalise chaque interaction avec le contenu avant et après. Elle sert trois choses à la fois : l'historique affiché dans l'éditeur, le calcul du quota par agrégation, et la traçabilité RGPD. C'est la même donnée qui rend les trois possibles.
 Relevez « Contient » entre dossier et document, en 0,1 côté document : un document peut n'appartenir à aucun dossier. C'est le cas que le ON DELETE SET NULL doit produire quand un dossier est supprimé.`);
-  s.addText("Huit entités, des UUID, des cascades côté SGBD", { placeholder: "title" });
+  s.addText("Le modèle conceptuel de données", { placeholder: "title" });
   media(s, { file: `${R}/docs/dossier/fig/mcd.png`, ratio: 1.608, y: 1.45, maxH: 4.9, name: "modele conceptuel de donnees" });
   s.addText("Modèle conceptuel de données (dossier § 5.4).", { placeholder: "caption" });
 }
@@ -572,7 +572,7 @@ Deux choses à relever.
 Toutes les clés étrangères convergent vers user : c'est la traduction, dans le schéma, du cloisonnement par compte. Sessions, documents, dossiers, appels IA, consentements, demandes de réinitialisation — chaque ligne appartient à quelqu'un, et c'est la base qui le sait, pas seulement le code.
 La table ia porte deux clés étrangères, id_document et user_id. Le document aurait suffi pour retrouver son propriétaire, mais le quota se calcule par agrégation sur l'utilisateur : la redondance est assumée, elle évite une jointure sur chaque appel.
 Le modèle physique est en § 5.4 et le script de création MySQL en § 5.5 — il a été exécuté et vérifié sur un serveur réel.`);
-  s.addText("Les associations deviennent des clés étrangères", { placeholder: "title" });
+  s.addText("Le modèle logique de données", { placeholder: "title" });
   media(s, { file: `${R}/docs/dossier/fig/mld.png`, ratio: 1.572, y: 1.45, maxH: 4.9, name: "modele logique de donnees" });
   s.addText("Modèle logique de données (dossier § 5.4) ; modèle physique et script MySQL en § 5.4 et § 5.5.", { placeholder: "caption" });
 }
@@ -584,7 +584,7 @@ Trois acteurs : le visiteur, l'utilisateur authentifié, l'administrateur.
 Le périmètre de l'utilisateur est strictement limité à ses propres documents et dossiers, ses trois actions IA dans la limite de son quota, et son historique. L'administrateur hérite de tout le périmètre utilisateur et ajoute le back-office.
 Le moteur d'inférence apparaît comme un système externe sollicité par l'API — jamais par le navigateur, c'est la cohérence avec l'architecture.
 Le cas le plus significatif est la génération d'une assistance IA : c'est celui que je détaille en diagramme de séquence, et c'est aussi celui sur lequel porte mon jeu d'essai.`);
-  s.addText("Trois acteurs, un périmètre cloisonné", { placeholder: "title" });
+  s.addText("Les cas d'utilisation", { placeholder: "title" });
   media(s, { file: `${R}/docs/dossier/fig/usecase.png`, ratio: 1.37, y: 1.45, maxH: 4.9, name: "cas d'utilisation" });
   s.addText("Diagramme des cas d'utilisation (dossier § 5.6).", { placeholder: "caption" });
 }
@@ -597,7 +597,7 @@ Suivez l'ordre des contrôles, il n'est pas arbitraire. Authentification, puis p
 La journalisation intervient après la réponse du modèle, et elle enregistre le contenu avant et après.
 Le cas d'erreur est traité : si Ollama ne répond pas, la couche ia_service traduit l'exception réseau en un message lisible, et aucune ligne n'est écrite dans le journal — sinon un échec consommerait du quota.
 Et la décision finale reste à l'utilisateur : rien n'est appliqué au document automatiquement. C'est à la fois une exigence d'ergonomie et une mesure de sécurité — ne jamais appliquer automatiquement la sortie d'un modèle.`);
-  s.addText("Cinq contrôles avant le moindre appel au modèle", { placeholder: "title" });
+  s.addText("Le diagramme de séquence — génération IA", { placeholder: "title" });
   media(s, { file: `${R}/docs/dossier/fig/seq-uc10.png`, ratio: 1.59, y: 1.45, maxH: 4.9, name: "diagramme de sequence" });
   s.addText("Séquence — génération d'une assistance IA (dossier § 5.7).", { placeholder: "caption" });
 }
@@ -628,7 +628,7 @@ Avant d'entrer dans le code, la série complète des écrans livrés. Onze écra
 La première ligne est la zone publique et les pages réservées au visiteur : accueil, accueil mobile, connexion, inscription, mot de passe oublié, réinitialisation.
 La seconde est l'espace authentifié puis le back-office : tableau de bord, liste des documents, nouveau document, éditeur, assistant IA, administration. C'est le découpage que je vous ai montré sur les gardes du routeur.
 Ces douze captures sont en annexe § 12.2, et chacune y est accompagnée du code qui la produit. Je m'arrête maintenant sur trois d'entre elles et sur leur code.`);
-  s.addText("Onze écrans, douze captures", { placeholder: "title" });
+  s.addText("Les écrans livrés", { placeholder: "title" });
 
   const vignettes = [
     ["C-01-accueil", "C-01 Accueil"],
@@ -695,7 +695,7 @@ Le minuteur précédent est systématiquement annulé — sans ça, une frappe r
 L'enregistrement différé est doublé d'un bouton explicite : l'utilisateur doit pouvoir forcer la sauvegarde.
 Et rien n'est enregistré tant que le titre est vide.
 Une remarque de méthode, que j'ai tenu à écrire dans le dossier : sur la capture C-07, l'indicateur d'enregistrement n'apparaît pas, parce qu'aucune frappe n'a eu lieu. En conclure que la fonctionnalité est absente serait une erreur. Une capture atteste d'un état, pas d'un comportement — vérifier une fonctionnalité demande de lire le code ou d'exécuter un scénario. C'est exactement la raison d'être du jeu d'essai.`);
-  s.addText("Enregistrer 2,5 s après la dernière frappe", { placeholder: "title" });
+  s.addText("L'éditeur et l'enregistrement automatique", { placeholder: "title" });
   s.addText([
     ...li([
       "2,5 s : enregistrer à chaque caractère saturerait l'API ; un délai trop long ferait perdre du travail.",
@@ -719,8 +719,8 @@ Deuxième décision : c'est une fenêtre glissante, pas un compteur journalier. 
 Troisième décision : le code de retour est 429, Too Many Requests, pas 403. Un 403 dit « vous n'avez pas le droit » ; un 429 dit « réessayez plus tard ». Ce n'est pas la même information pour le client.
 Et le contrôle est entièrement côté serveur. Le front affiche le quota restant, mais c'est de l'affichage.
 Le test correspondant est le cas JE-07 du jeu d'essai, et mes données de test contiennent une ligne datée de 25 heures précisément pour vérifier la fenêtre glissante.`);
-  s.addText("Compter les appels, jamais les stocker", { placeholder: "title" });
-  s.addText("Composant métier — le quota IA, contrôlé côté serveur avant tout appel au modèle (dossier § 7.2).", { placeholder: "lead" });
+  s.addText("Un composant métier — le quota IA", { placeholder: "title" });
+  s.addText("Contrôlé côté serveur, avant tout appel au modèle (dossier § 7.2).", { placeholder: "lead" });
 
   code(s, { x: M, y: 1.95, w: 7.3, h: 3.9, file: "app/routes/ia_route.py", lines: [
     "window_start = utc_now_naive() - timedelta(hours=24)",
@@ -758,8 +758,8 @@ La propriété est dans la clause WHERE. Je ne charge pas le document puis ne co
 La différence n'est pas stylistique. Avec un contrôle a posteriori, il suffit d'oublier un if dans une route pour ouvrir une faille. Ici, oublier la condition fait échouer le test de propriété, qui existe pour chaque ressource.
 Conséquence voulue : un identifiant qui appartient à quelqu'un d'autre renvoie 404, pas 403. Un 403 confirmerait que la ressource existe. Le 404 est indiscernable d'un identifiant inexistant.
 Et toutes les requêtes passent par l'ORM, paramétrées, sans aucune concaténation de chaîne. C'est l'objectif de qualité que je m'étais fixé et il est tenu sans exception.`);
-  s.addText("La propriété est dans le WHERE", { placeholder: "title" });
-  s.addText("Composant d'accès aux données — le motif répété pour chaque ressource (dossier § 7.3).", { placeholder: "lead" });
+  s.addText("Un composant d'accès aux données", { placeholder: "title" });
+  s.addText("Le motif répété pour chaque ressource de l'application (dossier § 7.3).", { placeholder: "lead" });
 
   code(s, { x: M, y: 1.95, w: 7.3, h: 3.4, file: "app/routes/document_route.py", lines: [
     "stmt = select(Document).where(",
@@ -795,7 +795,7 @@ Un détail qui compte : les secrets sont déclarés sous la forme dollar-accolad
 Ollama reste hors composition, sur l'hôte, atteint par host.docker.internal : son image pèse plusieurs gigaoctets et le modèle se télécharge à part.
 La CI tourne à chaque push et chaque pull request, en trois travaux parallèles. Le parallélisme n'est pas une optimisation de performance : enchaînés, un échec du frontend masquait l'état du backend et il fallait deux exécutions pour connaître les deux.
 La troisième carte est la liste de contrôle d'une mise en ligne : passer APP_ENV à production, une clé distincte, CORS_ORIGINS au domaine réel, TLS devant l'application. Ce sont des valeurs de configuration, pas des développements — l'application est prête à être hébergée le jour où on lui donne un domaine.`);
-  s.addText("Conteneurisée, intégrée en continu, exécutée", { placeholder: "title" });
+  s.addText("La conteneurisation et l'intégration continue", { placeholder: "title" });
   s.addText("Trois services, trois travaux de CI, et une liste de contrôle pour une mise en ligne (dossier § 6).", { placeholder: "lead" });
 
   card(s, { x: M, y: 1.95, w: 3.87, h: 3.15, badge: "3×", title: "Conteneurisation",
@@ -832,7 +832,7 @@ A02 : bcrypt avec sel pour les mots de passe, SHA-256 pour les jetons. Aucun sec
 A05 : l'application refuse de démarrer sans JWT_SECRET_KEY. Pas de valeur par défaut, pas de repli silencieux. Une clé de secours en dur est une clé en production.
 A10 : la seule URL sortante du projet est OLLAMA_URL, une valeur de configuration. Aucune entrée utilisateur ne devient jamais une destination HTTP.
 Je suis transparente sur une faiblesse, elle est dans le dossier : A09, la journalisation applicative est incomplète. Le journal des interactions IA existe, mais il n'y a pas de journalisation systématique des événements de sécurité.`);
-  s.addText("La sécurité comme contrainte de conception", { placeholder: "title" });
+  s.addText("Les risques OWASP et leur traitement", { placeholder: "title" });
   s.addText("Grille OWASP Top 10 (2021), croisée avec le cahier des charges et les recommandations de l'ANSSI.", { placeholder: "lead" });
 
   const owasp = [
@@ -864,7 +864,7 @@ Et ce que je stocke en base n'est pas le jeton, c'est son empreinte SHA-256. Une
 Le code à droite est le cœur du mécanisme. À chaque usage, le jeton présenté est marqué consommé et un nouveau est émis. Si un jeton déjà consommé se représente, il n'y a que deux explications : soit l'utilisateur rejoue une vieille requête, soit quelqu'un a volé le jeton. Dans le doute, je révoque toutes les sessions du compte. C'est volontairement brutal — la gêne est un reconnexion, le risque évité est un compte compromis.
 Dernier point, et c'est celui qu'on oublie le plus souvent : à la réinitialisation du mot de passe, toutes les sessions sont supprimées. Changer son mot de passe après une compromission ne sert à rien si les sessions ouvertes par l'attaquant survivent.
 Une précision sur la purge : la tâche purge_expired_sessions filtre sur l'expiration du jeton, pas sur le drapeau revoke. Une session révoquée doit survivre jusqu'au terme de son jeton — sinon un jeton volé puis rejoué ne serait plus reconnu comme un rejeu, et la détection de vol tomberait.`);
-  s.addText("Un jeton court non révocable, un jeton long révocable", { placeholder: "title" });
+  s.addText("Le cycle de vie des sessions", { placeholder: "title" });
   s.addText("Deux besoins contradictoires, résolus par deux jetons de nature différente (dossier § 8).", { placeholder: "lead" });
 
   const el = [
@@ -914,7 +914,7 @@ Les chiffres, rejoués le 4 novembre : 461 cas automatisés, tous au vert — 40
 Mon objectif de couverture était 80 % sur services/ et sur les routes, sans objectif chiffré ailleurs. C'est volontaire : viser un pourcentage global pousse à écrire des tests faciles sur du code sans risque. Les 55 % du front sont tirés vers le bas par six modules de service qui sont des enveloppes d'une ligne autour d'axios — les tester reviendrait à tester axios.
 Trois zones concentrent l'effort : la chaîne d'authentification, le contrôle de propriété, et le quota. Ce sont les trois endroits où une régression coûte cher.
 Le quatrième niveau, les tests système, a été joué le 5 octobre sur la pile conteneurisée : sept cas au vert sur dix. Un échec réel sur le parcours de réinitialisation de mot de passe, et deux cas hors de portée de cet environnement, dont celui qui demande un Ollama joignable. Restent les tests de charge, qui viennent après.`);
-  s.addText("461 cas au vert, 95 % de couverture backend", { placeholder: "title" });
+  s.addText("Le plan de tests et ses résultats", { placeholder: "title" });
   s.addText("Campagne rejouée le 4 novembre 2026 — quatre niveaux, du moins coûteux au plus coûteux à exécuter.", { placeholder: "lead" });
 
   stat(s, { x: M, y: 1.9, w: 2.9, h: 1.3, value: "461", label: "cas automatisés, tous au vert" });
@@ -949,7 +949,7 @@ Les données sont construites par un script, pour être reproductibles à l'iden
 La donnée la plus utile du jeu est celle de droite : dans le journal du compte U1, dix-neuf lignes datées de moins de vingt-quatre heures, et une ligne datée de vingt-cinq heures.
 Cette ligne unique est le seul moyen de distinguer une fenêtre glissante d'un compteur journalier. Sans elle, le cas JE-07 passerait quelle que soit l'implémentation.
 C'est ce que j'ai appris en construisant ce jeu : un jeu de données, ce n'est pas remplir des tables — c'est choisir les valeurs qui font échouer les mauvaises implémentations.`);
-  s.addText("La ligne datée de 25 heures", { placeholder: "title" });
+  s.addText("Le jeu d'essai", { placeholder: "title" });
   s.addText("Jeu d'essai sur POST /documents/<id>/ia/generer — la fonctionnalité la plus significative du projet.", { placeholder: "lead" });
 
   card(s, { x: M, y: 1.95, w: 3.87, h: 2.4, badge: "?", title: "Pourquoi cette route",
@@ -1009,7 +1009,7 @@ Se conformer : le RGPD obtenu par l'architecture puisque les contenus ne sortent
 La propriété est dans la clause WHERE, et une ressource qui ne vous appartient pas renvoie 404 — pas 403, qui confirmerait son existence. Le rôle est relu en base à chaque requête, jamais lu dans le jeton. Les mots de passe sont en bcrypt salé, les jetons stockés en empreinte SHA-256 : une fuite de la base ne permet pas de rejouer une session. L'application refuse de démarrer sans sa clé de signature. Le refresh token est dans un cookie inaccessible au JavaScript, et rejouer un jeton déjà consommé révoque tout le compte. Enfin je stocke du Markdown brut et non du HTML : si DOMPurify échoue un jour, la donnée stockée n'est toujours pas exécutable.
 Si vous me demandez ce qui manque : la journalisation des événements de sécurité est incomplète, c'est la catégorie A09 de l'OWASP, et c'est écrit dans le dossier.
 Je vous remercie, je suis à votre disposition pour vos questions.`);
-  s.addText("Ce qui était demandé, ce qui le tient", { placeholder: "title" });
+  s.addText("Le bilan au regard du cahier des charges", { placeholder: "title" });
 
   // ── Les quatre objectifs du cahier des charges ────────────────────
   s.addText("LES QUATRE OBJECTIFS DU CAHIER DES CHARGES", {
