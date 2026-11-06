@@ -311,7 +311,115 @@ format de stockage des documents).
 
 ---
 
-## ▣ Fiche 27 — Gestion du temps
+## ▣ Fiche 27 — Les définitions à savoir dire
+
+Le jury demande souvent « qu'est-ce que c'est, exactement ? ». Une phrase de
+définition, puis **un ancrage dans ton projet** : c'est l'ancrage qui montre que
+tu l'as compris et pas récité.
+
+### Architecture et web
+
+| Terme | À dire |
+|---|---|
+| **API REST** | Une interface où chaque ressource a son adresse et où le verbe HTTP dit l'action — GET pour lire, POST pour créer, PUT/PATCH pour modifier, DELETE pour supprimer. **Chez moi** : `GET /documents`, `POST /documents/:id/ia/generer`. |
+| **SPA** (application monopage) | Le serveur envoie une seule page ; ensuite c'est le JavaScript qui change l'affichage sans recharger. **Chez moi** : Vue Router change de vue, le navigateur ne recharge jamais. |
+| **Architecture en couches** | Chaque couche ne parle qu'à la suivante et ignore celle du dessus. **Chez moi** : routes → services → persistance, et **aucun import Flask dans `services/`**. |
+| **Endpoint** | Un point d'entrée de l'API : une URL plus un verbe. |
+| **Blueprint** (Flask) | Un groupe de routes qu'on enregistre d'un bloc. **Chez moi** : cinq — auth, documents, dossiers, IA, admin. |
+| **CORS** | La règle qui décide quelles origines ont le droit d'appeler l'API depuis un navigateur. **Chez moi** : restreint à l'origine du front, et rien d'autre. |
+| **Proxy inverse** | Un serveur placé devant l'application, qui reçoit les requêtes et les distribue. **Chez moi** : Nginx sert le front et relaie `/api` vers le back. |
+| **Conteneur / image** | L'**image** est le modèle figé, le **conteneur** est une instance qui tourne. On part toujours de la même image, donc du même état. |
+
+### Base de données
+
+| Terme | À dire |
+|---|---|
+| **SGBD relationnel** | Un système qui range les données en tables liées entre elles et qui garantit lui-même la cohérence. **Chez moi** : MySQL 8.4. |
+| **ORM** | Une couche qui fait correspondre des classes du langage à des tables. **Chez moi** : SQLAlchemy — et c'est lui qui **paramètre toutes les requêtes**, donc qui rend l'injection SQL impossible. |
+| **Clé primaire / clé étrangère** | La primaire identifie une ligne de façon unique ; l'étrangère pointe vers la primaire d'une autre table. **Chez moi** : 8 primaires, 9 étrangères. |
+| **UUID** | Un identifiant de 36 caractères tiré au hasard, pas un compteur. **Chez moi** : on ne peut pas deviner `/documents/43` à partir de `/documents/42`. |
+| **Cardinalité** | Combien d'éléments de A peuvent correspondre à un élément de B. **Chez moi** : lecture Merise, `(0,n)` côté utilisateur, `(1,1)` côté dépendant. |
+| **MCD / MLD / MPD** | Le **conceptuel** dit *quoi* (entités, associations) ; le **logique** traduit les associations en clés étrangères ; le **physique** ajoute les types SQL, les index et les règles de suppression. |
+| **Dénormalisation** | Accepter une redondance pour éviter une jointure coûteuse. **Chez moi** : `ia` porte `user_id` *et* `id_document`, parce que le quota se compte par utilisateur. |
+| **Index** | Une structure qui évite de parcourir toute la table. **Chez moi** : `(user_id, created_at)` sert le calcul du quota. |
+| **ON DELETE CASCADE** | Supprimer la ligne parente supprime les filles. **Chez moi** : c'est **le droit à l'effacement du RGPD en une instruction**. |
+| **ON DELETE SET NULL** | La fille survit, son lien passe à nul. **Chez moi** : supprimer un dossier ne supprime pas ses documents. |
+| **Requête paramétrée** | La valeur est transmise à part de la requête, donc jamais interprétée comme du SQL. C'est **la** parade à l'injection. |
+| **NoSQL** | Des bases sans schéma fixe ni jointures, faites pour le volume distribué. **Chez moi** : écarté, et c'est argumenté — mes données ont un schéma stable et sont fortement reliées. |
+
+### Sécurité
+
+| Terme | À dire |
+|---|---|
+| **Authentification / autorisation** | L'authentification répond à « qui êtes-vous », l'autorisation à « avez-vous le droit ». **Deux choses distinctes** : un utilisateur authentifié n'a pas pour autant accès au document d'un autre. |
+| **Hachage** | Une transformation **à sens unique** : on ne revient pas en arrière. À ne pas confondre avec le chiffrement, qui est réversible. |
+| **Sel** | Une valeur aléatoire ajoutée avant le hachage, pour que deux mots de passe identiques ne donnent pas la même empreinte. **Chez moi** : bcrypt le gère lui-même. |
+| **bcrypt** | Une fonction de hachage **lente exprès**, à coût réglable. C'est sa lenteur qui protège de la force brute. |
+| **JWT** | Un jeton qui contient ses propres informations et une signature. Le serveur le vérifie **sans rien stocker** — ce qui est son avantage, et sa limite : **on ne peut pas le révoquer**. |
+| **Access / refresh token** | L'**access** sert à chaque appel, court (15 min). Le **refresh** sert seulement à obtenir un nouvel access, long (7 jours) et **révocable côté serveur**. |
+| **Rotation des jetons** | Chaque usage du refresh en émet un nouveau et invalide l'ancien. **Chez moi** : un jeton déjà consommé qui revient est traité comme un vol. |
+| **httpOnly** | Un cookie que le JavaScript ne peut pas lire. **Chez moi** : même une faille XSS ne donne pas le refresh token. |
+| **SameSite=Strict** | Le cookie n'est envoyé que si la requête part du même site. C'est la parade CSRF. **Attention** : il raisonne en *sites*, pas en *origines*. |
+| **XSS** | Faire exécuter du JavaScript étranger dans le navigateur d'un autre utilisateur. **Chez moi** : l'aperçu Markdown est assaini par DOMPurify, et je stocke du Markdown brut, jamais du HTML. |
+| **Injection SQL** | Faire interpréter une entrée comme du code SQL. **Chez moi** : impossible, l'ORM paramètre tout. |
+| **CSRF** | Faire exécuter une action à un utilisateur connecté depuis un autre site, à son insu. |
+| **Défense en profondeur** | Ne jamais dépendre d'une seule barrière. **Chez moi** : DOMPurify assainit l'affichage, **et** la base ne contient que du Markdown non exécutable. |
+| **Moindre privilège** | Chacun n'a que les droits dont il a besoin. **Chez moi** : trois comptes MySQL — l'applicatif n'a aucun droit de structure. |
+| **Limitation de débit** | Plafonner le nombre d'appels par période. **Chez moi** : sur connexion, inscription et mot de passe oublié. |
+| **Énumération de comptes** | Déduire qu'une adresse existe à partir de la réponse du serveur. **Chez moi** : réponse identique que le compte existe ou non — « Email ou mot de passe incorrect » à la connexion, et le même message au mot de passe oublié. **Si on insiste** : le temps de réponse, lui, n'est pas égalisé, puisque l'envoi du mail prend un instant de plus. Je le sais ; la parade serait de différer l'envoi. |
+| **OWASP Top 10** | La liste de référence des dix risques applicatifs les plus courants. **Chez moi** : édition **2021**, et aussi le **Top 10 for LLM Applications**, édition 2026. |
+
+### Intelligence artificielle
+
+| Terme | À dire |
+|---|---|
+| **LLM** (modèle de langage) | Un modèle entraîné à prédire le mot suivant ; c'est de cette prédiction répétée que sort un texte. |
+| **Inférence** | L'exécution du modèle pour produire une réponse — par opposition à l'entraînement. **Je n'entraîne rien, je fais de l'inférence.** |
+| **Inférence locale** | Le modèle tourne sur la machine de l'entreprise. **Chez moi** : Ollama, et c'est ce qui satisfait l'exigence RGPD **par construction**. |
+| **Jeton** (token) | L'unité que manipule le modèle : un mot court, ou un morceau de mot. **Chez moi** : journalisé à chaque appel. |
+| **Prompt** | Le texte envoyé au modèle. **Chez moi** : un message `system` qui porte les règles, un message `user` qui porte le contenu. |
+| **Prompt engineering** | Écrire ce texte de façon à obtenir un résultat régulier. **Et un prompt se teste comme du code** : c'est le cas TU-04. |
+| **Fenêtre de contexte** | Le nombre de jetons que le modèle peut lire d'un coup. **Chez moi** : 4 096 — au-delà, Ollama tronque **silencieusement**, et par l'avant, donc ce sont les consignes qui disparaissent. |
+| **Température** | Le réglage du hasard dans la génération. **Chez moi** : 0,1 pour corriger, 0,7 pour compléter — on veut peu d'imagination pour corriger. |
+| **Hallucination** | Une sortie fausse énoncée avec assurance. **Chez moi** : c'est pourquoi **rien n'est appliqué automatiquement** et que l'interface prévient. |
+
+### Tests et qualité
+
+| Terme | À dire |
+|---|---|
+| **Test unitaire** | Vérifie une fonction isolée, sans base ni réseau. |
+| **Test d'intégration** | Vérifie que plusieurs composants fonctionnent ensemble — chez moi, route + service + base. |
+| **Test fonctionnel** | Rejoue un parcours utilisateur complet. |
+| **Couverture de code** | La part du code exécutée par les tests. **Ce n'est pas une preuve de qualité** : du code couvert peut être mal testé. |
+| **Double de test** (mock) | Un faux composant qui remplace un vrai. **Chez moi** : la leçon de la campagne — **les doubles mentent**, trois défauts sont passés sous un faux `requests.post`. |
+| **Test de mutation** | On casse volontairement le code pour vérifier qu'un test échoue. **Un test qu'on n'a jamais vu échouer ne prouve rien.** |
+| **Régression** | Une fonctionnalité qui remarchait et qui casse. Les tests de non-régression existent pour ça. |
+| **Jeu d'essai** | Un jeu de données construit pour la recette. **Ce n'est pas remplir des tables : c'est choisir les valeurs qui font échouer les mauvaises implémentations.** |
+
+### Exploitation
+
+| Terme | À dire |
+|---|---|
+| **Intégration continue (CI)** | À chaque envoi de code, une machine rejoue analyse, tests et construction. **Chez moi** : GitHub Actions, trois travaux parallèles. |
+| **Déploiement continu (CD)** | Le prolongement : la mise en ligne automatique après succès. **Chez moi** : non mis en place, l'hébergement reste à faire. |
+| **Pipeline** | L'enchaînement de ces étapes. |
+| **Lint** | L'analyse statique qui repère erreurs et écarts de style **sans exécuter** le code. |
+| **Fichier de verrouillage** | Fige la version exacte de chaque dépendance, directes et indirectes. **Chez moi** : `package-lock.json` commité — **une mesure de sécurité**, l'incident axios l'a montré. |
+
+### Conformité
+
+| Terme | À dire |
+|---|---|
+| **RGPD** | Le règlement européen sur les données personnelles. **Chez moi** : consentement tracé, export (art. 15 et 20), effacement par cascade. |
+| **Droit à l'effacement** | Le droit d'obtenir la suppression de ses données. **Chez moi** : porté par les `ON DELETE CASCADE`. |
+| **Portabilité** | Le droit de récupérer ses données dans un format réutilisable. **Chez moi** : export en archive ZIP. |
+| **RGAA 4.1.2** | Le référentiel français d'accessibilité, fondé sur **WCAG 2.1 niveau AA**. **Chez moi** : 15 écrans audités, 0 violation axe-core. |
+| **ANSSI** | L'agence française de cybersécurité ; ses recommandations ont servi de référence à l'audit. |
+| **AI Act** | Le règlement européen **UE 2024/1689**. Son **article 50** impose d'informer l'utilisateur qu'un contenu est généré — applicable depuis le **2 août 2026**, soit après la rédaction du cahier des charges. |
+
+---
+
+## ▣ Fiche 28 — Gestion du temps
 
 | Si tu es en retard | Coupe les diapos **14, 15, 18, 22** (descriptives). La **21** se survole en 20 s. |
 |---|---|
