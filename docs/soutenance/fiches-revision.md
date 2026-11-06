@@ -261,6 +261,107 @@ critère comme non couvert. »**
 
 ---
 
+## ▣ Fiche 25 bis — Les extraits de code, ligne à ligne
+
+Trois extraits sont projetés, et c'est sur eux qu'on te fera parler. Pour chacun :
+**ce qu'il fait**, puis **la ligne qui porte la décision**.
+
+### 1 · Le quota — `app/routes/ia_route.py` (diapo 24)
+
+```python
+window_start = utc_now_naive() - timedelta(hours=24)
+
+calls_last_24h = db_session.execute(
+    select(func.count()).select_from(IA).where(
+        IA.user_id    == request.user_id,
+        IA.created_at >= window_start,
+    )
+).scalar_one()
+
+if calls_last_24h >= current_user.quota_daily_limit:
+    return jsonify({"error": "Quota IA atteint."}), 429
+```
+
+| Ligne | Ce qu'elle décide |
+|---|---|
+| `utc_now_naive() - timedelta(hours=24)` | **Fenêtre glissante**, pas jour calendaire. Avec une remise à zéro à minuit, on ferait 40 appels entre 23 h et 1 h. `utc_now_naive` : tout est stocké en UTC sans fuseau, donc la comparaison ne dépend pas du serveur. |
+| `select(func.count())` | **Une agrégation, pas un compteur stocké.** Un compteur se désynchronise — il suffit d'un échec entre l'appel et l'incrément. Celle-ci est juste par construction. |
+| `IA.user_id == request.user_id` | Le quota est **par utilisateur**. `request.user_id` vient du jeton vérifié, jamais du corps de la requête. |
+| `>= current_user.quota_daily_limit` | Le seuil est **une colonne**, pas une constante : un administrateur peut le changer compte par compte. |
+| `429` | « Réessayez plus tard », et non `403` « vous n'avez pas le droit ». **Pas la même information pour le client.** |
+
+**La phrase** : *« Le contrôle est entièrement côté serveur, et il arrive avant l'appel au modèle. Vérifier le quota après l'inférence aurait permis de consommer le moteur sans jamais être compté. »*
+
+### 2 · La propriété — `app/routes/document_route.py` (diapo 25)
+
+```python
+stmt = select(Document).where(
+    Document.id_document == id_document,
+    Document.user_id     == request.user_id,
+)
+document = db_session.execute(stmt).scalar_one_or_none()
+
+if document is None:
+    return jsonify({"error": "Document introuvable"}), 404
+```
+
+| Ligne | Ce qu'elle décide |
+|---|---|
+| Les **deux** conditions dans le même `where` | **La propriété est dans la clause WHERE.** Je ne charge pas le document pour comparer ensuite son propriétaire : je demande un document qui a cet identifiant **ET** qui m'appartient. |
+| `scalar_one_or_none()` | Renvoie l'objet ou `None` — pas d'exception à rattraper, donc pas de branche qu'on oublie de traiter. |
+| `404` et non `403` | **Un 403 confirmerait que la ressource existe.** Le 404 est indiscernable d'un identifiant inexistant. |
+
+**Pourquoi c'est structurel** : avec un contrôle a posteriori, il suffit d'oublier un `if` dans une route pour ouvrir une faille. Ici, **oublier la condition fait échouer le test de propriété**, qui existe pour chaque ressource.
+
+**La phrase** : *« C'est le motif le plus répété du projet, et c'est voulu : la sécurité d'accès ne doit pas dépendre de la vigilance de celui qui écrit la route suivante. »*
+
+### 3 · La détection de rejeu — `app/services/auth_service.py` (diapo 29)
+
+```python
+if session.revoke:
+    revoke_all_user_sessions(
+        session.user_id, db_session)
+    db_session.commit()
+    raise ValueError(
+        "Réutilisation détectée")
+
+session.revoke = True
+```
+
+| Ligne | Ce qu'elle décide |
+|---|---|
+| `if session.revoke:` | On arrive ici avec un jeton **déjà consommé**. Deux explications possibles : l'utilisateur rejoue une vieille requête, ou quelqu'un a volé le jeton. |
+| `revoke_all_user_sessions(...)` | **Dans le doute, on révoque tout le compte**, pas seulement cette session. Volontairement brutal : la gêne est une reconnexion, le risque évité est un compte compromis. |
+| `raise ValueError(...)` | La couche métier **lève une exception**, elle ne renvoie pas de code HTTP — elle ne connaît pas HTTP. C'est le contrôleur qui traduit. **C'est la règle « aucun import Flask dans services/ » en action.** |
+| `session.revoke = True` | La **rotation** : chaque usage marque le jeton consommé et en émet un nouveau. C'est ce marquage qui rend la détection possible au tour suivant. |
+
+**La phrase** : *« Un JWT seul ne se révoque pas. C'est tout l'intérêt de la table de sessions : elle rend le refresh token révocable, et la rotation transforme un vol en incident détectable. »*
+
+### Et celui dont tu parles sans le montrer — l'enregistrement automatique
+
+```ts
+const AUTOSAVE_DELAY_MS = 2500;
+
+function scheduleAutoSave() {
+  if (!isTitreValid.value) return;
+  if (isLoading.value || isSaving.value) return;
+
+  if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+  autoSaveTimeout = setTimeout(performAutoSave, AUTOSAVE_DELAY_MS);
+}
+```
+
+| Ligne | Ce qu'elle décide |
+|---|---|
+| `2500` | Ni à chaque caractère — l'API saturerait — ni trop long — la sauvegarde deviendrait invisible et on perdrait du travail. |
+| `if (!isTitreValid.value) return;` | **Rien n'est enregistré tant que le titre est vide.** |
+| Le garde `isLoading` / `isSaving` | On ne planifie pas pendant un chargement ou un enregistrement déjà en cours : **pas de course**. |
+| `clearTimeout(autoSaveTimeout)` | **Le minuteur précédent est systématiquement annulé.** Sans cette ligne, une frappe rapide empilerait autant de requêtes que de caractères. C'est la ligne que le jury cherche. |
+
+**La phrase** : *« Quatre décisions tiennent dans six lignes, et la plus importante est l'annulation du minuteur précédent — c'est elle qui transforme une suite de frappes en un seul enregistrement. »*
+
+---
+
 ## ▣ Fiche 26 — À quoi sert chaque brique
 
 Pour la question « pourquoi avoir utilisé ça ? ». Une ligne par outil : **ce que
