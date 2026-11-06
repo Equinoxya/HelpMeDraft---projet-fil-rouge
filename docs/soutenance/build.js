@@ -222,23 +222,24 @@ Six temps. Je commence par le besoin, parce que toutes les décisions techniques
 Puis la gestion de projet, la conception, la réalisation avec du code, la sécurité — qui est le fil rouge du projet — et je termine par les tests, la veille et le bilan.
 Annoncez le plan et respectez-le : le jury suit le dossier en parallèle, la correspondance l'aide.`);
   s.addText("Déroulé", { placeholder: "title" });
-  s.addText("Six temps, quarante minutes. Les numéros renvoient aux sections du dossier.", { placeholder: "lead" });
+  s.addText("Six temps. Les numéros renvoient aux sections du dossier.", { placeholder: "lead" });
 
+  // Pas de durée par partie : le minutage est dans les notes de l'orateur,
+  // il n'a pas à être affiché au jury — qui le lirait comme un engagement.
   const items = [
-    ["1", "Le contexte et le besoin", "Dossier § 2 et § 3", "≈ 4 min"],
-    ["2", "La gestion de projet", "§ 4", "≈ 5 min"],
-    ["3", "La conception", "§ 5", "≈ 12 min"],
-    ["4", "La réalisation", "§ 6 et § 7", "≈ 7 min"],
-    ["5", "La sécurité", "§ 8", "≈ 5 min"],
-    ["6", "Tests, veille et bilan", "§ 9, § 10, § 11", "≈ 8 min"],
+    ["1", "Le contexte et le besoin", "Dossier § 2 et § 3"],
+    ["2", "La gestion de projet", "§ 4"],
+    ["3", "La conception", "§ 5"],
+    ["4", "La réalisation", "§ 6 et § 7"],
+    ["5", "La sécurité", "§ 8"],
+    ["6", "Tests, veille et bilan", "§ 9, § 10, § 11"],
   ];
   items.forEach((it, i) => {
     const y = 1.95 + i * 0.8;
     s.addShape(pres.ShapeType.rect, { x: M + 0.1, y: y + 0.08, w: 0.46, h: 0.46, fill: { color: C.accent1 }, line: { ...BORD }, objectName: `puce ${it[0]}` });
     s.addText(it[0], { x: M + 0.1, y: y + 0.08, w: 0.46, h: 0.46, fontSize: 13, bold: true, color: "F4F1EA", fontFace: "Courier New", align: "center", valign: "middle", margin: 0, isTextBox: true });
-    s.addText(it[1], { x: M + 0.85, y: y, w: 6.4, h: 0.62, fontSize: 19, bold: true, color: C.text1, valign: "middle", margin: 0, isTextBox: true });
-    s.addText(it[2], { x: 7.4, y: y, w: 2.6, h: 0.62, fontSize: 13, color: C.accent5, fontFace: "Courier New", valign: "middle", margin: 0, isTextBox: true });
-    s.addText(it[3], { x: 10.2, y: y, w: 2.5, h: 0.62, fontSize: 13, color: C.accent1, bold: true, fontFace: "Courier New", align: "right", valign: "middle", margin: 0, isTextBox: true });
+    s.addText(it[1], { x: M + 0.85, y: y, w: 7.6, h: 0.62, fontSize: 19, bold: true, color: C.text1, valign: "middle", margin: 0, isTextBox: true });
+    s.addText(it[2], { x: 9.1, y: y, w: 3.6, h: 0.62, fontSize: 13, color: C.accent5, fontFace: "Courier New", align: "right", valign: "middle", margin: 0, isTextBox: true });
   });
 }
 
