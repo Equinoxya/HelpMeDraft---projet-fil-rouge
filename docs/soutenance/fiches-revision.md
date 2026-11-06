@@ -120,6 +120,32 @@ décisions techniques qui suivent en découlent. »
 - **La table `ia` sert trois choses** : historique, quota, traçabilité. **La même donnée rend les trois possibles.**
 - MLD : **toutes les clés étrangères convergent vers `user`** — le cloisonnement écrit dans le schéma.
 
+#### ▸ Si on te demande : « à quoi sert la table `ia` ? »
+
+C'est **le journal de chaque interaction avec le modèle**. Une ligne = un appel :
+`type_action`, le contenu **avant** et **après**, les jetons, l'horodatage, et le
+lien vers l'utilisateur **et** le document.
+
+| Elle sert à | Comment |
+|---|---|
+| **Le quota** | Recalculé par agrégation : `WHERE user_id = ? AND created_at >= (maintenant − 24 h)`. **Pas un compteur stocké** — un compteur se désynchronise, il suffit d'un échec entre l'appel et l'incrément. |
+| **L'historique** | Les lignes du document, triées du plus récent au plus ancien, affichées dans l'éditeur. |
+| **La traçabilité AI Act** | Les colonnes `insere`, `position_debut`, `insere_at`. **La ligne atteste que la proposition a été produite ; ces trois colonnes qu'elle a été acceptée et versée au document.** |
+
+**La phrase à placer** : *« C'est la même donnée qui rend les trois possibles. Je n'ai
+pas un compteur pour le quota, une table d'historique et un journal d'audit : j'ai un
+seul journal, et chaque besoin est une lecture différente dessus. »*
+
+**Les détails qui montrent que c'est pensé** — à ne sortir que si on creuse :
+- **Deux index**, et chacun trahit un motif de lecture : `(user_id, created_at)` pour le quota, `(id_document, created_at)` pour l'historique.
+- **Deux contraintes `CHECK`** : `type_action` limité aux trois actions, et `insere = FALSE OR insere_at IS NOT NULL` — *une insertion sans horodatage serait une trace inexploitable ; le SGBD refuse l'état incohérent plutôt que de compter sur l'application*.
+- **Deux clés étrangères en `ON DELETE CASCADE`** : supprimer un compte efface son journal — c'est le droit à l'effacement.
+- **Une quatrième lecture existe** : les statistiques du back-office (appels par compte, volume sur 24 h et 7 jours). Si on te fait remarquer que ça fait quatre usages et non trois, **donne-la toi-même** — c'est un argument de plus, pas une contradiction.
+
+**« Pourquoi `user_id` alors que le document porte déjà son propriétaire ? »**
+Dénormalisation assumée. Sans elle, **compter le quota imposerait une jointure sur
+`document` à chaque appel**.
+
 ### Fiche 12 · La séquence IA
 - **« Suivez l'ordre des contrôles, il n'est pas arbitraire. »** Auth → propriété → validation → quota → **puis** le modèle.
 - **« Chaque contrôle est placé avant celui qui coûte plus cher. »**
