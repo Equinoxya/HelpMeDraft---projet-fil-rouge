@@ -25,7 +25,7 @@ Emails, notes de service, rapports — un éditeur Markdown augmenté par un mod
 
 > [!NOTE]
 > **Projet en cours.** HelpMeDraft est le projet fil rouge du titre professionnel **Concepteur Développeur d'Applications (CDA)** — CD2IA 2025/2026, Metz Numeric School. Commanditaire fictif : **LexiCorp**, éditeur d'outils de gestion documentaire pour les PME.
-> Le cœur fonctionnel, la suite de tests (344 tests), la conteneurisation et la CI/CD sont en place. Restent les livrables d'examen, une poignée de corrections RGAA et la validation de la pile Docker sur une machine disposant d'un démon — voir [l'état d'avancement](#-état-davancement).
+> Le cœur fonctionnel, la suite de tests (461 tests), la conteneurisation — exécutée et validée sur un démon réel — et la CI/CD sont en place. Restent l'hébergement, les tests de charge et une poignée de compléments AI Act — voir [l'état d'avancement](#-état-davancement).
 
 <details>
 <summary><b>📑 Sommaire</b></summary>
@@ -89,6 +89,7 @@ Les assistants de rédaction existants envoient le texte de l'utilisateur à une
 ### 📁 Gestion documentaire
 - CRUD documents, organisation en dossiers, filtrage
 - Statuts `brouillon` · `a_relire` · `termine`
+- **Export PDF des documents terminés** (Markdown → HTML → PDF)
 - Historique complet de chaque appel IA (avant / après, tokens, insertion effective)
 - Statistiques personnelles
 
@@ -121,6 +122,7 @@ Côté vitrine : pages publiques **Accueil**, **Fonctionnalités**, **Modèles**
 | 🤖 IA | **Ollama en local** (`qwen2.5:3b`) — aucune donnée envoyée à un service tiers |
 | 🔑 Authentification | JWT HS256 (access 15 min) + refresh token `httpOnly` haché, avec rotation |
 | ✉️ Emailing | Flask-Mail, sandbox Mailtrap en développement |
+| 📄 Export PDF | `markdown` puis **WeasyPrint** : le PDF est rendu depuis le même HTML que l'aperçu, donc identique à ce que l'utilisateur a relu |
 | 🧪 Tests | pytest (+ pytest-cov) côté backend, Vitest côté frontend |
 | 🔁 CI / CD | GitHub Actions — Ruff, ESLint, Prettier, types, tests, build des deux images |
 | 🐳 Conteneurisation | Docker Compose : MySQL 8.4, gunicorn, nginx |
@@ -156,7 +158,7 @@ HelpMeDraft/
 │   │   ├── jeu_essai.py         # jeu d'essai reproductible
 │   │   ├── promouvoir.py        # désigne le premier administrateur
 │   │   └── sauvegarde.sh / restauration.sh
-│   ├── tests/                   # 286 tests : unit/, integration/, security/
+│   ├── tests/                   # 403 tests : unit/, integration/, security/
 │   ├── Dockerfile               # gunicorn, utilisateur non privilégié
 │   ├── run.py                   # point d'entrée de développement
 │   └── requirements.txt         # versions figées (reproductibilité CI)
@@ -445,6 +447,7 @@ Base : `http://localhost:5000`. Toutes les routes hors `/auth` exigent l'en-têt
 |---|---|---|
 | `GET` / `POST` | `/documents` | Liste paginée (filtrable par dossier) / création |
 | `GET` / `PUT` / `DELETE` | `/documents/<id>` | Lecture / mise à jour / suppression |
+| `GET` | `/documents/<id>/export.pdf` | **Export PDF**, réservé aux documents au statut `termine`. Renvoie `409` sinon — le refus ne tient pas aux droits de l'appelant mais à l'état du document, qu'il peut changer lui-même |
 | `GET` | `/documents/stats` | Statistiques personnelles |
 | `GET` / `POST` | `/dossiers` | Liste avec compteurs / création |
 | `DELETE` | `/dossiers/<id>` | Suppression (les documents repassent à `id_dossier` nul) |
@@ -498,8 +501,8 @@ Huit entités, identifiants UUID, suppression en cascade depuis `user` — sauf 
 
 ## 🧪 Tests
 
-**344 tests, tous au vert** — 286 pytest, 58 Vitest. Couverture backend **96 %** hors
-`database/jeu_essai.py`, script de peuplement non destiné à être couvert (89 % en le comptant).
+**461 tests, tous au vert** — 403 pytest, 58 Vitest. Couverture backend **95 %** hors
+`database/jeu_essai.py`, script de peuplement non destiné à être couvert (90 % en le comptant).
 
 ```bash
 # Backend — depuis backend/, venv activé
@@ -517,7 +520,7 @@ npm run test:coverage
 | Unitaires (métier, accès aux données) | `backend/tests/unit/` |
 | Intégration (routes HTTP, flux Ollama, traçabilité IA) | `backend/tests/integration/` |
 | Sécurité (17 non-régressions, `-m securite`) | `backend/tests/security/` |
-| Parité ORM / `schema_mysql.sql` (36 contrôles) | `backend/tests/unit/test_schema_parite.py` |
+| Parité ORM / `schema_mysql.sql` (41 contrôles) | `backend/tests/unit/test_schema_parite.py` |
 | Interface et utilitaires | `frontend/src/**/__tests__/` |
 
 L'environnement de test est hermétique : base en mémoire, aucun appel réseau. Le
@@ -560,7 +563,7 @@ L'[audit de sécurité](docs/audit-securite.md) est rédigé : **0 vulnérabilit
 
 - [ ] Chiffrement des données sensibles au repos (3 options chiffrées au § 5.1 de l'audit)
 - [ ] Restreindre l'écoute d'Ollama à `127.0.0.1` (`OLLAMA_HOST=127.0.0.1:11434`)
-- [ ] Épingler les dépendances transitives (Werkzeug non épinglée)
+- [x] ~~Épingler les dépendances transitives~~ — `requirements.lock` les épingle avec leurs empreintes et le `Dockerfile` installe depuis lui ; `requirements.txt`, lui, ne verrouille que les dépendances directes et ne sert qu'au poste de développement
 - [ ] **`/auth/forgot-password` sans délai sur le serveur de courriel** : le courriel part dans le
       fil de la requête, et Flask-Mail n'impose aucun délai. SMTP injoignable → la requête ne se
       termine jamais, et avec deux workers synchrones **l'API entière cesse de répondre**. Route
@@ -625,10 +628,11 @@ L'[audit de sécurité](docs/audit-securite.md) est rédigé : **0 vulnérabilit
 | Traçabilité des contenus générés (AI Act) | ✅ Terminé |
 | Back-office administrateur | ✅ Terminé |
 | Pages légales et vitrine | ✅ Terminé |
+| Export PDF des documents terminés | ✅ Terminé |
 | Correctifs de sécurité (XSS, tokens, CSRF) | ✅ Terminé |
 | Maquettes, captures et veille | ✅ Terminé |
 | Documents de conception (11 diagrammes) | ✅ Terminé |
-| Tests automatisés (344) et plan de tests | ✅ Terminé |
+| Tests automatisés (461) et plan de tests | ✅ Terminé |
 | Migration vers MySQL, droits, sauvegarde et jeu d'essai | ✅ Terminé |
 | Conteneurisation Docker | ✅ Terminée et validée sur un démon réel |
 | Pipeline CI/CD (GitHub Actions, Ruff, ESLint) | ✅ Terminé |
@@ -636,8 +640,9 @@ L'[audit de sécurité](docs/audit-securite.md) est rédigé : **0 vulnérabilit
 | Audit d'accessibilité et correctifs RGAA | ✅ Terminé |
 | Tests système TS-01 à TS-10 | 🔄 7 au vert, 1 défaut trouvé, 2 hors de portée (Ollama, lecteur d'écran) |
 | Tests de charge et d'acceptation | ⬜ À faire |
-| Procédure et scripts de déploiement | ⬜ À faire |
-| Dossier de projet, diaporama, documentation utilisateur | ⬜ À faire |
+| Hébergement sur une adresse durable | ⬜ À faire |
+| Dossier de projet et diaporama de soutenance | ✅ Terminés |
+| Documentation utilisateur | ⬜ À faire |
 
 Le détail, lot par lot, est dans [`TODO.md`](TODO.md).
 
