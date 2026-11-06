@@ -330,6 +330,45 @@ tu l'as compris et pas récité.
 | **Proxy inverse** | Un serveur placé devant l'application, qui reçoit les requêtes et les distribue. **Chez moi** : Nginx sert le front et relaie `/api` vers le back. |
 | **Conteneur / image** | L'**image** est le modèle figé, le **conteneur** est une instance qui tourne. On part toujours de la même image, donc du même état. |
 
+### Conception logicielle
+
+C'est le vocabulaire du REAC : « composants **métier** », « composants d'**accès aux
+données** ». Le jury s'en sert pour vérifier que tu sais *où* vit quoi.
+
+| Terme | À dire |
+|---|---|
+| **Logique métier** | Les règles propres au domaine, indépendantes de la façon dont on y accède. **Chez moi** : « un quota vaut 20 appels par 24 heures », « un jeton rejoué révoque la session ». Elles resteraient vraies si je remplaçais l'API REST par une ligne de commande. |
+| **Composant métier** | Le code qui porte ces règles. **Chez moi** : `auth_service`, `ia_service`, `email_service` — dans `app/services/`. |
+| **Couche de présentation** | La frontière avec l'extérieur : elle désérialise, valide, autorise, choisit le code de statut. **Chez moi** : `app/routes/`. **C'est la seule couche qui parle HTTP.** |
+| **Couche d'accès aux données** | Celle qui sait parler au SGBD, et la seule. **Chez moi** : `database/db.py` — modèles, relations, requêtes. |
+| **Séparation des responsabilités** | Chaque morceau de code a une raison de changer, et une seule. **Chez moi** : la règle vérifiable est **« aucun import Flask dans `services/` »**. |
+| **Couplage / cohésion** | Le **couplage** est ce qui lie deux modules — on le veut faible. La **cohésion** est ce qui lie l'intérieur d'un module — on la veut forte. Un service qui ne connaît pas `request` est faiblement couplé au transport. |
+| **Patron de conception** | Une solution éprouvée à un problème qui revient. On ne les invente pas, on les reconnaît. |
+| **Fabrique** (factory) | Une fonction qui construit l'objet au lieu de le créer au chargement. **Chez moi** : `create_app()` — c'est ce qui permet d'instancier l'application avec une configuration de test. |
+| **Décorateur** | Enrober une fonction pour lui ajouter un comportement sans la modifier. **Chez moi** : `@token_required`, `@limiter.limit` — la préoccupation transversale est écrite une fois. |
+| **Intercepteur** | Le même principe côté client, sur les requêtes. **Chez moi** : l'intercepteur axios injecte le jeton et rejoue l'appel après un 401. |
+| **Préoccupation transversale** | Ce qui concerne toutes les routes sans appartenir à aucune : authentification, journalisation, limitation de débit. D'où décorateurs et intercepteurs. |
+| **Magasin centralisé** (store) | Une source de vérité unique partagée par toutes les vues. **Chez moi** : le store Pinia `auth`. |
+| **Injection de dépendances** | Fournir à un composant ce dont il a besoin, au lieu qu'il aille le chercher. **Chez moi** : les services reçoivent leur session de base en paramètre — c'est ce qui les rend testables. |
+| **Idempotence** | Rejouer l'appel ne change pas le résultat. **Chez moi** : `POST .../insertion` — un second appel renvoie `200` sans réécrire l'horodatage d'origine. |
+| **Transaction** | Un ensemble d'écritures qui réussit ou échoue d'un bloc. |
+| **Échec sécurisé** | En cas de doute, refuser plutôt que continuer dégradé. **Chez moi** : l'application **refuse de démarrer** sans `JWT_SECRET_KEY`. |
+| **Liste blanche** | N'accepter que des valeurs explicitement autorisées, au lieu d'interdire les mauvaises. **Chez moi** : `type_action`, `scope`, `status`, `format`. |
+| **Refactorisation** | Changer la structure du code sans changer son comportement. Les tests sont ce qui rend l'opération sûre. |
+| **Dette technique** | Un raccourci qu'on devra payer plus tard. **Chez moi** : je l'invoque pour refuser un composant NoSQL qui n'aurait servi qu'à remplir une grille. |
+
+> **La question POO.** Elle tombe souvent, parce que le CP 3 évalue « les bonnes pratiques
+> de la POO ». **Dis-le avant qu'on te le trouve.**
+>
+> Ce qui est objet chez toi : les **huit modèles** de `database/db.py` sont des classes qui
+> héritent toutes d'une base commune `Base(DeclarativeBase)` — héritage, encapsulation des
+> colonnes, correspondance classe ↔ table.
+>
+> Ce qui ne l'est pas : **tes services sont des modules de fonctions**. Un choix idiomatique
+> en Python pour des services **sans état** — une classe sans attribut d'instance n'est
+> qu'un espace de noms, et le module en est déjà un. C'est écrit dans ton dossier (§ 5.2),
+> donc assume-le plutôt que de le découvrir à l'oral.
+
 ### Base de données
 
 | Terme | À dire |

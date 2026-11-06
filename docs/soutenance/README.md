@@ -8,7 +8,7 @@ Script oral télégraphique : [`script-oral.md`](./script-oral.md).
 Fiches de révision : [`fiches-revision.md`](./fiches-revision.md) — 28 fiches, une par
 temps fort, à réviser une fois le script connu. La fiche 26 répond à « à quoi
 sert cette technologie ? », outil par outil ; la fiche 27 donne les définitions à
-savoir dire, de l'API REST à l'AI Act.
+savoir dire — de la logique métier à l'AI Act, en huit familles.
 
 `docs/Soutenance-HelpMeDraft.pdf` en est l'export, à garder comme secours le jour J.
 
