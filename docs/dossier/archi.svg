@@ -19,14 +19,14 @@
 
   <style>
     .zone  { fill:#F4F1EA; stroke:#CFC9BC; stroke-width:1 }
-    .ztit  { font-size:10; font-weight:700; fill:#5A554C; letter-spacing:1.3px }
+    .ztit  { font-size:10px; font-weight:700; fill:#5A554C; letter-spacing:1.3px }
     .boite { fill:#FFFFFF; stroke:#111111; stroke-width:1.1 }
-    .titre { font-size:11.5; font-weight:700; fill:#111111 }
-    .corps { font-size:8.8; fill:#44474A }
-    .cle   { font-size:8.8; fill:#C4341C; font-weight:600 }
-    .num   { font-size:9.5; font-weight:700; fill:#FFFFFF }
-    .lab   { font-size:8.8; fill:#5A554C }
-    .pied  { font-size:10.5; fill:#111111 }
+    .titre { font-size:11.5px; font-weight:700; fill:#111111 }
+    .corps { font-size:8.8px; fill:#44474A }
+    .cle   { font-size:8.8px; fill:#C4341C; font-weight:600 }
+    .num   { font-size:9.5px; font-weight:700; fill:#FFFFFF }
+    .lab   { font-size:8.8px; fill:#5A554C }
+    .pied  { font-size:10.5px; fill:#111111 }
   </style>
 
   <!-- ─────────────── zones ─────────────── -->

@@ -576,12 +576,13 @@ Le modèle physique est en § 5.4 et le script de création MySQL en § 5.5 — 
 {
   const s = add("MEDIA", "Conception",
 `[18:15 — 19:00]
-Trois acteurs : le visiteur, l'utilisateur authentifié, l'administrateur.
-Le périmètre de l'utilisateur est strictement limité à ses propres documents et dossiers, ses trois actions IA dans la limite de son quota, et son historique. L'administrateur hérite de tout le périmètre utilisateur et ajoute le back-office.
+Trois acteurs, et une bande par acteur : c'est la bande qui porte le périmètre, ce qui évite de tirer un trait vers chacun des dix-huit cas.
+Le périmètre de l'utilisateur est strictement limité à ses propres documents et dossiers, ses trois actions IA dans la limite de son quota, et son historique. À l'intérieur de sa bande, les cas sont groupés par thème : mes documents, l'assistance IA, ma session. L'administrateur hérite de tout ce qui précède et ajoute le back-office.
+En bas, deux cas à part : vérifier le quota et s'authentifier. Aucun acteur ne les déclenche lui-même — ils sont inclus par les cas qui en dépendent, et la liste de ces cas est écrite sous l'ovale plutôt que tirée en flèches.
 Le moteur d'inférence apparaît comme un système externe sollicité par l'API — jamais par le navigateur, c'est la cohérence avec l'architecture.
 Le cas le plus significatif est la génération d'une assistance IA : c'est celui que je détaille en diagramme de séquence, et c'est aussi celui sur lequel porte mon jeu d'essai.`);
   s.addText("Les cas d'utilisation", { placeholder: "title" });
-  media(s, { file: `${R}/docs/dossier/fig/usecase.png`, ratio: 1.37, y: 1.45, maxH: 4.9, name: "cas d'utilisation" });
+  media(s, { file: `${R}/docs/dossier/fig/usecase.png`, ratio: 1.855, y: 1.45, maxH: 4.9, name: "cas d'utilisation" });
   s.addText("Diagramme des cas d'utilisation (dossier § 5.6).", { placeholder: "caption" });
 }
 
@@ -590,11 +591,11 @@ Le cas le plus significatif est la génération d'une assistance IA : c'est celu
 `[19:00 — 20:30]
 Le diagramme de séquence du cas le plus significatif : la génération d'une assistance IA.
 Suivez l'ordre des contrôles, il n'est pas arbitraire. Authentification, puis propriété du document, puis validation des entrées, puis quota — et seulement ensuite l'appel au modèle. Chaque contrôle est placé avant celui qui coûte plus cher. Vérifier le quota après l'inférence aurait permis de consommer le moteur sans jamais être compté.
-La journalisation intervient après la réponse du modèle, et elle enregistre le contenu avant et après.
+Lisez les numéros, et surtout les étapes 12 et 17. L'entrée du journal est créée AVANT l'appel au modèle, et pas après : c'est elle qui fournit l'identifiant que la réponse renvoie au client, et dont il se sert ensuite pour signaler l'insertion. Si le modèle ne répond pas, cette entrée est annulée — un échec ne coûte donc aucun quota. Le test TI-50 l'exige explicitement.
 Le cas d'erreur est traité : si Ollama ne répond pas, la couche ia_service traduit l'exception réseau en un message lisible, et aucune ligne n'est écrite dans le journal — sinon un échec consommerait du quota.
 Et la décision finale reste à l'utilisateur : rien n'est appliqué au document automatiquement. C'est à la fois une exigence d'ergonomie et une mesure de sécurité — ne jamais appliquer automatiquement la sortie d'un modèle.`);
   s.addText("Le diagramme de séquence — génération IA", { placeholder: "title" });
-  media(s, { file: `${R}/docs/dossier/fig/seq-uc10.png`, ratio: 1.59, y: 1.45, maxH: 4.9, name: "diagramme de sequence" });
+  media(s, { file: `${R}/docs/dossier/fig/seq-uc10.png`, ratio: 1.852, y: 1.45, maxH: 4.9, name: "diagramme de sequence" });
   s.addText("Séquence — génération d'une assistance IA (dossier § 5.7).", { placeholder: "caption" });
 }
 
@@ -734,16 +735,16 @@ Le test correspondant est le cas JE-07 du jeu d'essai, et mes données de test c
 
   const pts = [
     ["Une agrégation, pas un compteur", "Un compteur stocké se désynchronise ; une agrégation est juste par construction."],
-    ["Une fenêtre glissante", "« 20 par 24 h », pas « par jour » : sinon 40 appels entre 23 h et 1 h."],
+    ["Une fenêtre glissante", "Le cahier des charges dit « 20 requêtes par 24 heures », pas « par jour ». Avec un compteur remis à zéro à minuit, on fait 20 appels à 23 h et 20 autres à 1 h : 40 en deux heures, sans jamais dépasser la règle. La fenêtre part donc de l'instant présent, moins 24 heures."],
     ["429, pas 403", "« Réessayez plus tard », et non « vous n'avez pas le\u00A0droit\u00A0»."],
   ];
+  const hauteurs = [0.52, 1.30, 0.42];   // le point du milieu porte l'explication
+  let yp = 1.95;
   pts.forEach((p, i) => {
-    const y = 1.95 + i * 1.32;
-    s.addText(p[0], { x: 8.2, y, w: 4.5, h: 0.36, fontSize: 15, bold: true, color: THEME.colors.accent1, margin: 0, isTextBox: true });
-    s.addText(p[1], { x: 8.2, y: y + 0.38, w: 4.5, h: 0.85, fontSize: 14, color: C.text1, margin: 0, isTextBox: true });
+    s.addText(p[0], { x: 8.2, y: yp, w: 4.5, h: 0.34, fontSize: 15, bold: true, color: THEME.colors.accent1, margin: 0, isTextBox: true });
+    s.addText(p[1], { x: 8.2, y: yp + 0.36, w: 4.5, h: hauteurs[i], fontSize: 13.5, color: C.text1, valign: "top", margin: 0, isTextBox: true, lineSpacing: 16 });
+    yp += 0.36 + hauteurs[i] + 0.42;
   });
-  s.addText("Le front affiche le quota restant — mais le contrôle qui compte est celui du serveur.",
-    { x: M, y: 6.0, w: CW, h: 0.4, fontSize: 13.5, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "note quota" });
 }
 
 {
@@ -795,9 +796,9 @@ La troisième carte est la liste de contrôle d'une mise en ligne : passer APP_E
   s.addText("Trois services, trois travaux de CI, et une liste de contrôle pour une mise en ligne (dossier § 6).", { placeholder: "lead" });
 
   card(s, { x: M, y: 1.95, w: 3.87, h: 3.15, badge: "3×", title: "Conteneurisation",
-    body: "MySQL 8.4, volume persistant et sonde de santé.\nBackend sous Gunicorn, utilisateur non privilégié.\nFrontend Vite puis Nginx, 82,9 Mo.\n\nSecrets en ${VAR:?} : la composition échoue si la variable manque." });
+    body: "MySQL 8.4 — volume persistant, sonde de santé.\n\nBackend — Gunicorn, utilisateur non privilégié.\n\nFrontend — build Vite, servi par Nginx, 82,9 Mo." });
   card(s, { x: M + 4.11, y: 1.95, w: 3.87, h: 3.15, badge: "CI", title: "Intégration continue",
-    body: "GitHub Actions à chaque push et chaque pull request, en trois travaux parallèles : backend (Ruff, pytest), frontend (ESLint, vue-tsc, Vitest, build), Docker (composition et images).\n\nInstallation par npm ci --ignore-scripts." });
+    body: "GitHub Actions à chaque push et chaque pull request, en trois travaux parallèles : backend (Ruff, pytest), frontend (ESLint, vue-tsc, Vitest, build), Docker (composition et images).\n\nEnchaînés, un échec du frontend masquait l'état du backend." });
   card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 3.15, badge: "→", accent: THEME.colors.accent4, title: "Le jour d'une mise en ligne",
     body: "APP_ENV=production, qui active Secure sur le cookie.\nUne JWT_SECRET_KEY distincte.\nCORS_ORIGINS au domaine réel.\nCompte MySQL sans droits DDL.\nTLS devant l'application.\nRedis pour le limiteur de débit." });
 
@@ -865,14 +866,16 @@ Une précision sur la purge : la tâche purge_expired_sessions filtre sur l'expi
 
   const el = [
     ["Access token", "JWT HS256, 15 minutes, en-tête Authorization, jamais stocké en base."],
-    ["Refresh token", "64 octets aléatoires, cookie httpOnly / Secure / SameSite=Strict / path=/auth, 7 jours."],
+    ["Refresh token", "64 octets tirés au hasard, déposés dans un cookie httpOnly : le JavaScript de la page ne peut pas le lire, donc une faille XSS ne suffit pas à le voler. SameSite=Strict écarte les requêtes venues d'un autre site, et path=/auth fait qu'il n'est envoyé qu'aux deux routes qui en ont besoin. Il vit 7 jours, et reste révocable à tout instant — c'est lui qui rend la déconnexion réelle."],
     ["Stockage", "Empreinte SHA-256 uniquement : une fuite de la base ne permet pas de rejouer une session."],
   ];
+  const hb = [1.0, 2.05, 1.05];          // le refresh token porte l'explication
+  let ye = 1.95;
   el.forEach((e, i) => {
-    const y = 1.95 + i * 1.6;
-    bloc(s, { x: M, y, w: 6.1, h: 1.3, fill: C.background2, name: `session ${e[0]}` });
-    s.addText(e[0], { x: M + 0.28, y: y + 0.18, w: 5.5, h: 0.34, fontSize: 16, bold: true, color: THEME.colors.accent1, margin: 0, isTextBox: true });
-    s.addText(e[1], { x: M + 0.28, y: y + 0.56, w: 5.54, h: 0.6, fontSize: 14.5, color: C.text1, valign: "top", margin: 0, isTextBox: true });
+    bloc(s, { x: M, y: ye, w: 6.1, h: hb[i], fill: C.background2, name: `session ${e[0]}` });
+    s.addText(e[0], { x: M + 0.28, y: ye + 0.14, w: 5.5, h: 0.32, fontSize: 15.5, bold: true, color: THEME.colors.accent1, margin: 0, isTextBox: true });
+    s.addText(e[1], { x: M + 0.28, y: ye + 0.5, w: 5.54, h: hb[i] - 0.62, fontSize: 13.5, color: C.text1, valign: "top", margin: 0, isTextBox: true, lineSpacing: 16 });
+    ye += hb[i] + 0.18;
   });
 
   code(s, { x: 7.0, y: 1.95, w: 5.7, h: 3.0, file: "app/services/auth_service.py", size: 11, lines: [
@@ -967,26 +970,34 @@ C'est ce que j'ai appris en construisant ce jeu : un jeu de données, ce n'est p
 {
   const s = add("CONTENT", "Tests, veille et bilan",
 `[36:30 — 38:30]
-Ma veille porte sur trois périmètres : les dépendances, la sécurité applicative, le réglementaire. Le principe est de surveiller ce que le projet utilise réellement — une alerte sur une bibliothèque absente du projet n'est pas une information.
+Je décris d'abord la méthode, parce que c'est elle qu'on évalue — les trouvailles viennent après.
+Trois périmètres, chacun avec ses sources et son rythme. Les dépendances : la base d'avis de GitHub et les audits des gestionnaires de paquets, consultés à chaque installation puis revus chaque semaine. La sécurité applicative : NVD et CVE.org, les alertes CISA, l'OWASP Top 10, les bulletins du CERT-FR — chaque semaine. Le réglementaire : la CNIL, la Commission européenne, numerique.gouv.fr — chaque mois, parce que ces textes bougent plus lentement.
+Le principe directeur est une règle de tri : je ne retiens une entrée que si le composant figure dans requirements.txt, dans package.json ou dans l'environnement d'exécution. Surveiller l'actualité de la sécurité en général produit du bruit ; surveiller ce que le projet utilise réellement produit des décisions. Et chaque entrée se termine par un verdict d'applicabilité — ma version est-elle dans la plage affectée, et les conditions d'exploitation sont-elles réunies ici ? C'est ce verdict qui distingue une veille d'une collection de liens.
 Huit entrées sur six mois, trois ont appelé une action. C'est la mesure de l'utilité de l'exercice.
+Si on me demande les trouvailles : DOMPurify, 5,1 — la bibliothèque que j'avais ajoutée pour corriger une faille XSS en portait une elle-même ; mise à jour en 3.4.16. Ollama, 9,1 — atténuée parce que le serveur n'écoute que sur localhost ; mise à jour quand même. L'AI Act, entré en application le 2 août 2026, après le cahier des charges. Et axios, le 31 mars : deux versions piégées publiées après la compromission d'un compte mainteneur npm, projet non affecté, et c'est le package-lock.json commité qui permet de le prouver après coup.
 Le premier constat est que la sévérité publiée ne prédit pas l'impact réel. La CVE la plus sévère de ma liste, 9,1 sur Ollama, était atténuée par ma configuration — le serveur n'écoutait que sur localhost. La plus modérée, 5,1 sur DOMPurify, affectait directement ma version.
 DOMPurify est l'entrée la plus instructive, parce que c'est la bibliothèque que j'avais ajoutée précisément pour corriger une faille XSS. Découvrir qu'elle porte elle-même une vulnérabilité de contournement établit un principe : une mesure de sécurité est un composant comme un autre, avec sa propre surface d'attaque. Ajouter une bibliothèque d'assainissement ne clôt pas le sujet XSS, elle le déplace vers la maintenance de cette bibliothèque. D'où la valeur de la défense en profondeur : je stocke du Markdown brut, pas du HTML — si DOMPurify échoue, la donnée stockée n'est toujours pas exécutable.
 Ollama éclaire rétrospectivement mon choix d'architecture : héberger soi-même, c'est aussi maintenir soi-même. La décision reste la bonne au regard du RGPD, mais elle se paie en maintenance, et le dire est plus honnête que de la présenter comme un choix sans contrepartie.
 Et l'AI Act justifie à lui seul la veille comme livrable : le cahier des charges, rédigé avant l'entrée en application, ne mentionne que le RGPD. Sans ce suivi, j'aurais livré une application non conforme à une obligation entrée en vigueur trois semaines avant la fin du développement.`);
-  s.addText("La veille technologique", { placeholder: "title" });
-  s.addText("Huit entrées entre avril et septembre 2026, trois ont appelé une action. Journal complet : docs/veille-helpmedraft.html", { placeholder: "lead" });
+  s.addText("Comment je fais ma veille", { placeholder: "title" });
+  s.addText("Trois périmètres, chacun avec ses sources et son rythme. Journal complet : docs/veille-helpmedraft.html", { placeholder: "lead" });
 
-  card(s, { x: M, y: 1.95, w: 3.87, h: 2.9, badge: "5.1", accent: THEME.colors.accent3, title: "DOMPurify — corrigé",
-    body: "CVE-2026-0540, contournement du nettoyage XSS. Version affectée : la mienne. Mise à jour en 3.4.16 le 02/10/2026.\n\nUne mesure de sécurité est un composant comme un autre." });
-  card(s, { x: M + 4.11, y: 1.95, w: 3.87, h: 2.9, badge: "9.1", accent: THEME.colors.accent3, title: "Ollama — corrigé",
-    body: "CVE-2026-7482, lecture hors limites sans authentification. Atténuée par l'écoute sur localhost seule. Mise à jour en 0.35.1.\n\nHéberger soi-même, c'est maintenir soi-même." });
-  card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 2.9, badge: "UE", accent: THEME.colors.accent4, title: "AI Act — en cours",
-    body: "Transparence applicable depuis le 02/08/2026. Partiellement couvert ; trois compléments identifiés : mention au premier usage, marquage des passages générés, clause CGU." });
+  card(s, { x: M, y: 1.95, w: 3.87, h: 2.5, badge: "1", title: "Les dépendances",
+    body: "GitHub Advisory Database, et les avis d'audit des gestionnaires de paquets (npm, pip).\n\nÀ chaque installation, puis une revue chaque semaine." });
+  card(s, { x: M + 4.11, y: 1.95, w: 3.87, h: 2.5, badge: "2", title: "La sécurité applicative",
+    body: "NVD et CVE.org, les alertes CISA, l'OWASP Top 10, les bulletins du CERT-FR (ANSSI).\n\nChaque semaine." });
+  card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 2.5, badge: "3", title: "Le réglementaire",
+    body: "La CNIL, la Commission européenne pour l'AI Act, numerique.gouv.fr pour le RGAA.\n\nChaque mois : c'est le rythme auquel ces textes bougent." });
 
   s.addText([
-    { text: "axios, 31 mars 2026 — ", options: { bold: true } },
-    { text: "deux versions piégées publiées après la compromission d'un compte mainteneur npm. Projet non affecté. Pas de CVE : ce n'est pas un défaut de code, c'est le canal de distribution qui a été attaqué. C'est le fichier package-lock.json, commité, qui permet de le prouver après coup.", options: {} },
-  ], { x: M, y: 5.2, w: CW, h: 1.1, fontSize: 14.5, color: THEME.colors.dk1, margin: 0, isTextBox: true, objectName: "axios" });
+    { text: "La règle de tri — ", options: { bold: true, color: THEME.colors.accent1 } },
+    { text: "je ne retiens une entrée que si le composant figure dans requirements.txt, dans package.json ou dans l'environnement d'exécution. Une alerte sur une bibliothèque que je n'utilise pas n'est pas une information. Et chaque entrée se termine par un verdict : ma version est-elle dans la plage affectée, et les conditions d'exploitation sont-elles réunies ici ?", options: {} },
+  ], { x: M, y: 4.72, w: CW, h: 0.84, fontSize: 13.5, color: THEME.colors.dk1, margin: 0, isTextBox: true, lineSpacing: 16, objectName: "regle de tri" });
+
+  s.addText([
+    { text: "Ce que ça a produit — ", options: { bold: true, color: THEME.colors.accent1 } },
+    { text: "huit entrées en six mois, trois ont appelé une action : DOMPurify mis à jour, Ollama mis à jour, l'AI Act entré dans le périmètre. C'est cette proportion qui mesure l'utilité de l'exercice.", options: {} },
+  ], { x: M, y: 5.72, w: CW, h: 0.6, fontSize: 13.5, color: THEME.colors.dk1, margin: 0, isTextBox: true, lineSpacing: 16, objectName: "rendement" });
 }
 
 {
