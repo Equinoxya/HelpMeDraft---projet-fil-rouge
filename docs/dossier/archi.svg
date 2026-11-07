@@ -1,91 +1,114 @@
 <svg viewBox="0 0 980 430" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif">
+  <!--
+    Architecture logicielle — lecture de gauche à droite.
+
+    La version précédente empilait trois colonnes reliées par des flèches qui
+    se croisaient : on ne voyait pas quelle couche appelait quel service. Ici
+    chaque dépendance est posée à la hauteur de la couche qui l'appelle, le
+    chemin d'une requête se suit en trois temps numérotés, et chaque bloc tient
+    en deux lignes — la troisième, en brique, porte le point à retenir.
+  -->
   <defs>
-    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#44525f"/>
+    <marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#111111"/>
+    </marker>
+    <marker id="flr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#C4341C"/>
     </marker>
   </defs>
 
-  <!-- groupes -->
-  <rect x="14" y="40" width="286" height="330" rx="6" fill="#f3f7fb" stroke="#c4d4e2"/>
-  <text x="26" y="60" font-size="10.5" font-weight="600" fill="#1f3c56">POSTE CLIENT — navigateur</text>
+  <style>
+    .zone  { fill:#F4F1EA; stroke:#CFC9BC; stroke-width:1 }
+    .ztit  { font-size:10; font-weight:700; fill:#5A554C; letter-spacing:1.3px }
+    .boite { fill:#FFFFFF; stroke:#111111; stroke-width:1.1 }
+    .titre { font-size:11.5; font-weight:700; fill:#111111 }
+    .corps { font-size:8.8; fill:#44474A }
+    .cle   { font-size:8.8; fill:#C4341C; font-weight:600 }
+    .num   { font-size:9.5; font-weight:700; fill:#FFFFFF }
+    .lab   { font-size:8.8; fill:#5A554C }
+    .pied  { font-size:10.5; fill:#111111 }
+  </style>
 
-  <rect x="352" y="40" width="286" height="330" rx="6" fill="#f2f8f3" stroke="#bcd9c3"/>
-  <text x="364" y="60" font-size="10.5" font-weight="600" fill="#1f5b32">SERVEUR APPLICATIF — Flask</text>
+  <!-- ─────────────── zones ─────────────── -->
+  <rect class="zone" x="16"  y="34" width="218" height="340" rx="4"/>
+  <text class="ztit" x="28"  y="53">NAVIGATEUR</text>
 
-  <rect x="690" y="40" width="276" height="330" rx="6" fill="#fdf7ef" stroke="#e8d2ae"/>
-  <text x="702" y="60" font-size="10.5" font-weight="600" fill="#8a5a12">SERVICES</text>
+  <rect class="zone" x="306" y="34" width="330" height="340" rx="4"/>
+  <text class="ztit" x="318" y="53">API — FLASK</text>
 
-  <!-- client -->
-  <rect x="30" y="76" width="254" height="78" rx="4" fill="#fff" stroke="#9ab5cc"/>
-  <text x="42" y="96" font-size="10.5" font-weight="600" fill="#1f3c56">Couche présentation</text>
-  <text x="42" y="113" font-size="9.3" fill="#44525f">vues et composants — Vue 3, Tailwind CSS</text>
-  <text x="42" y="128" font-size="9.3" fill="#44525f">affichage, saisie, restitution des erreurs</text>
-  <text x="42" y="144" font-size="9.3" fill="#b8341c">assainissement du rendu Markdown</text>
+  <rect class="zone" x="708" y="34" width="256" height="340" rx="4"/>
+  <text class="ztit" x="720" y="53">DÉPENDANCES</text>
 
-  <rect x="30" y="168" width="254" height="72" rx="4" fill="#fff" stroke="#9ab5cc"/>
-  <text x="42" y="188" font-size="10.5" font-weight="600" fill="#1f3c56">État applicatif</text>
-  <text x="42" y="205" font-size="9.3" fill="#44525f">magasin centralisé — Pinia</text>
-  <text x="42" y="220" font-size="9.3" fill="#b8341c">jeton d'accès conservé en mémoire,</text>
-  <text x="42" y="233" font-size="9.3" fill="#b8341c">jamais dans le stockage du navigateur</text>
+  <!-- ─────────────── navigateur ─────────────── -->
+  <rect class="boite" x="30" y="70" width="190" height="62" rx="3"/>
+  <text class="titre" x="43" y="90">Vue 3 · TypeScript</text>
+  <text class="corps" x="43" y="106">Les 15 écrans.</text>
+  <text class="corps" x="43" y="121">Routeur : trois gardes.</text>
 
-  <rect x="30" y="254" width="254" height="72" rx="4" fill="#fff" stroke="#9ab5cc"/>
-  <text x="42" y="274" font-size="10.5" font-weight="600" fill="#1f3c56">Client HTTP</text>
-  <text x="42" y="291" font-size="9.3" fill="#44525f">un module de service par domaine</text>
-  <text x="42" y="306" font-size="9.3" fill="#44525f">intercepteurs : jeton injecté,</text>
-  <text x="42" y="319" font-size="9.3" fill="#44525f">session renouvelée sur réponse 401</text>
+  <rect class="boite" x="30" y="146" width="190" height="62" rx="3"/>
+  <text class="titre" x="43" y="166">Pinia — la session</text>
+  <text class="corps" x="43" y="182">Le jeton d'accès</text>
+  <text class="cle"   x="43" y="197">reste en mémoire.</text>
 
-  <!-- serveur -->
-  <rect x="368" y="76" width="254" height="78" rx="4" fill="#fff" stroke="#9cc3a8"/>
-  <text x="380" y="96" font-size="10.5" font-weight="600" fill="#1f5b32">Couche contrôleur</text>
-  <text x="380" y="113" font-size="9.3" fill="#44525f">cinq plans d'URL</text>
-  <text x="380" y="128" font-size="9.3" fill="#b8341c">valide, autorise, choisit le code de statut</text>
-  <text x="380" y="144" font-size="9.3" fill="#44525f">seule couche qui connaisse le protocole</text>
+  <rect class="boite" x="30" y="222" width="190" height="62" rx="3"/>
+  <text class="titre" x="43" y="242">axios — les appels</text>
+  <text class="corps" x="43" y="258">Un intercepteur unique.</text>
+  <text class="corps" x="43" y="273">Rejoue après un 401.</text>
 
-  <rect x="368" y="168" width="254" height="72" rx="4" fill="#fff" stroke="#9cc3a8"/>
-  <text x="380" y="188" font-size="10.5" font-weight="600" fill="#1f5b32">Couche métier</text>
-  <text x="380" y="205" font-size="9.3" fill="#44525f">authentification · inférence · messagerie</text>
-  <text x="380" y="220" font-size="9.3" fill="#44525f">règles de gestion indépendantes</text>
-  <text x="380" y="233" font-size="9.3" fill="#44525f">du transport</text>
+  <!-- ─────────────── 1 · navigateur → API ─────────────── -->
+  <line x1="234" y1="101" x2="300" y2="101" stroke="#111111" stroke-width="1.6" marker-end="url(#fl)"/>
+  <circle cx="243" cy="84" r="8" fill="#C4341C"/>
+  <text class="num" x="243" y="87.5" text-anchor="middle">1</text>
+  <text class="lab" x="255" y="87.5">HTTPS</text>
 
-  <rect x="368" y="254" width="254" height="72" rx="4" fill="#fff" stroke="#9cc3a8"/>
-  <text x="380" y="274" font-size="10.5" font-weight="600" fill="#1f5b32">Couche d'accès aux données</text>
-  <text x="380" y="291" font-size="9.3" fill="#44525f">sept modèles, SQLAlchemy 2.0</text>
-  <text x="380" y="306" font-size="9.3" fill="#b8341c">requêtes paramétrées exclusivement,</text>
-  <text x="380" y="319" font-size="9.3" fill="#b8341c">contraintes d'intégrité portées ici</text>
+  <!-- ─────────────── les trois couches ─────────────── -->
+  <rect class="boite" x="320" y="70" width="302" height="66" rx="3"/>
+  <text class="titre" x="334" y="90">Routes</text>
+  <text class="corps" x="334" y="106">Valide l'entrée, autorise, compte le quota.</text>
+  <text class="cle"   x="334" y="124">Seule couche qui connaît HTTP.</text>
 
-  <!-- services -->
-  <rect x="706" y="76" width="244" height="62" rx="4" fill="#fff" stroke="#dcc08f"/>
-  <text x="718" y="96" font-size="10.5" font-weight="600" fill="#8a5a12">Base relationnelle</text>
-  <text x="718" y="113" font-size="9.3" fill="#44525f">MySQL 8.4 — InnoDB, utf8mb4</text>
-  <text x="718" y="128" font-size="9.3" fill="#44525f">comptes de service au moindre privilège</text>
+  <line x1="471" y1="136" x2="471" y2="174" stroke="#111111" stroke-width="1.6" marker-end="url(#fl)"/>
+  <circle cx="453" cy="155" r="8" fill="#C4341C"/>
+  <text class="num" x="453" y="158.5" text-anchor="middle">2</text>
 
-  <rect x="706" y="168" width="244" height="62" rx="4" fill="#fff" stroke="#dcc08f"/>
-  <text x="718" y="188" font-size="10.5" font-weight="600" fill="#8a5a12">Service d'inférence</text>
-  <text x="718" y="205" font-size="9.3" fill="#44525f">Ollama, exécuté localement</text>
-  <text x="718" y="220" font-size="9.3" fill="#b8341c">jamais exposé au réseau public</text>
+  <rect class="boite" x="320" y="178" width="302" height="66" rx="3"/>
+  <text class="titre" x="334" y="198">Services — les règles métier</text>
+  <text class="corps" x="334" y="214">Mots de passe, jetons, prompts, courriels.</text>
+  <text class="cle"   x="334" y="232">Aucun import Flask ici.</text>
 
-  <rect x="706" y="254" width="244" height="62" rx="4" fill="#fff" stroke="#dcc08f"/>
-  <text x="718" y="274" font-size="10.5" font-weight="600" fill="#8a5a12">Relais de messagerie</text>
-  <text x="718" y="291" font-size="9.3" fill="#44525f">SMTP — réinitialisation de mot de passe</text>
-  <text x="718" y="306" font-size="9.3" fill="#44525f">seul tiers destinataire d'une donnée</text>
+  <line x1="471" y1="244" x2="471" y2="282" stroke="#111111" stroke-width="1.6" marker-end="url(#fl)"/>
+  <circle cx="453" cy="263" r="8" fill="#C4341C"/>
+  <text class="num" x="453" y="266.5" text-anchor="middle">3</text>
 
-  <!-- liens internes client -->
-  <line x1="157" y1="154" x2="157" y2="168" stroke="#44525f" stroke-width="1.1" marker-end="url(#a1)" marker-start="url(#a1)"/>
-  <line x1="157" y1="240" x2="157" y2="254" stroke="#44525f" stroke-width="1.1" marker-end="url(#a1)" marker-start="url(#a1)"/>
-  <!-- liens internes serveur -->
-  <line x1="495" y1="154" x2="495" y2="168" stroke="#44525f" stroke-width="1.1" marker-end="url(#a1)"/>
-  <line x1="495" y1="240" x2="495" y2="254" stroke="#44525f" stroke-width="1.1" marker-end="url(#a1)"/>
+  <rect class="boite" x="320" y="286" width="302" height="66" rx="3"/>
+  <text class="titre" x="334" y="306">Accès aux données</text>
+  <text class="corps" x="334" y="322">SQLAlchemy — les 8 modèles.</text>
+  <text class="cle"   x="334" y="340">Requêtes paramétrées, sans exception.</text>
 
-  <!-- client -> serveur -->
-  <path d="M284,290 L320,290 L320,118 L368,118" fill="none" stroke="#b8341c" stroke-width="1.5" marker-end="url(#a1)"/>
-  <text x="332" y="206" font-size="8.8" fill="#b8341c" font-weight="600" transform="rotate(-90 332 206)">HTTPS · JSON</text>
-  <text x="344" y="206" font-size="8.4" fill="#b8341c" transform="rotate(-90 344 206)">jeton + témoin HttpOnly</text>
+  <!-- ─────────────── dépendances, à hauteur de leur appelant ─────────────── -->
+  <rect class="boite" x="722" y="166" width="228" height="58" rx="3"/>
+  <text class="titre" x="736" y="186">Ollama</text>
+  <text class="corps" x="736" y="202">Modèle qwen2.5:3b.</text>
+  <text class="cle"   x="736" y="217">Sur la machine, non exposé.</text>
 
-  <!-- serveur -> services -->
-  <line x1="622" y1="107" x2="706" y2="107" stroke="#44525f" stroke-width="1.2" marker-end="url(#a1)"/>
-  <path d="M622,200 L664,200 L664,199 L706,199" fill="none" stroke="#44525f" stroke-width="1.2" marker-end="url(#a1)"/>
-  <path d="M622,215 L664,215 L664,285 L706,285" fill="none" stroke="#44525f" stroke-width="1.2" marker-end="url(#a1)"/>
-  <path d="M622,290 L660,290 L660,122 L706,122" fill="none" stroke="#44525f" stroke-width="1.2" marker-end="url(#a1)"/>
+  <rect class="boite" x="722" y="238" width="228" height="48" rx="3"/>
+  <text class="titre" x="736" y="258">Serveur de courriel</text>
+  <text class="corps" x="736" y="274">Réinitialisation du mot de passe.</text>
 
-  <text x="14" y="392" font-size="9" fill="#8795a1">Trois processus distincts communiquent par le réseau. Chacun peut être déplacé sur une autre machine sans modification du code des autres : seule la configuration change.</text>
+  <rect class="boite" x="722" y="300" width="228" height="48" rx="3"/>
+  <text class="titre" x="736" y="320">MySQL 8.4</text>
+  <text class="corps" x="736" y="336">Les 8 tables applicatives.</text>
+
+  <!-- Services → Ollama et courriel ; données → MySQL. Aucun croisement. -->
+  <path d="M622 203 L672 203 L672 195 L716 195" fill="none" stroke="#111111" stroke-width="1.4" marker-end="url(#fl)"/>
+  <path d="M622 226 L672 226 L672 262 L716 262" fill="none" stroke="#111111" stroke-width="1.4" marker-end="url(#fl)"/>
+  <line x1="622" y1="324" x2="716" y2="324" stroke="#111111" stroke-width="1.4" marker-end="url(#fl)"/>
+
+  <!-- ─────────────── ce qui ne se produit jamais ─────────────── -->
+  <path d="M125 290 L125 392 L836 392 L836 354" fill="none" stroke="#C4341C" stroke-width="1.2"
+        stroke-dasharray="5 4" marker-end="url(#flr)"/>
+  <rect x="300" y="382" width="330" height="20" fill="#F4F1EA"/>
+  <text x="310" y="396" font-size="9.8" font-weight="700" fill="#C4341C">✕ jamais : le navigateur n'atteint ni la base ni Ollama</text>
+
+  <text class="pied" x="16" y="421">Tout passe par l'API, qui authentifie, vérifie la propriété du document et compte le quota avant d'appeler quoi que ce soit.</text>
 </svg>

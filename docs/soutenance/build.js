@@ -305,10 +305,6 @@ Dernier point, et il est important pour la suite : les obligations de transparen
   card(s, { x: M + 6.15, y: 1.95, w: 5.95, h: 3.75, badge: "NF", title: "Exigences non fonctionnelles",
     body: "Sécurité — hachage, JWT, protection XSS / CSRF / injections\nAccessibilité — RGAA 4.1.2, contrastes, clavier, ARIA\nRGPD — consentement explicite, aucune donnée transmise à un tiers\nÉco-conception — chargement différé, dépendances limitées, compression\nAI Act — transparence, applicable depuis le 2 août 2026 (hors cahier des charges)" });
 
-  s.addText([
-    { text: "Hors périmètre, assumé :  ", options: { bold: true, color: THEME.colors.accent5 } },
-    { text: "facturation et abonnements · collaboratif temps réel · application mobile native · export bureautique propriétaire · hébergement cloud de production.", options: { color: THEME.colors.accent5 } },
-  ], { x: M, y: 6.0, w: CW, h: 0.6, fontSize: 14, margin: 0, isTextBox: true, objectName: "hors perimetre" });
 }
 
 // ═══════════════════════════ 3. Gestion de projet ═══════════════════════════
@@ -334,10 +330,9 @@ Sur la gestion de versions : une branche par fonctionnalité, des commits conven
 Travaillant seule, j'ai remplacé les rituels d'équipe par un point hebdomadaire avec mon référent et des revues croisées avec la promotion sur la chaîne d'authentification.`);
   s.addText("La méthode et le planning", { placeholder: "title" });
 
-  stat(s, { x: M, y: 1.42, w: 2.9, h: 1.25, value: "1 semaine", label: "durée d'une itération" });
-  stat(s, { x: M + 3.07, y: 1.42, w: 2.9, h: 1.25, value: "6 / 6", label: "étapes du plan engagées" });
-  stat(s, { x: M + 6.14, y: 1.42, w: 2.9, h: 1.25, value: "13", label: "lots fonctionnels terminés" });
-  stat(s, { x: M + 9.21, y: 1.42, w: 2.89, h: 1.25, value: "2", label: "points restants, documentés" });
+  stat(s, { x: M, y: 1.42, w: 3.9, h: 1.25, value: "1 semaine", label: "durée d'une itération" });
+  stat(s, { x: M + 4.1, y: 1.42, w: 3.9, h: 1.25, value: "6 / 6", label: "étapes du plan engagées" });
+  stat(s, { x: M + 8.2, y: 1.42, w: 3.9, h: 1.25, value: "13", label: "lots fonctionnels terminés" });
 
   media(s, { file: `${R}/docs/conception/diagrammes/planning-initial-gantt.png`, ratio: 2.48, y: 2.95, maxH: 3.4, name: "planning initial" });
   s.addText("Planning initial repris du cahier des charges et découpé en lots verticaux.", { placeholder: "caption" });
@@ -355,11 +350,11 @@ Les trois se rejoignent sur un même point, et c'est le fil du projet : chaque e
   s.addText("Les trois décisions qui structurent le projet.", { placeholder: "lead" });
 
   card(s, { x: M, y: 2.15, w: 3.87, h: 3.25, badge: "1", title: "Session révocable",
-    body: "Un JWT seul ne se révoque pas.\n\nTable user_session et rotation des refresh tokens : rejouer un jeton déjà consommé est traité comme un vol, et toutes les sessions du compte tombent." });
+    body: "Un JWT est signé, pas enregistré : le serveur le vérifie sans rien stocker. Personne ne peut donc l'annuler avant son échéance — ni moi, ni l'utilisateur qui se croit déconnecté.\n\nD'où une table user_session, qui redonne la main : chaque session y est inscrite et peut être révoquée.\n\nEt une rotation : chaque usage invalide le jeton précédent. Rejouer un jeton déjà consommé est traité comme un vol, et toutes les sessions du compte tombent." });
   card(s, { x: M + 4.11, y: 2.15, w: 3.87, h: 3.25, badge: "2", title: "Quota par agrégation",
     body: "Comptage sur le journal des appels, pas un compteur stocké sur l'utilisateur.\n\nLa valeur ne peut pas se désynchroniser, et l'historique reste auditable — ce qui sert aussi la traçabilité." });
   card(s, { x: M + 8.22, y: 2.15, w: 3.88, h: 3.25, badge: "3", title: "Confidentialité",
-    body: "Inférence locale : les contenus ne quittent pas l'infrastructure. L'exigence est satisfaite par construction.\n\nContreparties assumées — latence, qualité, maintenance." });
+    body: "Plutôt qu'anonymiser des textes libres — ce qui n'est jamais exhaustif —, le modèle est hébergé sur place.\n\nLes contenus ne quittent pas l'infrastructure : l'exigence est satisfaite par construction, et non par une clause de contrat." });
 
   s.addText("Les trois tiennent une exigence du cahier des charges par la structure du code, et non par une vérification ajoutée après coup.",
     { x: M, y: 5.66, w: CW, h: 0.5, fontSize: 14, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "fil des arbitrages" });
@@ -438,19 +433,18 @@ Le troisième, c'est « MySQL ou MongoDB », et j'ai écrit un argumentaire pour
     body: "Le cahier des charges recommande, il n'impose pas.\n\nMême modèle de composants ; ma maîtrise y était meilleure, et seule sur un projet la maîtrise réduit le risque.\n\nIntégration directe de CodeMirror 6.\n\nLe découpage services / store reste transposable à React." });
 
   card(s, { x: M + 4.11, y: 1.95, w: 3.87, h: 4.1, badge: "au choix", title: "Ollama plutôt qu'OpenAI",
-    body: "Le cahier des charges autorise les deux. C'est le RGPD qui tranche.\n\nL'anonymisation n'est jamais exhaustive sur du texte libre. En local, les contenus ne sortent pas : l'exigence est satisfaite par construction.\n\nContreparties assumées — latence, qualité, maintenance." });
+    body: "Le cahier des charges autorise les deux. C'est le RGPD qui tranche.\n\nL'anonymisation n'est jamais exhaustive sur du texte libre.\n\nEn local, les contenus ne sortent pas : l'exigence est satisfaite par construction." });
 
   card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 4.1, badge: "au choix", title: "MySQL plutôt que MongoDB",
-    body: "Schéma stable, données fortement reliées, volume modeste.\n\nLes clés étrangères en ON DELETE CASCADE mettent en œuvre le droit à l'effacement en une instruction.\n\nAucun NoSQL ajouté : un composant qui ne sert qu'à remplir une grille est une dette déguisée." });
+    body: "Schéma stable, données fortement reliées, volume modeste.\n\nLes clés étrangères en ON DELETE CASCADE mettent en œuvre le droit à l'effacement en une seule instruction." });
 
-  s.addText("L'argumentaire NoSQL complet est un livrable à part : docs/argumentaire-nosql.md, daté du 4 octobre.",
-    { x: M, y: 6.2, w: CW, h: 0.4, fontSize: 13, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "renvoi nosql" });
 }
 
 {
   const s = add("MEDIA", "Conception",
 `[10:50 — 12:40]
 Architecture client/serveur découplée en trois niveaux, avec un service d'inférence en périphérie.
+La figure se lit de gauche à droite, et les trois numéros suivent une requête : le navigateur appelle l'API en HTTPS, les routes valident et autorisent, puis la main descend aux services et enfin à la couche d'accès aux données. Chaque dépendance est posée à la hauteur de la couche qui l'appelle — Ollama et le serveur de courriel en face des services, MySQL en face de l'accès aux données.
 Le point à retenir est celui du titre : le navigateur ne dialogue jamais directement avec le moteur d'inférence. Tout passe par l'API, qui vérifie l'authentification, la propriété du document, le quota, puis journalise l'interaction.
 Si le front appelait Ollama directement, ni le quota ni la traçabilité RGPD ne seraient applicables — un utilisateur contournerait le quota en appelant le port 11434 lui-même. L'intermédiaire n'est pas une commodité, c'est ce qui rend les contraintes du cahier des charges opposables.
 Deuxième point : le moteur n'écoute que sur l'interface de bouclage. C'était une habitude implicite ; c'est devenu une consigne écrite après la publication de la CVE sur Ollama.
@@ -472,23 +466,24 @@ Côté front, la même logique : aucune vue n'appelle axios directement, tout pa
   s.addText("La règle d'architecture qui rend le plan de tests possible.", { placeholder: "lead" });
 
   const rows = [
-    ["Présentation", "app/routes/", "Validation des entrées, codes de retour, sérialisation JSON", "Règle métier"],
-    ["Métier", "app/services/", "Hachage, cycle de vie des jetons, prompts, appel au modèle, courriels", "Flask : request, response"],
-    ["Persistance", "database/db.py", "Modèles SQLAlchemy, relations, contraintes, requêtes et agrégations", "Logique de présentation"],
+    ["Présentation", "app/routes/",
+     "Reçoit la requête HTTP et la rend présentable au reste : vérifie le jeton, contrôle le type et la longueur de chaque entrée, refuse ce qui sort des valeurs admises. Choisit le code de retour — 404 plutôt que 403, 429 plutôt que 403 — et sérialise la réponse en JSON."],
+    ["Métier", "app/services/",
+     "Porte les règles qui seraient vraies sans le Web : hacher un mot de passe, émettre et faire tourner un jeton, détecter un rejeu, composer un prompt et appeler le modèle, envoyer un courriel. Elle lève des exceptions ; c'est la couche au-dessus qui les traduit en codes HTTP."],
+    ["Persistance", "database/db.py",
+     "Décrit les données et seule elle parle au SGBD : les 8 modèles, leurs relations, les contraintes d'intégrité, et les requêtes — toutes paramétrées, y compris l'agrégation qui calcule le quota."],
   ];
   s.addText("Couche", { x: M + 0.28, y: 1.95, w: 1.9, h: 0.3, fontSize: 12, bold: true, color: THEME.colors.accent5, margin: 0, isTextBox: true });
-  s.addText("Responsabilité", { x: M + 4.0, y: 1.95, w: 4.4, h: 0.3, fontSize: 12, bold: true, color: THEME.colors.accent5, margin: 0, isTextBox: true });
-  s.addText("Ne contient jamais", { x: M + 8.7, y: 1.95, w: 3.1, h: 0.3, fontSize: 12, bold: true, color: THEME.colors.accent4, margin: 0, isTextBox: true });
+  s.addText("Responsabilité", { x: M + 4.0, y: 1.95, w: 7.8, h: 0.3, fontSize: 12, bold: true, color: THEME.colors.accent5, margin: 0, isTextBox: true });
   rows.forEach((r, i) => {
-    const y = 2.3 + i * 1.12;
-    bloc(s, { x: M, y, w: CW, h: 1.0, fill: C.background2, name: `couche ${r[0]}` });
+    const y = 2.28 + i * 1.22;
+    bloc(s, { x: M, y, w: CW, h: 1.12, fill: C.background2, name: `couche ${r[0]}` });
     s.addText(r[0], { x: M + 0.28, y: y + 0.14, w: 3.5, h: 0.34, fontSize: 15, bold: true, color: C.text1, margin: 0, isTextBox: true });
     s.addText(r[1], { x: M + 0.28, y: y + 0.5, w: 3.5, h: 0.34, fontSize: 12.5, color: THEME.colors.accent5, fontFace: "Courier New", margin: 0, isTextBox: true });
-    s.addText(r[2], { x: M + 4.0, y: y + 0.14, w: 4.5, h: 0.75, fontSize: 14, color: C.text1, margin: 0, isTextBox: true });
-    s.addText(r[3], { x: M + 8.7, y: y + 0.14, w: 3.1, h: 0.75, fontSize: 14, color: THEME.colors.accent4, margin: 0, isTextBox: true });
+    s.addText(r[2], { x: M + 4.0, y: y + 0.12, w: 7.8, h: 1.0, fontSize: 12.5, color: C.text1, lineSpacing: 15, valign: "top", margin: 0, isTextBox: true });
   });
   s.addText("Côté front, la même règle : aucune vue n'appelle axios. L'intercepteur qui rejoue une requête après un 401 est donc écrit une seule fois.",
-    { x: M, y: 5.85, w: CW, h: 0.5, fontSize: 13.5, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "note front" });
+    { x: M, y: 6.06, w: CW, h: 0.5, fontSize: 13, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "note front" });
 }
 
 {
