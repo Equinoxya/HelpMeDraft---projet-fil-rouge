@@ -62,3 +62,6 @@ htmlcov/
 
 # Journal produit par demarrer-docker.bat (diagnostic local).
 docker-demarrage.log
+
+# artefact de construction : la copie publiée est docs/Soutenance-HelpMeDraft.pptx
+docs/soutenance/Soutenance-HelpMeDraft.pptx
