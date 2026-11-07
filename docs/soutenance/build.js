@@ -349,15 +349,15 @@ Les trois se rejoignent sur un même point, et c'est le fil du projet : chaque e
   s.addText("Les arbitrages techniques", { placeholder: "title" });
   s.addText("Les trois décisions qui structurent le projet.", { placeholder: "lead" });
 
-  card(s, { x: M, y: 2.15, w: 3.87, h: 3.25, badge: "1", title: "Session révocable",
-    body: "Un JWT est signé, pas enregistré : le serveur le vérifie sans rien stocker. Personne ne peut donc l'annuler avant son échéance — ni moi, ni l'utilisateur qui se croit déconnecté.\n\nD'où une table user_session, qui redonne la main : chaque session y est inscrite et peut être révoquée.\n\nEt une rotation : chaque usage invalide le jeton précédent. Rejouer un jeton déjà consommé est traité comme un vol, et toutes les sessions du compte tombent." });
-  card(s, { x: M + 4.11, y: 2.15, w: 3.87, h: 3.25, badge: "2", title: "Quota par agrégation",
+  card(s, { x: M, y: 1.95, w: 3.87, h: 4.5, badge: "1", title: "Session révocable",
+    body: "Un JWT est signé, pas enregistré : le serveur le vérifie sans rien stocker. Personne ne peut donc l'annuler avant son échéance — ni moi, ni l'utilisateur qui se croit déconnecté.\n\nD'où la table user_session : chaque session y est inscrite, et révocable.\n\nEt une rotation : chaque usage invalide le précédent. Un jeton rejoué est traité comme un vol — toutes les sessions tombent." });
+  card(s, { x: M + 4.11, y: 1.95, w: 3.87, h: 4.5, badge: "2", title: "Quota par agrégation",
     body: "Comptage sur le journal des appels, pas un compteur stocké sur l'utilisateur.\n\nLa valeur ne peut pas se désynchroniser, et l'historique reste auditable — ce qui sert aussi la traçabilité." });
-  card(s, { x: M + 8.22, y: 2.15, w: 3.88, h: 3.25, badge: "3", title: "Confidentialité",
+  card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 4.5, badge: "3", title: "Confidentialité",
     body: "Plutôt qu'anonymiser des textes libres — ce qui n'est jamais exhaustif —, le modèle est hébergé sur place.\n\nLes contenus ne quittent pas l'infrastructure : l'exigence est satisfaite par construction, et non par une clause de contrat." });
 
   s.addText("Les trois tiennent une exigence du cahier des charges par la structure du code, et non par une vérification ajoutée après coup.",
-    { x: M, y: 5.66, w: CW, h: 0.5, fontSize: 14, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "fil des arbitrages" });
+    { x: M, y: 6.62, w: CW, h: 0.4, fontSize: 13.5, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "fil des arbitrages" });
 }
 
 // ═══════════════════════════ 4. Conception ═══════════════════════════
@@ -970,7 +970,8 @@ C'est ce que j'ai appris en construisant ce jeu : un jeu de données, ce n'est p
 {
   const s = add("CONTENT", "Tests, veille et bilan",
 `[36:30 — 38:30]
-Je décris d'abord la méthode, parce que c'est elle qu'on évalue — les trouvailles viennent après.
+Je décris d'abord le dispositif, parce que c'est lui qu'on évalue — les trouvailles viennent après.
+Concrètement : chaque matin, une revue avec Claude. Je lui donne la pile que j'ai retenue et les versions réellement résolues — pas les plages déclarées, les versions résolues — et il confronte cet état aux avis publiés la veille. Ce que ça m'apporte, c'est le balayage : seule, je n'aurais pas relu tous les jours les avis de quinze bibliothèques. Ce que ça ne remplace pas, c'est le verdict : savoir si une CVE est exploitable ICI demande de connaître la configuration, et c'est moi qui tranche. Le journal garde la trace des deux.
 Trois périmètres, chacun avec ses sources et son rythme. Les dépendances : la base d'avis de GitHub et les audits des gestionnaires de paquets, consultés à chaque installation puis revus chaque semaine. La sécurité applicative : NVD et CVE.org, les alertes CISA, l'OWASP Top 10, les bulletins du CERT-FR — chaque semaine. Le réglementaire : la CNIL, la Commission européenne, numerique.gouv.fr — chaque mois, parce que ces textes bougent plus lentement.
 Le principe directeur est une règle de tri : je ne retiens une entrée que si le composant figure dans requirements.txt, dans package.json ou dans l'environnement d'exécution. Surveiller l'actualité de la sécurité en général produit du bruit ; surveiller ce que le projet utilise réellement produit des décisions. Et chaque entrée se termine par un verdict d'applicabilité — ma version est-elle dans la plage affectée, et les conditions d'exploitation sont-elles réunies ici ? C'est ce verdict qui distingue une veille d'une collection de liens.
 Huit entrées sur six mois, trois ont appelé une action. C'est la mesure de l'utilité de l'exercice.
@@ -979,25 +980,39 @@ Le premier constat est que la sévérité publiée ne prédit pas l'impact réel
 DOMPurify est l'entrée la plus instructive, parce que c'est la bibliothèque que j'avais ajoutée précisément pour corriger une faille XSS. Découvrir qu'elle porte elle-même une vulnérabilité de contournement établit un principe : une mesure de sécurité est un composant comme un autre, avec sa propre surface d'attaque. Ajouter une bibliothèque d'assainissement ne clôt pas le sujet XSS, elle le déplace vers la maintenance de cette bibliothèque. D'où la valeur de la défense en profondeur : je stocke du Markdown brut, pas du HTML — si DOMPurify échoue, la donnée stockée n'est toujours pas exécutable.
 Ollama éclaire rétrospectivement mon choix d'architecture : héberger soi-même, c'est aussi maintenir soi-même. La décision reste la bonne au regard du RGPD, mais elle se paie en maintenance, et le dire est plus honnête que de la présenter comme un choix sans contrepartie.
 Et l'AI Act justifie à lui seul la veille comme livrable : le cahier des charges, rédigé avant l'entrée en application, ne mentionne que le RGPD. Sans ce suivi, j'aurais livré une application non conforme à une obligation entrée en vigueur trois semaines avant la fin du développement.`);
-  s.addText("Comment je fais ma veille", { placeholder: "title" });
-  s.addText("Trois périmètres, chacun avec ses sources et son rythme. Journal complet : docs/veille-helpmedraft.html", { placeholder: "lead" });
+  s.addText("Ma veille — une revue tous les matins", { placeholder: "title" });
+  s.addText("Un rituel quotidien outillé, braqué sur la pile que j'ai choisie. Journal : docs/veille/journal-de-veille.md", { placeholder: "lead" });
 
-  card(s, { x: M, y: 1.95, w: 3.87, h: 2.5, badge: "1", title: "Les dépendances",
-    body: "GitHub Advisory Database, et les avis d'audit des gestionnaires de paquets (npm, pip).\n\nÀ chaque installation, puis une revue chaque semaine." });
-  card(s, { x: M + 4.11, y: 1.95, w: 3.87, h: 2.5, badge: "2", title: "La sécurité applicative",
-    body: "NVD et CVE.org, les alertes CISA, l'OWASP Top 10, les bulletins du CERT-FR (ANSSI).\n\nChaque semaine." });
-  card(s, { x: M + 8.22, y: 1.95, w: 3.88, h: 2.5, badge: "3", title: "Le réglementaire",
-    body: "La CNIL, la Commission européenne pour l'AI Act, numerique.gouv.fr pour le RGAA.\n\nChaque mois : c'est le rythme auquel ces textes bougent." });
+  card(s, { x: M, y: 1.9, w: 5.9, h: 2.2, badge: "le rituel", title: "Chaque matin, une revue assistée",
+    body: "J'ai mis en place une revue quotidienne avec Claude : il reprend les technologies que j'ai retenues, confronte les versions réellement résolues du projet aux avis publiés la veille, et me rend une liste courte. Lui fait le balayage, moi le verdict." });
 
-  s.addText([
-    { text: "La règle de tri — ", options: { bold: true, color: THEME.colors.accent1 } },
-    { text: "je ne retiens une entrée que si le composant figure dans requirements.txt, dans package.json ou dans l'environnement d'exécution. Une alerte sur une bibliothèque que je n'utilise pas n'est pas une information. Et chaque entrée se termine par un verdict : ma version est-elle dans la plage affectée, et les conditions d'exploitation sont-elles réunies ici ?", options: {} },
-  ], { x: M, y: 4.72, w: CW, h: 0.84, fontSize: 13.5, color: THEME.colors.dk1, margin: 0, isTextBox: true, lineSpacing: 16, objectName: "regle de tri" });
+  card(s, { x: M + 6.2, y: 1.9, w: 5.9, h: 2.2, badge: "le tri", title: "Ce qui vaut la peine d'être retenu",
+    body: "Je ne retiens une entrée que si le composant figure dans requirements.txt, dans package.json ou dans ce qui tourne. Et chaque entrée finit par un verdict : ma version est-elle dans la plage affectée, et les conditions d'exploitation réunies ici ?" });
 
-  s.addText([
-    { text: "Ce que ça a produit — ", options: { bold: true, color: THEME.colors.accent1 } },
-    { text: "huit entrées en six mois, trois ont appelé une action : DOMPurify mis à jour, Ollama mis à jour, l'AI Act entré dans le périmètre. C'est cette proportion qui mesure l'utilité de l'exercice.", options: {} },
-  ], { x: M, y: 5.72, w: CW, h: 0.6, fontSize: 13.5, color: THEME.colors.dk1, margin: 0, isTextBox: true, lineSpacing: 16, objectName: "rendement" });
+  s.addText("CE QUI PASSE EN REVUE", { x: M, y: 4.30, w: 5.9, h: 0.26, fontSize: 11, bold: true, color: THEME.colors.accent5, charSpacing: 1.2, margin: 0, isTextBox: true });
+  [["Back-end", "Flask, Werkzeug, SQLAlchemy, PyJWT, bcrypt, requests, WeasyPrint, Gunicorn, PyMySQL"],
+   ["Front-end", "Vue, Vite, DOMPurify, marked, CodeMirror, axios, Tailwind"],
+   ["Exécution", "Ollama et le modèle, MySQL, les images Docker"],
+   ["Cadre", "OWASP Top 10 et LLM Top 10, CERT-FR, AI Act, CNIL, RGAA"]].forEach((l, i) => {
+    const y = 4.60 + i * 0.50;
+    s.addText(l[0], { x: M, y, w: 1.25, h: 0.46, fontSize: 13, bold: true, color: THEME.colors.accent1, valign: "top", margin: 0, isTextBox: true });
+    s.addText(l[1], { x: M + 1.3, y, w: 4.6, h: 0.46, fontSize: 12.5, color: C.text1, valign: "top", margin: 0, lineSpacing: 15, isTextBox: true });
+  });
+
+  s.addText("CE QUE ÇA A MAINTENU À JOUR", { x: M + 6.2, y: 4.30, w: 5.9, h: 0.26, fontSize: 11, bold: true, color: THEME.colors.accent5, charSpacing: 1.2, margin: 0, isTextBox: true });
+  [["03/11/26", "DOMPurify porté en 3.4.17", "cinq contournements publiés en 2026 sur la bibliothèque qui assainit le Markdown"],
+   ["03/10/26", "Werkzeug épinglé en 3.1.9", "la veille a montré que les dépendances transitives n'étaient pas gelées : deux verrous à empreintes les figent"],
+   ["10/10/26", "AI Act entré au périmètre", "applicable depuis le 02/08/26, après le cahier des charges"],
+   ["31/03/26", "axios vérifié, non affecté", "compte mainteneur npm compromis ; c'est le fichier de verrouillage qui le prouve"]].forEach((l, i) => {
+    const y = 4.60 + i * 0.50;
+    s.addText(l[0], { x: M + 6.2, y, w: 0.92, h: 0.46, fontSize: 11.5, color: THEME.colors.accent5, fontFace: "Courier New", valign: "top", margin: 0, isTextBox: true });
+    s.addText([{ text: l[1] + " — ", options: { bold: true, color: THEME.colors.accent1 } },
+               { text: l[2], options: {} }],
+      { x: M + 7.18, y, w: 4.92, h: 0.46, fontSize: 12.5, color: C.text1, valign: "top", margin: 0, lineSpacing: 15, isTextBox: true });
+  });
+
+  s.addText("Reste ouvert, et je le dis : les CVE Ollama, que ma configuration atténue sans les corriger — le moteur n'écoute que sur la boucle locale.",
+    { x: M, y: 6.62, w: CW, h: 0.4, fontSize: 12.5, color: THEME.colors.accent5, margin: 0, isTextBox: true, objectName: "reste ouvert" });
 }
 
 {
