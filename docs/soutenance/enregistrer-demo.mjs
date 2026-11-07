@@ -1,9 +1,8 @@
 /**
- * Captation vidéo de la démonstration — HelpMeDraft
+ * Captation vidéo — démonstration courte (celle du diaporama)
  *
- * Pilote un Chromium réel sur l'application en fonctionnement et enregistre
- * le parcours. Les sous-titres sont incrustés dans la page (overlay DOM),
- * donc gravés dans la vidéo : rien à monter après coup.
+ * Parcours resserré, autour de deux minutes, intégré à la dernière
+ * diapositive du support. La version longue est dans demo-3min.mjs.
  *
  * PRÉREQUIS
  *   1. backend  : cd backend && python run.py                   (port 5000)
@@ -19,185 +18,15 @@
  *   node docs/soutenance/enregistrer-demo.mjs [dossier-de-sortie]
  */
 
-import { mkdirSync, readdirSync, renameSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { createRequire } from "node:module";
+import { resolve } from "node:path";
+import {
+  BASE, COMPTES, MDP, OLLAMA_REEL,
+  appelApi, carte, connexion, deconnexion, executer, frapper, frapperEditeur,
+  pause, retirerCarte, scenario, soustitre,
+} from "./demo-commun.mjs";
 
-// Playwright peut être installé dans le projet ou globalement. L'import ESM
-// n'honore pas NODE_PATH : on passe par createRequire, qui le trouve dans les
-// deux cas.
-const exiger = createRequire(import.meta.url);
-let chromium;
-try {
-  ({ chromium } = await import("playwright"));
-} catch {
-  ({ chromium } = exiger("playwright"));
-}
-
-const BASE = process.env.DEMO_URL ?? "http://localhost:5173";
 const SORTIE = resolve(process.argv[2] ?? "docs/soutenance/demo");
-const MDP = process.env.DEMO_MDP ?? "JeuDEssai1";
-
-/**
- * Vrai si un VRAI Ollama répond. Sinon la captation reste possible avec un
- * substitut, mais la vidéo DOIT le dire : une démonstration qui laisse croire
- * qu'un modèle a tourné alors qu'il n'y en a pas est une démonstration fausse.
- */
-const OLLAMA_REEL = await fetch(`${process.env.OLLAMA_URL ?? "http://127.0.0.1:11434"}/api/version`)
-  .then((r) => r.ok)
-  .catch(() => false);
-
-const COMPTES = {
-  camille: "camille@helpmedraft.test",
-  karim: "karim@helpmedraft.test",
-  admin: "admin@helpmedraft.test",
-};
-
-const pause = (ms) => new Promise((r) => setTimeout(r, ms));
-
-const API = process.env.DEMO_API ?? "http://localhost:5000";
-
-/**
- * Le jeton d'accès vit en mémoire dans le store Pinia, jamais dans
- * localStorage — c'est voulu. Pour interroger l'API depuis la page, on
- * repasse donc par le cookie de refresh, httpOnly, que le navigateur joint
- * tout seul.
- */
-async function appelApi(page, chemin, options = {}) {
-  return page.evaluate(
-    async ([api, chemin, options]) => {
-      const r0 = await fetch(`${api}/auth/refresh`, { method: "POST", credentials: "include" });
-      if (!r0.ok) return { statut: r0.status, corps: "refresh refusé" };
-      const { access_token } = await r0.json();
-      const r = await fetch(`${api}${chemin}`, {
-        method: options.method ?? "GET",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${access_token}` },
-        body: options.body ? JSON.stringify(options.body) : undefined,
-      });
-      let corps;
-      try { corps = await r.json(); } catch { corps = null; }
-      return { statut: r.status, corps };
-    },
-    [API, chemin, options],
-  );
-}
-
-
-// ─────────────────────────── sous-titres ───────────────────────────
-
-const OVERLAY = `
-(() => {
-  if (document.getElementById('__demo_overlay')) return;
-  const barre = document.createElement('div');
-  barre.id = '__demo_overlay';
-  barre.style.cssText = [
-    'position:fixed','left:0','right:0','bottom:0','z-index:2147483647',
-    'background:#111111','color:#F4F1EA','padding:14px 28px',
-    'font:600 19px/1.45 Georgia,serif','letter-spacing:.2px',
-    'border-top:4px solid #E0533C','pointer-events:none',
-    'transition:opacity .25s','opacity:0','min-height:30px',
-  ].join(';');
-  const puce = document.createElement('span');
-  puce.id = '__demo_puce';
-  puce.style.cssText = 'color:#E0533C;font:700 12px/1 "Courier New",monospace;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:5px';
-  const texte = document.createElement('span');
-  texte.id = '__demo_texte';
-  barre.append(puce, texte);
-  document.body.appendChild(barre);
-})();`;
-
-async function soustitre(page, surtitre, texte) {
-  await page.evaluate(OVERLAY).catch(() => {});
-  await page
-    .evaluate(
-      ([s, t]) => {
-        const barre = document.getElementById("__demo_overlay");
-        if (!barre) return;
-        document.getElementById("__demo_puce").textContent = s;
-        document.getElementById("__demo_texte").textContent = t;
-        barre.style.opacity = t ? "1" : "0";
-      },
-      [surtitre, texte],
-    )
-    .catch(() => {});
-}
-
-/** Carte pleine page, pour l'ouverture et la clôture. */
-async function carte(page, titre, lignes, sousTitre = "") {
-  await page.evaluate(
-    ([titre, lignes, sousTitre]) => {
-      const vue = document.createElement("div");
-      vue.id = "__demo_carte";
-      vue.style.cssText = [
-        "position:fixed","inset:0","z-index:2147483646","background:#111111",
-        "color:#F4F1EA","display:flex","flex-direction:column",
-        "justify-content:center","padding:0 10vw","font-family:Georgia,serif",
-      ].join(";");
-      const st = document.createElement("div");
-      st.textContent = sousTitre;
-      st.style.cssText = 'color:#E0533C;font:700 14px/1 "Courier New",monospace;letter-spacing:3px;text-transform:uppercase;margin-bottom:22px';
-      const h = document.createElement("div");
-      h.textContent = titre;
-      h.style.cssText = "font-size:54px;font-weight:700;line-height:1.1;margin-bottom:28px";
-      const ul = document.createElement("div");
-      ul.style.cssText = "font-size:22px;line-height:1.75;max-width:62ch";
-      for (const l of lignes) {
-        const p = document.createElement("div");
-        p.textContent = l;
-        p.style.cssText = "margin-bottom:9px";
-        ul.appendChild(p);
-      }
-      vue.append(st, h, ul);
-      document.body.appendChild(vue);
-    },
-    [titre, lignes, sousTitre],
-  );
-}
-
-const retirerCarte = (page) =>
-  page.evaluate(() => document.getElementById("__demo_carte")?.remove()).catch(() => {});
-
-/** Frappe lisible à l'écran : ni instantanée, ni interminable. */
-const frapper = (cible, texte, delay = 55) => cible.pressSequentially(texte, { delay });
-
-/**
- * Saisie dans CodeMirror. `type()` y réordonne des caractères sous charge
- * (constaté : « rien recu » devenait « ien recur »). insertText mot à mot
- * conserve l'effet de frappe sans les fautes.
- */
-async function frapperEditeur(page, cible, texte, delai = 110) {
-  await cible.click();
-  for (const mot of texte.split(/(?<=\s)/)) {
-    await page.keyboard.insertText(mot);
-    await pause(delai);
-  }
-}
-
-async function connexion(page, compte) {
-  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
-  await page.fill("#email", COMPTES[compte] ?? compte);
-  await page.fill("#mdp", MDP);
-  await pause(500);
-  await page.getByRole("button", { name: /se connecter|connexion/i }).first().click();
-  await page.waitForURL(/dashboard|admin/, { timeout: 15000 }).catch(() => {});
-  await pause(1200);
-}
-
-async function deconnexion(page) {
-  // Le store est en mémoire : un simple rechargement suffirait presque, mais
-  // le cookie de refresh relancerait la session. On révoque côté serveur.
-  await page.evaluate(
-    (api) => fetch(`${api}/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {}),
-    API,
-  );
-  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" }).catch(() => {});
-  await pause(600);
-}
-
-// ─────────────────────────── scénario ───────────────────────────
-
-const etapes = [];
-const etape = (titre, fn) => etapes.push({ titre, fn });
+const { etapes, etape } = scenario();
 
 etape("Ouverture", async (page) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
@@ -426,48 +255,5 @@ etape("Clôture", async (page) => {
   await pause(7000);
 });
 
-// ─────────────────────────── exécution ───────────────────────────
 
-mkdirSync(SORTIE, { recursive: true });
-
-const navigateur = await chromium.launch({ args: ["--no-sandbox", "--force-device-scale-factor=1"] });
-const contexte = await navigateur.newContext({
-  viewport: { width: 1440, height: 900 },
-  recordVideo: { dir: SORTIE, size: { width: 1440, height: 900 } },
-  locale: "fr-FR",
-  timezoneId: "Europe/Paris",
-  reducedMotion: "no-preference",
-});
-const page = await contexte.newPage();
-
-// Masque le curseur de saisie clignotant, qui scintille à l'encodage.
-await contexte.addInitScript(() => {
-  const style = document.createElement("style");
-  style.textContent = "*{caret-color:#C4341C!important}";
-  document.documentElement.appendChild(style);
-});
-
-let rang = 0;
-for (const { titre, fn } of etapes) {
-  rang += 1;
-  const debut = Date.now();
-  process.stdout.write(`  ${String(rang).padStart(2, "0")}. ${titre}… `);
-  try {
-    await fn(page);
-    console.log(`ok (${((Date.now() - debut) / 1000).toFixed(1)} s)`);
-  } catch (erreur) {
-    console.log(`ÉCHEC — ${erreur.message.split("\n")[0]}`);
-    await page.screenshot({ path: join(SORTIE, `echec-${rang}-${titre.replace(/\W+/g, "-")}.png`) }).catch(() => {});
-  }
-}
-
-await contexte.close();
-await navigateur.close();
-
-const brut = readdirSync(SORTIE).find((f) => f.endsWith(".webm") && !f.startsWith("demo-"));
-if (brut) {
-  renameSync(join(SORTIE, brut), join(SORTIE, "demo-helpmedraft.webm"));
-  console.log(`\nVidéo : ${join(SORTIE, "demo-helpmedraft.webm")}`);
-  console.log("Conversion MP4 :");
-  console.log(`  ffmpeg -i ${join(SORTIE, "demo-helpmedraft.webm")} -c:v libx264 -preset slow -crf 23 -pix_fmt yuv420p ${join(SORTIE, "demo-helpmedraft.mp4")}`);
-}
+await executer(etapes, { sortie: SORTIE, nom: "demo-helpmedraft" });
