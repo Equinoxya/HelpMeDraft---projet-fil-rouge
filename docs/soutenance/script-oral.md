@@ -21,7 +21,7 @@ Durée : **40 min** d'exposé, questions après.
 
 **La clôture** : les quatre objectifs du cahier des charges, repris dans les termes de l'ouverture, et les six mesures de sécurité qui les tiennent. **Tu réponds à la commande, tu ne récites pas un bilan.**
 
-**Les 4 points restants** (les dire avant qu'on te les demande) : déploiement effectif · bascule MySQL complète · 3 compléments AI Act · journalisation applicative.
+**Les points restants** (en réserve : les dire avant qu'on te les demande) : déploiement effectif · bascule MySQL complète · 3 compléments AI Act · journalisation applicative.
 
 ---
 
@@ -65,7 +65,7 @@ Durée : **40 min** d'exposé, questions après.
 - Quota 20/24 h : vient du cahier des charges, implémenté côté serveur — j'y reviens.
 - À droite, le non fonctionnel. La ligne qui a tout pesé : *« aucune donnée personnelle transmise à OpenAI sans anonymisation ».*
 - **Sur des textes libres, l'anonymisation n'est jamais exhaustive.** → point de départ de l'inférence locale.
-- En bas : le hors périmètre. **Un périmètre qu'on ne borne pas est un périmètre qui dérive.**
+- Le périmètre est borné, et c'est délibéré : **un périmètre qu'on ne borne pas est un périmètre qui dérive.**
 - Important pour la suite : AI Act applicable **2 août 2026**, après le cahier des charges. C'est ma veille qui l'a remonté.
 
 ---
@@ -129,7 +129,7 @@ Durée : **40 min** d'exposé, questions après.
 - Le moteur n'écoute que sur l'interface de bouclage. Habitude implicite → consigne écrite après la CVE Ollama.
 
 ### Diapo 13 · Le découpage en couches `[12:40 — 14:20]`
-- Trois couches. **La règle qui compte est la colonne de droite : ce que chaque couche ne contient jamais.**
+- Trois couches, et pour chacune une responsabilité écrite en clair. **Ce qui compte autant, c'est ce qu'elle ne contient jamais — et ça, je le dis.**
 - **Aucun import Flask dans `services/`.** Pas esthétique — fonctionnel.
 - C'est elle qui rend le métier testable **sans démarrer de serveur ni ouvrir de base**.
 - Sans elle, tout test d'`auth_service` ou `ia_service` devient un test d'intégration : plus lent, plus fragile. **C'est le socle du plan de tests.**

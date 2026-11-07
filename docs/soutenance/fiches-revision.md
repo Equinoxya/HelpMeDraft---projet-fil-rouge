@@ -61,7 +61,7 @@ décisions techniques qui suivent en découlent. »
 - C'est toujours l'utilisateur qui insère ou remplace.
 - La ligne qui a tout pesé : *« aucune donnée personnelle transmise sans anonymisation »*.
 - **« Sur des textes libres, l'anonymisation n'est jamais exhaustive. »** → point de départ de l'inférence locale.
-- Hors périmètre assumé. **« Un périmètre qu'on ne borne pas est un périmètre qui dérive. »**
+- Le périmètre est borné, et c'est délibéré. **« Un périmètre qu'on ne borne pas est un périmètre qui dérive. »**
 - AI Act applicable le **2 août 2026**, après le cahier des charges. C'est la veille qui l'a remonté.
 
 ---
