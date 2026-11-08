@@ -1,6 +1,6 @@
 # Fiches de révision — ce que je dois dire
 
-Exposé de 40 min, 34 diapositives. Le détail est dans [`script-oral.md`](./script-oral.md) ;
+Exposé de 40 min, 35 diapositives — la dernière est une diapositive de secours. Le détail est dans [`script-oral.md`](./script-oral.md) ;
 ici, c'est la version à réviser : une fiche par temps fort, trois à cinq puces, et la
 phrase à placer.
 
@@ -26,7 +26,9 @@ phrase à placer.
 | Jetons | access **15 min** · refresh **7 jours** |
 | Éditeur | enregistrement **2,5 s** après la dernière frappe |
 | Docker | image front **82,9 Mo** · **3** services · **3** travaux de CI |
-| Veille | **8** entrées, **3** actions · CVE **9,1** Ollama / **5,1** DOMPurify |
+| Veille | **8** entrées, **3** actions · revue **tous les matins**, assistée |
+| Mises à jour | DOMPurify **3.4.17** le 03/11 · Werkzeug **3.1.9** épinglé le 03/10 |
+| Éco-conception | **8** besoins identifiés (ECO-01 à 08) · CSS **−57 %** |
 | Dates | AI Act **2 août 2026** · pile validée **5 octobre** |
 | Projet | **13** lots · itérations d'**1 semaine** |
 
@@ -75,7 +77,10 @@ décisions techniques qui suivent en découlent. »
 - `package-lock.json` commité : **pas de l'organisation, une mesure de sécurité** (cf. axios).
 
 ### Fiche 5 · Les trois arbitrages
-1. **Un JWT seul ne se révoque pas** → table `user_session` + rotation. Jeton rejoué = vol → tout tombe.
+1. **Un JWT seul ne se révoque pas.** Il est *signé*, pas *enregistré* : le serveur le vérifie sans rien
+   stocker, donc personne ne peut l'annuler avant son échéance — ni moi, ni l'utilisateur qui se croit
+   déconnecté. D'où la table `user_session`, qui redonne la main. Plus une rotation : chaque usage
+   invalide le précédent, et **un jeton rejoué est traité comme un vol — toutes les sessions tombent.**
 2. **Le quota par agrégation**, pas par compteur. Un compteur se désynchronise, une agrégation non.
 3. **La confidentialité** → modèle en local. **« L'exigence est satisfaite par construction. »**
 - Le fil : **les trois tiennent une exigence par la structure du code, pas par une vérification ajoutée.**
@@ -94,14 +99,29 @@ décisions techniques qui suivent en découlent. »
 - **Vue 3 / React** — il recommande, il n'impose pas. Maîtrise = moins de risque en solo. Transposable.
 - **Ollama / OpenAI** — les deux autorisés, **c'est le RGPD qui tranche**. `ia_service` isole l'appel.
 - **MySQL / MongoDB** — schéma stable, données reliées. **`ON DELETE CASCADE` met en œuvre le droit à l'effacement en une instruction.**
-- Sur le NoSQL : **« ce serait facile, et c'est précisément ce qui rend l'ajout suspect. »**
+- ⚠️ **Le NoSQL n'est plus écrit sur la diapositive 11 — il est dans tes notes.** À sortir si on te pose
+  la question CP 8 (« composants SQL *et* NoSQL ») : **« ce serait facile, et c'est précisément ce qui
+  rend l'ajout suspect. »** Un composant qui ne sert qu'à remplir une grille est une dette déguisée en
+  compétence. **« Je l'assume, et le jury est libre de considérer le critère comme non couvert. »**
+  L'argumentaire est un livrable à part : `docs/argumentaire-nosql.md`.
 
 ### Fiche 8 · L'architecture
-- **« Le navigateur ne parle jamais au moteur d'inférence. »**
+- **Lis la figure à voix haute, de gauche à droite** : navigateur → API → dépendances, et suis les trois
+  numéros en brique, qui sont le trajet d'une requête.
+- Chaque dépendance est posée **à la hauteur de la couche qui l'appelle** — Ollama et le courriel face aux
+  services, MySQL face à l'accès aux données. Aucune flèche ne se croise, et c'est exprès.
+- **Montre le trait pointillé barré d'une croix** : c'est ce qui n'arrive jamais. **« Le navigateur ne parle
+  jamais au moteur d'inférence. »**
 - Sinon : on contourne le quota en appelant le port 11434 soi-même.
 - **« L'intermédiaire n'est pas une commodité : il rend les contraintes opposables. »**
 
 ### Fiche 9 · Les couches
+- La diapositive donne, pour chaque couche, **ce qu'elle fait et dans quel ordre**. Ce qu'elle *ne contient
+  jamais* n'y est plus écrit : **c'est toi qui le dis**, et c'est là que tu montres que tu l'as pensé.
+- Présentation : reçoit la requête, vérifie le jeton, contrôle type et longueur, choisit le code de retour.
+- Métier : les règles qui seraient vraies **sans le Web**. Elle lève des exceptions ; la couche au-dessus les
+  traduit en codes HTTP.
+- Persistance : les 8 modèles, les contraintes, et **seule elle parle au SGBD**.
 - **« Aucun import Flask dans `services/`. »** Pas esthétique — fonctionnel.
 - C'est elle qui rend le métier testable **sans serveur ni base**. **Socle du plan de tests.**
 - Honnêteté : `current_app` pour la configuration, **seul point où la règle fléchit** (§ 7.2).
@@ -149,7 +169,11 @@ Dénormalisation assumée. Sans elle, **compter le quota imposerait une jointure
 ### Fiche 12 · La séquence IA
 - **« Suivez l'ordre des contrôles, il n'est pas arbitraire. »** Auth → propriété → validation → quota → **puis** le modèle.
 - **« Chaque contrôle est placé avant celui qui coûte plus cher. »**
-- Ollama muet → message lisible, **et aucune ligne écrite** (sinon un échec consommerait du quota).
+- **Les étapes 12 et 17 vont ensemble, et c'est le point à ne pas rater.** L'entrée du journal est créée
+  **AVANT** l'appel au modèle — c'est elle qui fournit l'identifiant que la réponse renvoie au client, et dont
+  il se sert ensuite pour signaler l'insertion (traçabilité AI Act). Si le modèle ne répond pas, elle est
+  **annulée** : `ROLLBACK`. **Un échec ne coûte donc aucun quota**, et le test TI-50 l'exige explicitement.
+- Si on te demande pourquoi ne pas écrire après : parce qu'il faut l'identifiant *dans* la réponse.
 - **« La décision finale reste à l'utilisateur. »** Ergonomie **et** sécurité.
 
 ---
@@ -195,6 +219,10 @@ Dénormalisation assumée. Sans elle, **compter le quota imposerait une jointure
 
 ### Fiche 19 · Les deux jetons
 - Court = sûr mais pénible ; long = confortable mais dangereux. **La combinaison donne les deux.**
+- Le refresh token : **64 octets tirés au hasard**, dans un cookie **httpOnly** — le JavaScript de la page
+  ne peut pas le lire, donc **une faille XSS ne suffit pas à le voler**. **SameSite=Strict** écarte les
+  requêtes venues d'un autre site, et **path=/auth** fait qu'il n'est envoyé qu'aux deux routes qui en ont
+  besoin. 7 jours, et révocable à tout instant — **c'est lui qui rend la déconnexion réelle**.
 - **Je ne stocke pas le jeton, je stocke son empreinte SHA-256.**
 - Jeton consommé qui revient → vieille requête **ou** vol. **Dans le doute, je révoque tout.**
 - **« La gêne est une reconnexion, le risque évité est un compte compromis. »**
@@ -218,13 +246,67 @@ Dénormalisation assumée. Sans elle, **compter le quota imposerait une jointure
 - **La ligne datée de 25 heures** : seul moyen de distinguer une fenêtre glissante d'un compteur journalier.
 - **« Un jeu de données, c'est choisir les valeurs qui font échouer les mauvaises implémentations. »**
 
-### Fiche 22 · La veille
-- Trois périmètres. **« Une alerte sur une bibliothèque absente du projet n'est pas une information. »**
-- **« La sévérité publiée ne prédit pas l'impact réel »** : 9,1 Ollama atténuée, 5,1 DOMPurify subie.
-- DOMPurify : la bibliothèque **ajoutée pour corriger le XSS** portait sa propre faille.
-- → **« Une mesure de sécurité est un composant comme un autre. »** D'où le Markdown brut stocké.
-- Ollama : **héberger soi-même, c'est maintenir soi-même.**
-- AI Act : **sans cette veille, j'aurais livré une application non conforme.**
+### Fiche 22 · La veille — *la diapositive décrit la MÉTHODE, pas les trouvailles*
+
+**Le dispositif, à dire en premier.**
+- **« Chaque matin, une revue assistée. »** Je reprends les technologies que j'ai retenues, et je confronte
+  **les versions réellement résolues** de mon projet — pas les plages déclarées, les versions résolues — aux
+  avis publiés la veille. Il en sort une liste courte.
+- **« Le balayage est outillé ; le verdict reste le mien. »** Seule, je n'aurais pas relu chaque jour les
+  avis de quinze bibliothèques. Mais savoir si une CVE est exploitable **ici** demande de connaître la
+  configuration — et ça, c'est moi qui tranche.
+- La règle de tri : une entrée n'est retenue que si le composant figure dans `requirements.txt`, dans
+  `package.json`, ou dans ce qui tourne. **« Une alerte sur une bibliothèque absente du projet n'est pas une
+  information. »**
+- Chaque entrée finit par un **verdict d'applicabilité** : ma version est-elle dans la plage affectée, et les
+  conditions d'exploitation réunies ici ? **« C'est ce verdict qui distingue une veille d'une collection de
+  liens. »**
+
+**Ce qui passe en revue** — back-end (Flask, Werkzeug, SQLAlchemy, PyJWT, bcrypt, requests, WeasyPrint,
+Gunicorn, PyMySQL) · front-end (Vue, Vite, DOMPurify, marked, CodeMirror, axios, Tailwind) · exécution
+(Ollama, MySQL, images Docker) · cadre (OWASP Top 10 et LLM Top 10, CERT-FR, AI Act, CNIL, RGAA).
+
+**Ce que ça a maintenu à jour**, avec les dates — c'est la preuve que la veille sert à quelque chose.
+
+| Date | Quoi | Pourquoi |
+|---|---|---|
+| **03/11/26** | DOMPurify porté en **3.4.17** | cinq contournements publiés en 2026 **sur la bibliothèque qui assainit mon Markdown** |
+| **03/10/26** | Werkzeug épinglé en **3.1.9** | la veille a montré que les dépendances **transitives** n'étaient pas gelées → deux verrous à empreintes |
+| **10/10/26** | AI Act entré au périmètre | applicable depuis le 02/08/26, **après** le cahier des charges |
+| **31/03/26** | axios vérifié, **non affecté** | compte mainteneur npm compromis ; **c'est le fichier de verrouillage qui le prouve** |
+
+**Les phrases à placer.**
+- DOMPurify : la bibliothèque **ajoutée pour corriger le XSS** portait ses propres contournements.
+  → **« Une mesure de sécurité est un composant comme un autre. »** D'où le Markdown brut stocké : si
+  DOMPurify échoue, la donnée stockée n'est toujours pas exécutable. C'est la défense en profondeur.
+- Werkzeug est **ta plus belle entrée** : la veille identifie le trou, et le dépôt montre la correction.
+  **« Tant que les transitives ne sont pas épinglées, aucun verdict de veille n'est vérifiable. »**
+- AI Act : **sans cette veille, j'aurais livré une application non conforme** à une obligation entrée en
+  vigueur trois semaines avant la fin du développement.
+
+> ⚠️ **Ne dis pas « Ollama a été mis à jour ».** Les CVE Ollama **restent ouvertes** (ticket `KAN-100`). Ce
+> que tu dis, et la diapositive l'écrit : **ma configuration les atténue sans les corriger — le moteur
+> n'écoute que sur la boucle locale.** Et l'enseignement tient : **héberger soi-même, c'est maintenir
+> soi-même.**
+
+---
+
+### Fiche 22 bis · L'éco-conception *(critère CP 6 — on peut te le demander)*
+
+- **Ce que c'est** : concevoir pour consommer moins — électricité, réseau, mémoire, durée de vie du matériel.
+  Des arbitrages pris **pendant** la conception, pas un label ajouté à la fin.
+- **Le mot qui compte dans le référentiel est « identifiés »** : *« les besoins d'éco-conception sont
+  identifiés »*. On évalue ta capacité à repérer où ça consomme, pas à tout avoir optimisé.
+- **Huit besoins**, ECO-01 à ECO-08, dans le dossier § 5.4, chacun avec son état et son levier.
+- **Deux sont faits** : les **16 routes sont en import différé** (on ne télécharge que l'écran visité), et
+  **daisyUI a été retiré** — 45,6 Ko pour cinq classes réellement utilisées. **79,9 → 34,4 Ko, −57 %.**
+- **L'argument qui porte** : **« sur une application d'IA générative, le poste dominant n'est ni le réseau ni
+  la base : c'est l'inférence. »** Les deux leviers qui comptent sont donc ECO-04 (ne pas recalculer deux
+  fois la même suggestion) et ECO-06 (ne pas mobiliser un modèle de 8 milliards de paramètres pour corriger
+  un accord). **L'inférence locale sert cet objectif au passage** : elle supprime l'aller-retour vers un
+  centre de données distant.
+- **Dis que le CSS, tu l'as mesuré** : **« une mesure, pas une impression. »** C'est ce qui distingue
+  l'éco-conception du discours.
 
 ---
 
@@ -508,6 +590,9 @@ données** ». Le jury s'en sert pour vérifier que tu sais *où* vit quoi.
 | **MCD / MLD / MPD** | Le **conceptuel** dit *quoi* (entités, associations) ; le **logique** traduit les associations en clés étrangères ; le **physique** ajoute les types SQL, les index et les règles de suppression. |
 | **Dénormalisation** | Accepter une redondance pour éviter une jointure coûteuse. **Chez moi** : `ia` porte `user_id` *et* `id_document`, parce que le quota se compte par utilisateur. |
 | **Index** | Une structure qui évite de parcourir toute la table. **Chez moi** : `(user_id, created_at)` sert le calcul du quota. |
+| **Agrégation** | Une requête qui, au lieu de rendre des lignes, en calcule une valeur — un total, une moyenne, un décompte. **Chez moi** : `COUNT` des appels IA des 24 dernières heures. **La valeur n'est stockée nulle part : elle est recalculée à chaque fois, donc toujours juste.** C'est l'opposé d'un compteur, qu'un échec entre l'appel et l'incrément suffit à désynchroniser. |
+| **Fenêtre glissante** | Un intervalle qui se déplace avec le présent : « les 24 dernières heures », et non « aujourd'hui ». **Chez moi** : `created_at >= maintenant − 24 h`. Avec un compteur remis à zéro à minuit, on ferait 20 appels à 23 h et 20 autres à 1 h — 40 en deux heures sans jamais dépasser la règle. |
+| **Dépendance transitive** | Une dépendance de tes dépendances, que tu n'as pas demandée toi-même. **Chez moi** : Werkzeug vient avec Flask. **La veille a montré qu'elles n'étaient pas gelées** — d'où les deux fichiers de verrouillage à empreintes. |
 | **ON DELETE CASCADE** | Supprimer la ligne parente supprime les filles. **Chez moi** : c'est **le droit à l'effacement du RGPD en une instruction**. |
 | **ON DELETE SET NULL** | La fille survit, son lien passe à nul. **Chez moi** : supprimer un dossier ne supprime pas ses documents. |
 | **Requête paramétrée** | La valeur est transmise à part de la requête, donc jamais interprétée comme du SQL. C'est **la** parade à l'injection. |
@@ -581,15 +666,16 @@ données** ». Le jury s'en sert pour vérifier que tu sais *où* vit quoi.
 | **Portabilité** | Le droit de récupérer ses données dans un format réutilisable. **Chez moi** : export en archive ZIP. |
 | **RGAA 4.1.2** | Le référentiel français d'accessibilité, fondé sur **WCAG 2.1 niveau AA**. **Chez moi** : 15 écrans audités, 0 violation axe-core. |
 | **ANSSI** | L'agence française de cybersécurité ; ses recommandations ont servi de référence à l'audit. |
+| **Éco-conception** | Concevoir un logiciel pour qu'il consomme moins de ressources — électricité, réseau, mémoire, durée de vie du matériel. Des arbitrages pris **pendant** la conception, pas un label ajouté après. **Chez moi** : 8 besoins identifiés (ECO-01 à ECO-08) ; deux réalisés — chargement différé des 16 routes, et daisyUI retiré, **CSS de 79,9 à 34,4 Ko, −57 %**. **Le poste dominant d'une application d'IA, c'est l'inférence**, pas le réseau. |
 | **AI Act** | Le règlement européen **UE 2024/1689**. Son **article 50** impose d'informer l'utilisateur qu'un contenu est généré — applicable depuis le **2 août 2026**, soit après la rédaction du cahier des charges. |
 
 ---
 
 ## ▣ Fiche 28 — Gestion du temps
 
-| Si tu es en retard | Coupe les diapos **14, 15, 18, 22** (descriptives). La **21** se survole en 20 s. |
+| Si tu es en retard | Coupe les diapos **14, 15, 18, 22** (descriptives). La **32** (jeu d'essai) se survole en 20 s. |
 |---|---|
-| **Ne coupe jamais** | **8** (arbitrages) · **11** (choix techno) · **12** (archi) · **24** (quota) · **25** (WHERE) · **29** (jetons) · **34** (clôture) |
+| **Ne coupe jamais** | **8** (arbitrages) · **11** (choix techno) · **12** (archi) · **19** (séquence) · **24** (quota) · **25** (WHERE) · **29** (jetons) · **33** (veille) · **34** (clôture) |
 
 **Si tu perds le fil** → reviens à la question « pourquoi ce choix ? ». Chaque diapo a une
 raison, pas une liste.
